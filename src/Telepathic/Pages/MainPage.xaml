@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pageModels="clr-namespace:Telepathic.PageModels"             
+             xmlns:models="clr-namespace:Telepathic.Models"
+             xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
+             xmlns:pullToRefresh="clr-namespace:Syncfusion.Maui.Toolkit.PullToRefresh;assembly=Syncfusion.Maui.Toolkit"
+             xmlns:bottomSheet="clr-namespace:Syncfusion.Maui.Toolkit.BottomSheet;assembly=Syncfusion.Maui.Toolkit"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="Telepathic.Pages.MainPage"
+             x:DataType="pageModels:MainPageModel"
+             Title="{Binding Today}">
+
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+                EventName="NavigatedTo"
+                Command="{Binding NavigatedToCommand}" />
+        <toolkit:EventToCommandBehavior
+                EventName="NavigatedFrom"
+                Command="{Binding NavigatedFromCommand}" />
+        <toolkit:EventToCommandBehavior
+                EventName="Appearing"                
+                Command="{Binding AppearingCommand}" />
+    </ContentPage.Behaviors>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Settings" IconImageSource="{StaticResource IconSettings}" Order="Primary" Priority="0" Command="{Binding ShowSettingsCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid>
+        <pullToRefresh:SfPullToRefresh
+            IsRefreshing="{Binding IsRefreshing}"
+            RefreshCommand="{Binding RefreshCommand}">
+            <pullToRefresh:SfPullToRefresh.PullableContent>
+                <ScrollView>
+                    <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}" Padding="{StaticResource LayoutPadding}">
+                        <controls:CategoryChart />
+                        <Label Text="Projects" Style="{StaticResource Title2}"/>
+                        <ScrollView Orientation="Horizontal" Margin="-30,0">
+                            <HorizontalStackLayout 
+                                Spacing="15" Padding="30,0"
+                                BindableLayout.ItemsSource="{Binding Projects}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Project">
+                                        <controls:ProjectCardView WidthRequest="200">
+                                            <controls:ProjectCardView.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding NavigateToProjectCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}" CommandParameter="{Binding .}"/>
+                                            </controls:ProjectCardView.GestureRecognizers>
+                                        </controls:ProjectCardView>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </ScrollView>
+                        <Grid HeightRequest="44">
+                            <Label Text="Tasks" Style="{StaticResource Title2}" VerticalOptions="Center"/>
+                            <ImageButton 
+                                Source="{StaticResource IconClean}"
+                                HorizontalOptions="End"
+                                VerticalOptions="Center"
+                                Aspect="Center"
+                                HeightRequest="44"
+                                WidthRequest="44"
+                                IsVisible="{Binding HasCompletedTasks}"
+                                Command="{Binding CleanTasksCommand}"
+                                />
+                        </Grid>
+                        <VerticalStackLayout Spacing="15"
+                            BindableLayout.ItemsSource="{Binding Tasks}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <controls:TaskView TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </pullToRefresh:SfPullToRefresh.PullableContent>
+        </pullToRefresh:SfPullToRefresh>
+
+        <controls:AddButton 
+            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+            Command="{Binding AddTaskCommand}" />
+
+            <!-- Settings Bottom Sheet -->
+        <bottomSheet:SfBottomSheet x:Name="SettingsSheet"
+                                    IsOpen="{Binding IsSettingsSheetOpen, Mode=TwoWay}"
+                                    VerticalOptions="Fill"
+                                    MinimumHeightRequest="400"
+                                    Background="{StaticResource Primary}"
+                                    CornerRadius="24">
+            <bottomSheet:SfBottomSheet.BottomSheetContent>
+            <VerticalStackLayout Padding="24" Spacing="24">
+                <Label Text="Settings" FontAttributes="Bold" FontSize="24"/>
+                <HorizontalStackLayout Spacing="12">
+                    <Label Text="OpenAI API Key:" VerticalOptions="Center"/>
+                    <Entry Text="{Binding OpenAIApiKey, Mode=TwoWay}" Placeholder="Enter API Key" IsPassword="True" WidthRequest="200"/>
+                    <Button Text="Save" Command="{Binding SaveApiKeyCommand}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="12">
+                    <Label Text="Calendar:" VerticalOptions="Center"/>
+                    <Button Text="{Binding CalendarButtonText}" Command="{Binding ToggleCalendarCommand}" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="12">
+                    <Label Text="Enable Telepathy" VerticalOptions="Center"/>
+                    <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+            </bottomSheet:SfBottomSheet.BottomSheetContent>
+        </bottomSheet:SfBottomSheet>
+    </Grid>
+
+    
+</ContentPage>
