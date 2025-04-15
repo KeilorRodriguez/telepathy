@@ -67,8 +67,12 @@
             <VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
                 <sf:SfTextInputLayout 
                     Hint="Name" >
-                    <Entry
-                        Text="{Binding Name}" />
+                    <Entry 
+                        Text="{Binding Name}">
+                        <Entry.Behaviors>
+                            <toolkit:EventToCommandBehavior EventName="Unfocused" Command="{Binding NameUnfocusedCommand}"/>
+                        </Entry.Behaviors>
+                    </Entry>
                 </sf:SfTextInputLayout>
 
                 <sf:SfTextInputLayout 
@@ -84,6 +88,29 @@
                         SelectedItem="{Binding Category}"
                         SelectedIndex="{Binding CategoryIndex}" />
                 </sf:SfTextInputLayout>
+
+                <!-- BEGIN: AI Recommendations Section -->
+                <VerticalStackLayout Spacing="8" IsVisible="{Binding HasRecommendations}">
+                    <Border Background="{toolkit:AppThemeResource SecondaryBackground}" Padding="12" StrokeShape="RoundRectangle 12">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Recommended Tasks" FontAttributes="Bold" FontSize="Medium"/>
+                            <Button Text="Accept All" Command="{Binding AcceptAllRecommendationsCommand}" 
+                                IsEnabled="{Binding HasRecommendedTasks}"/>
+                            <CollectionView ItemsSource="{Binding RecommendedTasks}" Margin="0,8,0,0">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ProjectTask">
+                                        <Grid ColumnDefinitions="*,Auto" Padding="0,4">
+                                            <Label Text="{Binding Title}" VerticalOptions="Center" TextColor="White"/>
+                                            <Button Text="Accept" Command="{Binding Source={RelativeSource AncestorType={x:Type pageModels:ProjectDetailPageModel}}, Path=AcceptRecommendationCommand}" 
+                                                CommandParameter="{Binding .}" Grid.Column="1"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+                <!-- END: AI Recommendations Section -->
 
                 <Label 
                     Text="Icon" 

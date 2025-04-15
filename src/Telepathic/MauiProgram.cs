@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Maui;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using OpenAI;
 using Syncfusion.Maui.Toolkit.Hosting;
 
 namespace Telepathic;
@@ -38,6 +40,11 @@ public static class MauiProgram
 		builder.Services.AddSingleton<MainPageModel>();
 		builder.Services.AddSingleton<ProjectListPageModel>();
 		builder.Services.AddSingleton<ManageMetaPageModel>();
+
+		var openAiApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
+		builder.Services
+			.AddChatClient(new OpenAIClient(openAiApiKey).GetChatClient(model: "gpt-4o-mini").AsIChatClient())
+			.UseLogging();
 
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");

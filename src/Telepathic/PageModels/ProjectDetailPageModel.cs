@@ -1,6 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Telepathic.Models;
+using Telepathic.Services;
+using System.Collections.ObjectModel;
+using Microsoft.Extensions.AI;
 
 namespace Telepathic.PageModels;
 
@@ -12,6 +15,12 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	private readonly CategoryRepository _categoryRepository;
 	private readonly TagRepository _tagRepository;
 	private readonly ModalErrorHandler _errorHandler;
+	private readonly IChatClient _chatClient;
+
+	private ObservableCollection<ProjectTask> _recommendedTasks = new();
+	public ReadOnlyObservableCollection<ProjectTask> RecommendedTasks { get; }
+	[ObservableProperty]
+	private bool _hasRecommendations;
 
 	[ObservableProperty]
 	private string _name = string.Empty;
@@ -55,15 +64,104 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	public bool HasCompletedTasks
 		=> _project?.Tasks.Any(t => t.IsCompleted) ?? false;
 
-	public ProjectDetailPageModel(ProjectRepository projectRepository, TaskRepository taskRepository, CategoryRepository categoryRepository, TagRepository tagRepository, ModalErrorHandler errorHandler)
+	public bool HasRecommendedTasks
+	 	=> _recommendedTasks?.Count > 0;
+
+	public ProjectDetailPageModel(ProjectRepository projectRepository, TaskRepository taskRepository, CategoryRepository categoryRepository, TagRepository tagRepository, ModalErrorHandler errorHandler, IChatClient chatClient)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
 		_categoryRepository = categoryRepository;
 		_tagRepository = tagRepository;
 		_errorHandler = errorHandler;
+		_chatClient = chatClient;
 
 		Tasks = [];
+		RecommendedTasks = new ReadOnlyObservableCollection<ProjectTask>(_recommendedTasks);
+	}
+
+	partial void OnNameChanged(string value)
+	{
+		// No longer triggers recommendations here
+	}
+
+	[RelayCommand]
+	private void NameUnfocused()
+	{
+		// Only trigger if new project and no tasks
+		if (_project != null && _project.IsNullOrNew() && !string.IsNullOrWhiteSpace(Name) && (Tasks == null || Tasks.Count == 0))
+		{
+			_ = GetRecommendationsAsync(Name);
+		}
+	}
+
+	private async Task GetRecommendationsAsync(string projectName)
+	{
+		try
+		{
+			IsBusy = true;
+			var categoryTitles = Categories?.Select(c => c.Title).ToList() ?? new List<string>();
+			var prompt = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, pick the best matching category and suggest 3-7 tasks for this project.";// Respond as JSON: {{\"category\":\"category name\",\"tasks\":[\"task1\",\"task2\"]}}
+
+			var response = await _chatClient.GetResponseAsync<RecommendationResponse>(prompt);
+			if (response?.Result != null)
+			{
+				var rec = response.Result;
+				var bestCategory = Categories?.FirstOrDefault(c => c.Title.Equals(rec.Category, StringComparison.OrdinalIgnoreCase));
+				if (bestCategory != null)
+				{
+					Category = bestCategory;
+					CategoryIndex = Categories.IndexOf(bestCategory);
+				}
+				_recommendedTasks.Clear();
+				foreach (var t in rec.Tasks)
+				{
+					_recommendedTasks.Add(new ProjectTask { Title = t });
+				}
+				HasRecommendations = _recommendedTasks.Count > 0;
+			}
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+		finally
+		{
+			IsBusy = false;
+		}
+	}
+
+	[RelayCommand]
+	private void AcceptRecommendation(ProjectTask task)
+	{
+		if (!_project.IsNullOrNew() && task != null)
+		{
+			_project.Tasks.Add(task);
+			Tasks = new List<ProjectTask>(_project.Tasks);
+			_recommendedTasks.Remove(task);
+			HasRecommendations = _recommendedTasks.Count > 0;
+		}
+	}
+
+	[RelayCommand]
+	private void AcceptAllRecommendations()
+	{
+		if (!_project.IsNullOrNew() && _recommendedTasks.Count > 0)
+		{
+			foreach (var task in _recommendedTasks.ToList())
+			{
+				_project.Tasks.Add(task);
+			}
+			Tasks = new List<ProjectTask>(_project.Tasks);
+			_recommendedTasks.Clear();
+			HasRecommendations = false;
+		}
+	}
+
+	private class RecommendationResponse
+	{
+		public string Category { get; set; } = string.Empty;
+		public List<string> Tasks { get; set; } = new();
 	}
 
 	public void ApplyQueryAttributes(IDictionary<string, object> query)

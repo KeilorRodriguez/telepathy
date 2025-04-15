@@ -92,7 +92,7 @@
                                     IsOpen="{Binding IsSettingsSheetOpen, Mode=TwoWay}"
                                     VerticalOptions="Fill"
                                     MinimumHeightRequest="400"
-                                    Background="{StaticResource Primary}"
+                                    Background="{toolkit:AppThemeResource SecondaryBackground}"
                                     CornerRadius="24">
             <bottomSheet:SfBottomSheet.BottomSheetContent>
             <VerticalStackLayout Padding="24" Spacing="24">
@@ -108,7 +108,7 @@
                 </HorizontalStackLayout>
                 <HorizontalStackLayout Spacing="12">
                     <Label Text="Enable Telepathy" VerticalOptions="Center"/>
-                    <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}" />
+                    <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}" OnColor="{toolkit:AppThemeResource Primary}" />
                 </HorizontalStackLayout>
             </VerticalStackLayout>
             </bottomSheet:SfBottomSheet.BottomSheetContent>
