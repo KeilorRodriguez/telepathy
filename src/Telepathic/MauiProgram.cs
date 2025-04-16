@@ -47,9 +47,12 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ManageMetaPageModel>();
 
 		var openAiApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
-		builder.Services
-			.AddChatClient(new OpenAIClient(openAiApiKey).GetChatClient(model: "gpt-4o-mini").AsIChatClient())
-			.UseLogging();
+		if (!string.IsNullOrEmpty(openAiApiKey))
+		{
+			builder.Services
+				.AddChatClient(new OpenAIClient(openAiApiKey).GetChatClient(model: "gpt-4o-mini").AsIChatClient())
+				.UseLogging();
+		}
 
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");

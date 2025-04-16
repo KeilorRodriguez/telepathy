@@ -51,6 +51,10 @@
             x:Key="ChipDataTemplateSelector"
             NormalTagTemplate="{StaticResource NormalTagTemplate}"
             SelectedTagTemplate="{StaticResource SelectedTagTemplate}"/>
+
+        <toolkit:BoolToObjectConverter x:Key="IsTelepathyEnabledConverter" 
+                                          TrueObject="{StaticResource Primary}" 
+                                          FalseObject="{StaticResource White}" />
     </ContentPage.Resources>
 
     <ContentPage.ToolbarItems>
@@ -66,6 +70,7 @@
         <ScrollView>
             <VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
                 <sf:SfTextInputLayout 
+                    Stroke="{Binding IsTelepathyEnabled,Converter={StaticResource IsTelepathyEnabledConverter}}" 
                     Hint="Name" >
                     <Entry 
                         Text="{Binding Name}">

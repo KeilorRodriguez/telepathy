@@ -57,6 +57,9 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	string _busyDetails;
 
 	[ObservableProperty]
+	bool _isTelepathyEnabled = Preferences.Default.Get("telepathy_enabled", false);
+
+	[ObservableProperty]
 	private List<string> _icons =
 	[
 		FluentUI.ribbon_24_regular,

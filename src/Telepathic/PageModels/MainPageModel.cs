@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Storage;
+using Plugin.Maui.CalendarStore;
+using System.Collections.ObjectModel;
 using Telepathic.Models;
 
 namespace Telepathic.PageModels;
@@ -14,6 +16,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly SeedDataService _seedDataService;
+	private readonly ICalendarStore _calendarStore;
 
 	[ObservableProperty]
 	private List<CategoryChartData> _todoCategoryData = [];
@@ -51,17 +54,31 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	private string _aboutMeText = Preferences.Default.Get("about_me_text", string.Empty);
 
+	[ObservableProperty]
+	private ObservableCollection<CalendarInfo> _userCalendars = new();
+
+	[ObservableProperty]
+	private bool _isLoadingCalendars;
+
+	[ObservableProperty]
+	private bool _hasLoadedCalendars;
+
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
 
 	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
-		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler)
+		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
+		ICalendarStore calendarStore)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
 		_categoryRepository = categoryRepository;
 		_errorHandler = errorHandler;
 		_seedDataService = seedDataService;
+		_calendarStore = calendarStore;
+		
+		// Load saved calendar choices
+		LoadSavedCalendars();
 	}
 
 	private async Task LoadData()
@@ -154,7 +171,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	}
 
 	[RelayCommand]
-	private Task TaskCompleted(ProjectTask task)
+	private Task Completed(ProjectTask task)
 	{
 		OnPropertyChanged(nameof(HasCompletedTasks));
 		return _taskRepository.SaveItemAsync(task);
@@ -213,13 +230,108 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		Preferences.Default.Set("openai_api_key", OpenAIApiKey);
 		await AppShell.DisplayToastAsync("API Key saved!");
 	}
+	
+	private void LoadSavedCalendars()
+	{
+		var savedCalendarsJson = Preferences.Default.Get("saved_calendars", string.Empty);
+		if (!string.IsNullOrEmpty(savedCalendarsJson))
+		{
+			try
+			{
+				var savedCalendars = System.Text.Json.JsonSerializer.Deserialize<List<CalendarInfo>>(savedCalendarsJson);
+				if (savedCalendars != null)
+				{
+					UserCalendars = new ObservableCollection<CalendarInfo>(savedCalendars);
+					HasLoadedCalendars = true;
+				}
+			}			catch
+			{
+				// Silent fail, will reload calendars
+			}
+		}
+	}
+	
+	private void SaveSelectedCalendars()
+	{
+		var calendarsJson = System.Text.Json.JsonSerializer.Serialize(UserCalendars);
+		Preferences.Default.Set("saved_calendars", calendarsJson);
+	}
+
+	[RelayCommand]
+	private async Task LoadCalendars()
+	{
+		if (IsLoadingCalendars)
+			return;
+			
+		try
+		{
+			IsLoadingCalendars = true;
+			
+			var calendars = await _calendarStore.GetCalendars();
+			var tempCalendars = new List<CalendarInfo>();
+			
+			// If we already have saved calendars, preserve selections
+			var existingCalendars = UserCalendars.ToDictionary(c => c.Id, c => c);
+			
+			foreach (var calendar in calendars)
+			{
+				bool isSelected = existingCalendars.ContainsKey(calendar.Id) && existingCalendars[calendar.Id].IsSelected;
+				tempCalendars.Add(new CalendarInfo(calendar.Id, calendar.Name, isSelected));
+			}
+			
+			UserCalendars = new ObservableCollection<CalendarInfo>(tempCalendars);
+			SaveSelectedCalendars();
+			
+			HasLoadedCalendars = true;
+			CalendarButtonText = UserCalendars.Any(c => c.IsSelected) ? "Manage Calendars" : "Connect";
+			Preferences.Default.Set("calendar_connected", UserCalendars.Any(c => c.IsSelected));
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+		finally
+		{
+			IsLoadingCalendars = false;
+		}
+	}
+	
+	[RelayCommand]
+	private async Task ToggleCalendarSelection(CalendarInfo calendar)
+	{
+		calendar.IsSelected = !calendar.IsSelected;
+		SaveSelectedCalendars();
+		
+		CalendarButtonText = UserCalendars.Any(c => c.IsSelected) ? "Manage Calendars" : "Connect";
+		Preferences.Default.Set("calendar_connected", UserCalendars.Any(c => c.IsSelected));
+		await AppShell.DisplayToastAsync($"Calendar '{calendar.Name}' {(calendar.IsSelected ? "connected" : "disconnected")}!");
+	}
+
 	[RelayCommand]
 	private async Task ToggleCalendar()
 	{
-		bool connected = Preferences.Default.Get("calendar_connected", false);
-		connected = !connected;
-		Preferences.Default.Set("calendar_connected", connected);
-		CalendarButtonText = connected ? "Disconnect" : "Connect";
-		await AppShell.DisplayToastAsync(connected ? "Calendar connected!" : "Calendar disconnected!");
+		await LoadCalendars();
+		// if (!HasLoadedCalendars)
+		// {
+		// 	await LoadCalendars();
+		// }
+		// else
+		// {
+		// 	// We already have calendars, so this is just to show the calendar section
+		// }
+	}
+	
+	[RelayCommand]
+	private async Task DisconnectAllCalendars()
+	{
+		foreach (var calendar in UserCalendars)
+		{
+			calendar.IsSelected = false;
+		}
+		
+		SaveSelectedCalendars();
+		CalendarButtonText = "Connect";
+		Preferences.Default.Set("calendar_connected", false);
+		await AppShell.DisplayToastAsync("All calendars disconnected!");
 	}
 }
