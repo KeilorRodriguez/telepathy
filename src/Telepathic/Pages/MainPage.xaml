@@ -4,6 +4,7 @@
              xmlns:pageModels="clr-namespace:Telepathic.PageModels"             
              xmlns:models="clr-namespace:Telepathic.Models"
              xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
+             xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.TextInputLayout;assembly=Syncfusion.Maui.Toolkit"
              xmlns:pullToRefresh="clr-namespace:Syncfusion.Maui.Toolkit.PullToRefresh;assembly=Syncfusion.Maui.Toolkit"
              xmlns:bottomSheet="clr-namespace:Syncfusion.Maui.Toolkit.BottomSheet;assembly=Syncfusion.Maui.Toolkit"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
@@ -44,12 +45,12 @@
 
                         <!-- <controls:ActivityIndicatorView 
                             HorizontalOptions="Start"
-                            Title="COSMIC VICTORY ACHIEVED" 
+                            Title="Achieving cosmic victory" 
                             Detail="Your MAUI project's project management superpowers have been fully restored! Users across the cosmos will marvel at the smooth, shimmering animations while they organize their tasks and projects with your magnificent app!" 
-                            WidthRequest="400"
+                            MinimumWidthRequest="200"
                             MinimumHeightRequest="100"
-                            />
-
+                            /> -->
+<!-- 
                         <controls:AnimatedGradientText 
                             HorizontalOptions="Start"
                             Text="Analyzing new controls" 
@@ -126,11 +127,10 @@
             <bottomSheet:SfBottomSheet.BottomSheetContent>
             <VerticalStackLayout Padding="24" Spacing="24">
                 <Label Text="Settings" FontAttributes="Bold" FontSize="24"/>
-                <HorizontalStackLayout Spacing="12">
-                    <Label Text="OpenAI API Key:" VerticalOptions="Center"/>
+                <sf:SfTextInputLayout 
+                    Hint="OpenAI API Key">
                     <Entry Text="{Binding OpenAIApiKey, Mode=TwoWay}" Placeholder="Enter API Key" IsPassword="True" WidthRequest="200"/>
-                    <Button Text="Save" Command="{Binding SaveApiKeyCommand}" />
-                </HorizontalStackLayout>
+                </sf:SfTextInputLayout>
                 <HorizontalStackLayout Spacing="12">
                     <Label Text="Calendar:" VerticalOptions="Center"/>
                     <Button Text="{Binding CalendarButtonText}" Command="{Binding ToggleCalendarCommand}" />
@@ -139,6 +139,15 @@
                     <Label Text="Enable Telepathy" VerticalOptions="Center"/>
                     <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}" OnColor="{toolkit:AppThemeResource Primary}" />
                 </HorizontalStackLayout>
+                
+                <sf:SfTextInputLayout 
+                    Hint="About Me" >
+                    <Editor Text="{Binding AboutMeText, Mode=TwoWay}" 
+                        HorizontalOptions="Start"
+                        HeightRequest="100" 
+                        Placeholder="Tell me about yourself..." />
+                </sf:SfTextInputLayout>
+                    
             </VerticalStackLayout>
             </bottomSheet:SfBottomSheet.BottomSheetContent>
         </bottomSheet:SfBottomSheet>

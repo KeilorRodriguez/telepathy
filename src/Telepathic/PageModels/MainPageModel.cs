@@ -48,6 +48,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	private string _calendarButtonText = Preferences.Default.Get("calendar_connected", false) ? "Disconnect" : "Connect";
 
+	[ObservableProperty]
+	private string _aboutMeText = Preferences.Default.Get("about_me_text", string.Empty);
+
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
 
@@ -191,7 +194,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	partial void OnOpenAIApiKeyChanged(string value)
 	{
-		// Optionally auto-save, or only on Save button
+		Preferences.Default.Set("openai_api_key", value);
+	}
+	
+	partial void OnAboutMeTextChanged(string value)
+	{
+		Preferences.Default.Set("about_me_text", value);
 	}
 
 	[RelayCommand]
@@ -199,21 +207,19 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		IsSettingsSheetOpen = true;
 	}
-
 	[RelayCommand]
-	private void SaveApiKey()
+	private async Task SaveApiKey()
 	{
 		Preferences.Default.Set("openai_api_key", OpenAIApiKey);
-		AppShell.DisplayToastAsync("API Key saved!");
+		await AppShell.DisplayToastAsync("API Key saved!");
 	}
-
 	[RelayCommand]
-	private void ToggleCalendar()
+	private async Task ToggleCalendar()
 	{
 		bool connected = Preferences.Default.Get("calendar_connected", false);
 		connected = !connected;
 		Preferences.Default.Set("calendar_connected", connected);
 		CalendarButtonText = connected ? "Disconnect" : "Connect";
-		AppShell.DisplayToastAsync(connected ? "Calendar connected!" : "Calendar disconnected!");
+		await AppShell.DisplayToastAsync(connected ? "Calendar connected!" : "Calendar disconnected!");
 	}
 }

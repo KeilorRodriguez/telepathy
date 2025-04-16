@@ -109,16 +109,19 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 			var categoryTitles = Categories?.Select(c => c.Title).ToList() ?? new List<string>();
 
 			IsBusy = true;
-			BusyTitle = "Getting task recommendations...";
+			BusyTitle = "Getting task recommendations.";
 			BusyDetails = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, looking up tasks.";
 			
-			var prompt = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, pick the best matching category and suggest 3-7 tasks for this project.";// Respond as JSON: {{\"category\":\"category name\",\"tasks\":[\"task1\",\"task2\"]}}
+			string _aboutMeText = Preferences.Default.Get("about_me_text", string.Empty);
+
+			var prompt = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, pick the best matching category and suggest 3-7 tasks for this project. Use these details about me so the writing sounds like me: {_aboutMeText}";// Respond as JSON: {{\"category\":\"category name\",\"tasks\":[\"task1\",\"task2\"]}}
 
 			await Task.Delay(2000);
 
 			var response = await _chatClient.GetResponseAsync<RecommendationResponse>(prompt);
 
 			BusyDetails = "Processing the recommendations.";
+			BusyDetails = $"We have {response?.Result.Tasks.Count} tasks to recommend that we think could be amazing.";
 
 			await Task.Delay(2000);
 
