@@ -56,6 +56,12 @@
     <Color x:Key="LightSecondaryBackground">#E0E0E0</Color>
     <Color x:Key="DarkSecondaryBackground">#222228</Color>
 
+    <LinearGradientBrush x:Key="AIBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#8855FF" Offset="0.0" />
+        <GradientStop Color="#FF559E" Offset="0.5" />
+        <GradientStop Color="#55DDFF" Offset="1.0" />
+    </LinearGradientBrush>
+
     <!-- <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
     <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>

@@ -22,16 +22,20 @@
         <toolkit:EventToCommandBehavior
                 EventName="Appearing"                
                 Command="{Binding AppearingCommand}" />
-    </ContentPage.Behaviors>
-
-    <ContentPage.Resources>
+    </ContentPage.Behaviors>    <ContentPage.Resources>
         <ResourceDictionary>
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <toolkit:BoolToObjectConverter x:Key="TelepathyIconConverter" 
+                                          TrueObject="{StaticResource IconSettingsEnabled}" 
+                                          FalseObject="{StaticResource IconSettings}" />
         </ResourceDictionary>
-    </ContentPage.Resources>
-
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Settings" IconImageSource="{StaticResource IconSettings}" Order="Primary" Priority="0" Command="{Binding ShowSettingsCommand}" />
+    </ContentPage.Resources>    <ContentPage.ToolbarItems>
+        <ToolbarItem 
+            Text="Settings" 
+            IconImageSource="{Binding IsTelepathyEnabled, Converter={StaticResource TelepathyIconConverter}}" 
+            Order="Primary" 
+            Priority="0" 
+            Command="{Binding ShowSettingsCommand}" />
     </ContentPage.ToolbarItems>
 
     <Grid>
@@ -126,19 +130,23 @@
                                     CornerRadius="24">
             <bottomSheet:SfBottomSheet.BottomSheetContent>
             <VerticalStackLayout Padding="24" Spacing="24">
-                <Label Text="Settings" FontAttributes="Bold" FontSize="24"/>
+                <Label Text="Settings" FontAttributes="Bold" FontSize="24" HorizontalOptions="Center"/>
+                
+                <sf:SfTextInputLayout IsHintAlwaysFloated="True" Hint="Enable Telepathy" Padding="8">
+                    <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}" OnColor="{toolkit:AppThemeResource Primary}" />
+                </sf:SfTextInputLayout>
+
                 <sf:SfTextInputLayout 
                     Hint="OpenAI API Key">
-                    <Entry Text="{Binding OpenAIApiKey, Mode=TwoWay}" Placeholder="Enter API Key" IsPassword="True" WidthRequest="200"/>
+                    <Entry Text="{Binding OpenAIApiKey, Mode=TwoWay}" Placeholder="Enter API Key" IsPassword="True" />
                 </sf:SfTextInputLayout>
-                <HorizontalStackLayout Spacing="12">
-                    <Label Text="Calendar:" VerticalOptions="Center"/>
-                    <Button Text="{Binding CalendarButtonText}" Command="{Binding ToggleCalendarCommand}" />
-                </HorizontalStackLayout>
-                <HorizontalStackLayout Spacing="12">
-                    <Label Text="Enable Telepathy" VerticalOptions="Center"/>
-                    <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}" OnColor="{toolkit:AppThemeResource Primary}" />
-                </HorizontalStackLayout>
+
+                <sf:SfTextInputLayout IsHintAlwaysFloated="True" Hint="Calendar(s)" Padding="8">
+                    <Button 
+                        Text="{Binding CalendarButtonText}" 
+                        Command="{Binding ToggleCalendarCommand}"
+                        HorizontalOptions="Start" />
+                </sf:SfTextInputLayout>                
                 
                 <sf:SfTextInputLayout 
                     Hint="About Me" >

@@ -19,14 +19,10 @@
       <Border.Resources>
         <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         <converters:BoolToFontAttributesConverter x:Key="BoolToFontAttributesConverter" />
-        <LinearGradientBrush x:Key="RecommendationBorderBrush" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#8855FF" Offset="0.0" />
-            <GradientStop Color="#FF559E" Offset="0.5" />
-            <GradientStop Color="#55DDFF" Offset="1.0" />
-        </LinearGradientBrush>
+        
         <toolkit:BoolToObjectConverter x:Key="BoolToThicknessConverter" TrueObject="2" FalseObject="0" />
         <toolkit:BoolToObjectConverter x:Key="BoolToBorderBrushConverter" 
-                                     TrueObject="{StaticResource RecommendationBorderBrush}" 
+                                     TrueObject="{StaticResource AIBrush}" 
                                      FalseObject="Transparent" />
     </Border.Resources>
     

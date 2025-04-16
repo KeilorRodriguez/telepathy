@@ -106,11 +106,17 @@
                 Color="{toolkit:AppThemeResource TextOnBackground}"
                 Size="{StaticResource size240}" />
 
-    <FontImageSource x:Key="IconSettings"
-    Glyph="{x:Static f:FluentUI.settings_24_regular}"
-    FontFamily="{x:Static f:FluentUI.FontFamily}"
-    Color="{toolkit:AppThemeResource TextOnBackground}"
-    Size="{StaticResource IconSize}" />
+        <FontImageSource x:Key="IconSettings"
+                Glyph="{x:Static f:FluentUI.bot_24_regular}"
+                FontFamily="{x:Static f:FluentUI.FontFamily}"
+                Color="{toolkit:AppThemeResource TextOnBackground}"
+                Size="{StaticResource IconSize}" />
+
+        <FontImageSource x:Key="IconSettingsEnabled"
+                Glyph="{x:Static f:FluentUI.bot_sparkle_24_regular}"
+                FontFamily="{x:Static f:FluentUI.FontFamily}"
+                Color="#8855FF"
+                Size="{StaticResource IconSize}" />
 
     <Style TargetType="Label">
         <Setter Property="TextColor"
