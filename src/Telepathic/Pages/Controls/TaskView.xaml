@@ -9,6 +9,7 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:converters="clr-namespace:Telepathic.Converters"
     xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
+    xmlns:fonts="clr-namespace:Fonts"
     x:Class="Telepathic.Pages.Controls.TaskView"
     x:Name="rootBorder"
     StrokeShape="RoundRectangle 20"
@@ -63,22 +64,15 @@
                             Command="{Binding NavigateToTaskCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}" 
                             CommandParameter="{Binding .}"/>
                     </Grid.GestureRecognizers>
-                      <!-- Regular task completion checkbox (only shown for non-recommendations) -->
+                    
+                    <!-- Regular task completion checkbox (visible for all tasks) -->
                     <CheckBox 
                         Grid.Column="0" 
                         IsChecked="{Binding IsCompleted, Mode=OneTime}" 
                         VerticalOptions="Center" 
-                        CheckedChanged="CheckBox_CheckedChanged"
-                        IsVisible="{Binding IsRecommendation, Converter={StaticResource InvertedBoolConverter}}"/>
+                        CheckedChanged="CheckBox_CheckedChanged"/>
                     
-                    <!-- Recommendation acceptance checkbox (only shown for recommendations) -->
-                    <CheckBox 
-                        Grid.Column="0" 
-                        IsChecked="{Binding IsAccepted, Mode=TwoWay}" 
-                        VerticalOptions="Center" 
-                        CheckedChanged="RecommendationCheckBox_CheckedChanged"
-                        IsVisible="{Binding IsRecommendation}"/>
-                      <!-- Task Title (Normal or italic for recommendation) -->
+                    <!-- Task Title (Normal or italic for recommendation) -->
                     <Label 
                         Grid.Column="1" 
                         Text="{Binding Title}"
@@ -86,8 +80,21 @@
                         LineBreakMode="TailTruncation"
                         FontAttributes="{Binding IsRecommendation, Converter={StaticResource BoolToFontAttributesConverter}}">
                     </Label>
-                    
-                    <!-- We've replaced the star with a gradient border! -->
+                      <!-- Trashcan Button (only visible for recommendations) -->
+                    <Button
+                        Grid.Column="2"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        CornerRadius="20"
+                        Padding="0"
+                        BackgroundColor="Transparent" 
+                        IsVisible="{Binding IsRecommendation}"
+                        Command="{Binding RejectRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}"
+                        CommandParameter="{Binding .}"
+                        Text="{x:Static fonts:FluentUI.delete_32_regular}"
+                        FontFamily="{x:Static fonts:FluentUI.FontFamily}"
+                        FontSize="24"
+                        TextColor="{toolkit:AppThemeResource TextOnBackground}"/>
                 </Grid>
             </shimmer:SfShimmer.Content>
         </shimmer:SfShimmer>

@@ -13,7 +13,4 @@ public class ProjectTask
 	
 	[JsonIgnore]
 	public bool IsRecommendation { get; set; }
-	
-	[JsonIgnore]
-	public bool IsAccepted { get; set; }
 }

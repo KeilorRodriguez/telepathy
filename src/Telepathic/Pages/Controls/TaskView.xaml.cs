@@ -22,6 +22,12 @@ public partial class TaskView
 		typeof(TaskView),
 		null);
 
+	public static readonly BindableProperty RejectRecommendationCommandProperty = BindableProperty.Create(
+		nameof(RejectRecommendationCommand),
+		typeof(ICommand),
+		typeof(TaskView),
+		null);
+
 	public ICommand TaskCompletedCommand
 	{
 		get => (ICommand)GetValue(TaskCompletedCommandProperty);
@@ -34,6 +40,11 @@ public partial class TaskView
 		set => SetValue(AcceptRecommendationCommandProperty, value);
 	}
 
+	public ICommand RejectRecommendationCommand
+	{
+		get => (ICommand)GetValue(RejectRecommendationCommandProperty);
+		set => SetValue(RejectRecommendationCommandProperty, value);
+	}
 	private void CheckBox_CheckedChanged(object sender, CheckedChangedEventArgs e)
 	{
 		var checkbox = (CheckBox)sender;
@@ -46,24 +57,6 @@ public partial class TaskView
 
 		task.IsCompleted = e.Value;
 		TaskCompletedCommand?.Execute(task);
-	}
-		// This handles when a user checks a recommendation checkbox
-	private void RecommendationCheckBox_CheckedChanged(object sender, CheckedChangedEventArgs e)
-	{
-		var checkbox = (CheckBox)sender;
-		
-		if (checkbox.BindingContext is not ProjectTask task)
-			return;
-			
-		// Update the IsAccepted property based on checkbox state
-		task.IsAccepted = e.Value;
-		
-		// Only execute the command when accepted (checked)
-		if (e.Value)
-		{
-			// When checked, execute the accept recommendation command
-			AcceptRecommendationCommand?.Execute(task);
-		}
 	}
 	
 }
