@@ -5,19 +5,31 @@
     xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
     x:Class="Telepathic.Pages.Controls.ActivityIndicatorView"
     x:Name="Root">
-    <VerticalStackLayout Spacing="6">
+    <Grid 
+        RowSpacing="6" ColumnSpacing="6"
+        RowDefinitions="Auto, Auto" ColumnDefinitions="10,Auto">
         <controls:SkiaAnimatedGradientTextSK 
             x:Name="TitleText"
             Text="{Binding Title, Source={x:Reference Root}}"
             FontSize="42"
-            HeightRequest="40"
-            WidthRequest="400"
-            HorizontalOptions="Start" />
+            MinimumHeightRequest="40"
+            MinimumWidthRequest="400"
+            HorizontalOptions="Start"
+            Grid.ColumnSpan="2" />
+
+        <BoxView WidthRequest="2" Color="White" 
+            Grid.Column="0" 
+            Grid.Row="1"
+            VerticalOptions="Fill" HorizontalOptions="Start" />
             
         <Label 
+            Grid.Column="1"
+            Grid.Row="1"
             x:Name="DetailLabel"
             Text="{Binding Detail, Source={x:Reference Root}}"
-            FontSize="14"
+            LineBreakMode="WordWrap"
+            MaxLines="3"
+            FontSize="18"
             HorizontalOptions="Start"/>
-    </VerticalStackLayout>
+    </Grid>
 </ContentView>
