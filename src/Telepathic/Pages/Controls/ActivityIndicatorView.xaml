@@ -7,14 +7,14 @@
     x:Name="Root">
     <Grid 
         RowSpacing="6" ColumnSpacing="6"
-        RowDefinitions="Auto, Auto" ColumnDefinitions="10,Auto">
+        RowDefinitions="Auto, Auto" ColumnDefinitions="10,*">
         <controls:SkiaAnimatedGradientTextSK 
             x:Name="TitleText"
             Text="{Binding Title, Source={x:Reference Root}}"
             FontSize="42"
             MinimumHeightRequest="40"
-            MinimumWidthRequest="400"
-            HorizontalOptions="Start"
+            MinimumWidthRequest="200"
+            HorizontalOptions="Fill"
             Grid.ColumnSpan="2" />
 
         <BoxView WidthRequest="2" Color="White" 
@@ -30,6 +30,6 @@
             LineBreakMode="WordWrap"
             MaxLines="3"
             FontSize="18"
-            HorizontalOptions="Start"/>
+            HorizontalOptions="Fill"/>
     </Grid>
 </ContentView>
