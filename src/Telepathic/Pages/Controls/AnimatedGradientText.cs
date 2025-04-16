@@ -2,25 +2,36 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using Font = Microsoft.Maui.Graphics.Font;
 
-namespace Telepathic.Pages.Controls
+namespace Telepathic.Pages.Controls;
+
+/// <summary>
+/// ChatGPT‑style animated “thinking” header.
+/// </summary>
+public sealed class AnimatedGradientText : GraphicsView
 {
-    public class AnimatedGradientText : GraphicsView
-    {
-        // Bindable property so you can set Text in XAML or code:
-        public static readonly BindableProperty TextProperty =
-            BindableProperty.Create(
-                nameof(Text),
-                typeof(string),
-                typeof(AnimatedGradientText),
-                defaultValue: "Thinking...",
-                propertyChanged: (bindable, oldValue, newValue) =>
+    /*───────────────────────────  Bindables  ───────────────────────────*/
+
+    public static readonly BindableProperty TextProperty =
+        BindableProperty.Create(nameof(Text), typeof(string),
+            typeof(AnimatedGradientText), "Thinking…",
+            propertyChanged: (bindable, oldValue, newValue) =>
                 {
                     var ctrl = (AnimatedGradientText)bindable;
                     ctrl.Invalidate(); // Redraw whenever text changes
                 }
             );
 
-        public static readonly BindableProperty ShowDebugBackgroundProperty =
+    public static readonly BindableProperty BaseFontColorProperty =
+        BindableProperty.Create(nameof(BaseFontColor), typeof(Color),
+            typeof(AnimatedGradientText), Color.FromArgb("#8c8c8c"),
+            propertyChanged: (bindable, oldValue, newValue) =>
+                {
+                    var ctrl = (AnimatedGradientText)bindable;
+                    ctrl.Invalidate(); // Redraw whenever text changes
+                }
+            );
+
+    public static readonly BindableProperty ShowDebugBackgroundProperty =
             BindableProperty.Create(
                 nameof(ShowDebugBackground),
                 typeof(bool),
@@ -33,51 +44,31 @@ namespace Telepathic.Pages.Controls
                 }
             );
 
-        // New color properties for ultra customization!
-        public static readonly BindableProperty BaseFontColorProperty =
-            BindableProperty.Create(
-                nameof(BaseFontColor),
-                typeof(Color),
-                typeof(AnimatedGradientText),
-                defaultValue: Colors.White,
-                propertyChanged: (bindable, oldValue, newValue) =>
+
+    public static readonly BindableProperty GradientStartColorProperty =
+        BindableProperty.Create(nameof(GradientStartColor), typeof(Color),
+            typeof(AnimatedGradientText), Color.FromArgb("#8c8c8c"));
+
+    public static readonly BindableProperty GradientEndColorProperty =
+        BindableProperty.Create(nameof(GradientEndColor), typeof(Color),
+            typeof(AnimatedGradientText), Color.FromArgb("#8c8c8c"));
+
+    public static readonly BindableProperty FontSizeProperty =
+        BindableProperty.Create(nameof(FontSize), typeof(float),
+            typeof(AnimatedGradientText), 20f,
+            propertyChanged: (bindable, oldValue, newValue) =>
                 {
                     var ctrl = (AnimatedGradientText)bindable;
-                    ctrl.Invalidate();
+                    ctrl.Invalidate(); // Redraw whenever text changes
                 }
             );
 
-        public static readonly BindableProperty GradientStartColorProperty =
-            BindableProperty.Create(
-                nameof(GradientStartColor),
-                typeof(Color),
-                typeof(AnimatedGradientText),
-                defaultValue: Colors.DeepSkyBlue,
-                propertyChanged: (bindable, oldValue, newValue) =>
-                {
-                    var ctrl = (AnimatedGradientText)bindable;
-                    ctrl.Invalidate();
-                }
-            );
-
-        public static readonly BindableProperty GradientEndColorProperty =
-            BindableProperty.Create(
-                nameof(GradientEndColor),
-                typeof(Color),
-                typeof(AnimatedGradientText),
-                defaultValue: Colors.HotPink,
-                propertyChanged: (bindable, oldValue, newValue) =>
-                {
-                    var ctrl = (AnimatedGradientText)bindable;
-                    ctrl.Invalidate();
-                }
-            );
-
-        public string Text
-        {
-            get => (string)GetValue(TextProperty);
-            set => SetValue(TextProperty, value);
-        }
+    /*───────────────────────────  Public API  ──────────────────────────*/
+    public string Text
+    {
+        get => (string)GetValue(TextProperty);
+        set => SetValue(TextProperty, value);
+    }
 
         public bool ShowDebugBackground
         {
@@ -85,154 +76,117 @@ namespace Telepathic.Pages.Controls
             set => SetValue(ShowDebugBackgroundProperty, value);
         }
 
-        public Color BaseFontColor
-        {
-            get => (Color)GetValue(BaseFontColorProperty);
-            set => SetValue(BaseFontColorProperty, value);
-        }
+    public Color BaseFontColor
+    {
+        get => (Color)GetValue(BaseFontColorProperty);
+        set => SetValue(BaseFontColorProperty, value);
+    }
 
-        public Color GradientStartColor
-        {
-            get => (Color)GetValue(GradientStartColorProperty);
-            set => SetValue(GradientStartColorProperty, value);
-        }
+    public Color GradientStartColor
+    {
+        get => (Color)GetValue(GradientStartColorProperty);
+        set => SetValue(GradientStartColorProperty, value);
+    }
 
-        public Color GradientEndColor
-        {
-            get => (Color)GetValue(GradientEndColorProperty);
-            set => SetValue(GradientEndColorProperty, value);
-        }
+    public Color GradientEndColor
+    {
+        get => (Color)GetValue(GradientEndColorProperty);
+        set => SetValue(GradientEndColorProperty, value);
+    }
 
-        // Tracks how far along our "shimmer wave" is (0=none, 1=full width):
-        private float _progress;
+    public float FontSize
+    {
+        get => (float)GetValue(FontSizeProperty);
+        set => SetValue(FontSizeProperty, value);
+    }
 
-        private readonly TextDrawable _drawable;
+    /*───────────────────────────  Internals  ───────────────────────────*/
+    private float _progress;           // 0 → 1
+    private readonly IDrawable _drawer;
 
-        public AnimatedGradientText()
-        {
-            // Hook up our drawable
-            _drawable = new TextDrawable(this);
-            Drawable = _drawable;
-            
-            // Set some defaults
-            HeightRequest = 40;
-            WidthRequest = 250;
-            HorizontalOptions = LayoutOptions.Start;
+    public AnimatedGradientText()
+    {
+        _drawer = new ShimmerDrawable(this);
+        Drawable = _drawer;
 
-            // Animate forever:
-            StartAnimation();
-        }
+        HeightRequest = 32;
+        HorizontalOptions = LayoutOptions.Start;
 
-        private void StartAnimation()
-        {
-            // Animate _progress from 0→1 every 1.5s, then repeat
-            new Animation(
-                callback: val =>
-                {
-                    _progress = (float)val;
-                    Invalidate(); // Forces a redraw
-                },
-                start: 0,
-                end: 1,
-                easing: Easing.Linear
-            )
-            .Commit(
-                owner: this,
-                name: "ShimmerAnimation",
-                rate: 16,        // ~60fps
-                length: 1500,    // 1.5 seconds per cycle
-                finished: (_, __) => StartAnimation()  // repeat forever
-            );
-        }
+        StartAnimation();
+    }
 
-        // We'll expose the progress to the drawable
-        private class TextDrawable : IDrawable
-        {
-            private readonly AnimatedGradientText _parent;
-
-            public TextDrawable(AnimatedGradientText parent)
+    private void StartAnimation()
+    {
+        new Animation(v =>
             {
-                _parent = parent;
-            }
+                _progress = (float)v;
+                Invalidate();
+            },
+            0, 1, Easing.Linear)
+        .Commit(this, "shimmer", 16, 1250, finished: (_, __) => StartAnimation());
+    }
 
-            public void Draw(ICanvas canvas, RectF dirtyRect)
-            {
-                // Show debug background if requested - this helps us see if control is there
-                if (_parent.ShowDebugBackground)
+    /*─────────────────────────  Drawable  ──────────────────────────────*/
+    private sealed class ShimmerDrawable : IDrawable
+    {
+        private readonly AnimatedGradientText _owner;
+        private static readonly Color Transparent = Colors.Transparent;
+
+        public ShimmerDrawable(AnimatedGradientText owner) => _owner = owner;
+
+        public void Draw(ICanvas canvas, RectF dirty)
+        {
+            if (_owner.ShowDebugBackground)
                 {
                     canvas.FillColor = Colors.Red.WithAlpha(0.3f);
-                    canvas.FillRectangle(0, 0, dirtyRect.Width, dirtyRect.Height);
+                    canvas.FillRectangle(0, 0, dirty.Width, dirty.Height);
 
                     // Draw frame
                     canvas.StrokeColor = Colors.Yellow;
                     canvas.StrokeSize = 1;
-                    canvas.DrawRectangle(0, 0, dirtyRect.Width, dirtyRect.Height);
+                    canvas.DrawRectangle(0, 0, dirty.Width, dirty.Height);
                 }
 
-                // Get text or use default
-                var text = _parent.Text ?? "Thinking...";
-                if (string.IsNullOrEmpty(text))
-                    return;
+            string text = _owner.Text ?? "";
+            if (string.IsNullOrWhiteSpace(text)) return;
 
-                // Explicitly set font properties - this is crucial!
-                float fontSz = 24f; // IMPORTANT: Explicit size helps with visibility
-                canvas.Font = Font.DefaultBold;
-                canvas.FontSize = fontSz;
-                canvas.FontColor = _parent.BaseFontColor; // Now using our customizable base color!
+            /*─ 1. Measure ─*/
+            canvas.Font = Font.DefaultBold;
+            canvas.FontSize = _owner.FontSize;
+            SizeF txtSize = canvas.GetStringSize(text, Font.DefaultBold, _owner.FontSize);
 
-                // Draw text at absolute position - avoid relying on measured text size
-                float x = 0;
-                float y = (dirtyRect.Height - fontSz) / 2; // Vertical center-ish
+            float x = 0;
+            float y = (dirty.Height - txtSize.Height) / 2f;
 
-                // Draw the base text
-                canvas.DrawString(text, x, y, dirtyRect.Width, dirtyRect.Height, HorizontalAlignment.Left, VerticalAlignment.Top);
+            /*─ 2. Base (light gray) ─*/
+            canvas.FontColor = _owner.BaseFontColor;//.WithAlpha(0.5f);
+            canvas.DrawString(text, x, y, dirty.Width, dirty.Height, HorizontalAlignment.Left, VerticalAlignment.Top);
 
-                // Setup shimmer wave - use fixed width instead of measuring
-                float textWidth = dirtyRect.Width - 20f; // Approximate width
-                float clipWidth = textWidth * 0.4f; // Fixed width for shimmer effect (30% of text width)
+            /*─ 3. Shimmer overlay ─*/
+            canvas.SaveState();
+            canvas.ClipRectangle(x, y, txtSize.Width, txtSize.Height);
 
-                // Calculate shimmer position based on progress
-                float shimmerPosition = -textWidth + (_parent._progress * textWidth * 2); // Move from left to right
+            // 200 %‑width band like CSS `background-size:200% 100%`
+            float bandWidth = txtSize.Width * 2f;
+            float offset    = ( _owner._progress * bandWidth ) - bandWidth;
 
-                // Apply clip for shimmer region
-                canvas.SaveState();
-                canvas.ClipRectangle(x + shimmerPosition - (clipWidth / 2), y, clipWidth, fontSz * 1.2f);
-
-                // Create gradient for shimmer effect - with moving gradient relative to shimmer position
-                // var gradient = new RadialGradientPaint
-                // {
-                //     Center = new PointF(x + shimmerPosition, y + (fontSz / 2)),
-                //     Radius = clipWidth,
-                //     StartColor = _parent.GradientStartColor,
-                //     EndColor = _parent.GradientEndColor
-                // };
-
-                var gradient = new LinearGradientPaint
+            var grad = new LinearGradientPaint
+            {
+                StartPoint = new PointF(x + offset, y),
+                EndPoint   = new PointF(x + offset + bandWidth, y),
+                GradientStops = new[]
                 {
-                    StartPoint = new PointF(x + shimmerPosition - clipWidth, y),
-                    EndPoint = new PointF(x + shimmerPosition + clipWidth, y),
-                    GradientStops = new[]
-                    {
-                        new PaintGradientStop(0.0f, _parent.GradientStartColor.WithAlpha(0.0f)),
-                        new PaintGradientStop(0.2f, _parent.GradientStartColor),
-                        new PaintGradientStop(0.5f, _parent.GradientEndColor),
-                        new PaintGradientStop(0.8f, _parent.GradientStartColor),
-                        new PaintGradientStop(1.0f, _parent.GradientStartColor.WithAlpha(0.0f))
-                    }
-                };
+                    new PaintGradientStop(0.00f, Transparent),
+                    new PaintGradientStop(0.35f, _owner.GradientStartColor.WithAlpha(0.55f)),
+                    new PaintGradientStop(0.50f, _owner.GradientEndColor.WithAlpha(0.85f)),
+                    new PaintGradientStop(0.65f, _owner.GradientStartColor.WithAlpha(0.55f)),
+                    new PaintGradientStop(1.00f, Transparent)
+                }
+            };
 
-                // gradient.BlendStartAndEndColors(_parent.GradientStartColor, _parent.GradientEndColor, 0.5f);
-
-                // Apply gradient paint
-                canvas.SetFillPaint(gradient, dirtyRect);
-                // canvas.FontColor = Colors.Transparent;
-
-                // Draw the shimmer text with same position but gradient fill
-                canvas.DrawString(text, x, y, dirtyRect.Width, dirtyRect.Height, HorizontalAlignment.Left, VerticalAlignment.Top);
-
-                // Always restore canvas state
-                canvas.RestoreState();
-            }
+            canvas.SetFillPaint(grad, dirty);
+            canvas.DrawString(text, x, y, dirty.Width, dirty.Height, HorizontalAlignment.Left, VerticalAlignment.Top);   // same position, gradient fill
+            canvas.RestoreState();
         }
     }
 }

@@ -41,15 +41,33 @@
                 <ScrollView>
                     <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}" Padding="{StaticResource LayoutPadding}">
                         <controls:CategoryChart />
-                        <!-- <controls:AnimatedGradientText 
+
+                        <!-- <controls:ActivityIndicatorView 
+                            HorizontalOptions="Start"
+                            Title="COSMIC VICTORY ACHIEVED" 
+                            Detail="Your MAUI project's project management superpowers have been fully restored! Users across the cosmos will marvel at the smooth, shimmering animations while they organize their tasks and projects with your magnificent app!" 
+                            WidthRequest="400"
+                            MinimumHeightRequest="100"
+                            />
+
+                        <controls:AnimatedGradientText 
                             HorizontalOptions="Start"
                             Text="Analyzing new controls" 
-                            HeightRequest="40" 
+                            
                             WidthRequest="350"
-                            IsEnabled="True"
-                            IsVisible="True"
-                            ShowDebugBackground="False"
-                             /> -->
+                            HeightRequest="40"
+                            GradientStartColor="#4a90e2" 
+                            GradientEndColor="#9b59b6"
+                             />
+
+                        <controls:SkiaAnimatedGradientTextSK 
+                            Text="Analyzing new controls" 
+                            FontSize="42" 
+                            WidthRequest="350"
+                            HeightRequest="40"                             
+                            GradientStartColor="#4a90e2" 
+                            GradientEndColor="#9b59b6"
+                            /> -->
                                 
                         <!-- Activity Indicator with properly bound visibility -->
                         <Label Text="Projects" Style="{StaticResource Title2}"/>

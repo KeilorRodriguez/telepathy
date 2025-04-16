@@ -6,12 +6,12 @@
     x:Class="Telepathic.Pages.Controls.ActivityIndicatorView"
     x:Name="Root">
     <VerticalStackLayout Spacing="6">
-        <controls:AnimatedGradientText 
+        <controls:SkiaAnimatedGradientTextSK 
             x:Name="TitleText"
             Text="{Binding Title, Source={x:Reference Root}}"
-            ShowDebugBackground="False"
+            FontSize="42"
             HeightRequest="40"
-            WidthRequest="250"
+            WidthRequest="400"
             HorizontalOptions="Start" />
             
         <Label 

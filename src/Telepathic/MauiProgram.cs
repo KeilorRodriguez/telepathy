@@ -2,6 +2,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using OpenAI;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 using Syncfusion.Maui.Toolkit.Hosting;
 
 namespace Telepathic;
@@ -14,6 +15,7 @@ public static class MauiProgram
 		builder
 			.UseMauiApp<App>()
 			.UseMauiCommunityToolkit()
+			.UseSkiaSharp()
 			.ConfigureSyncfusionToolkit()
 			.ConfigureMauiHandlers(handlers =>
 			{

@@ -99,8 +99,7 @@
                             HeightRequest="100"                                 
                             TitleTextColor="#4d999999"
                             DetailTextColor="{toolkit:AppThemeResource TextOnBackground}"
-                            ShimmerStartColor="#FFFFFF" 
-                            ShimmerEndColor="#FFFFFF" />
+                             />
 
                 <!-- BEGIN: AI Recommendations Section -->
                 <VerticalStackLayout Spacing="8" IsVisible="{Binding HasRecommendations}">
