@@ -2,14 +2,18 @@
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:Telepathic"
-             x:Class="Telepathic.App">
-    <Application.Resources>
+             xmlns:converters="clr-namespace:Telepathic.Converters"
+             x:Class="Telepathic.App"><Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/AppStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Converters for our cosmic mission! -->
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:CombinedTasksConverter x:Key="CombinedTasksConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

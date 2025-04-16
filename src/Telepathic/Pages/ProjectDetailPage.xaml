@@ -87,42 +87,26 @@
                         ItemsSource="{Binding Categories}"
                         SelectedItem="{Binding Category}"
                         SelectedIndex="{Binding CategoryIndex}" />
-                </sf:SfTextInputLayout>
-
+                </sf:SfTextInputLayout>                
+                
                 <controls:ActivityIndicatorView 
                             IsVisible="{Binding IsBusy}"
                             IsRunning="{Binding IsBusy}"
-                            HorizontalOptions="Start"
+                            HorizontalOptions="Fill"
                             Title="{Binding BusyTitle}" 
                             Detail="{Binding BusyDetails}"
-                            WidthRequest="490"
-                            HeightRequest="100"                                 
+                            MinimumHeightRequest="100"                                 
                             TitleTextColor="#4d999999"
-                            DetailTextColor="{toolkit:AppThemeResource TextOnBackground}"
+                            DetailTextColor="{toolkit:AppThemeResource PlaceholderColor}"
                              />
-
-                <!-- BEGIN: AI Recommendations Section -->
-                <VerticalStackLayout Spacing="8" IsVisible="{Binding HasRecommendations}">
-                    <Border Background="{toolkit:AppThemeResource SecondaryBackground}" Padding="12" StrokeShape="RoundRectangle 12">
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Recommended Tasks" FontAttributes="Bold" FontSize="Medium"/>
-                            <Button Text="Accept All" Command="{Binding AcceptAllRecommendationsCommand}" 
-                                IsEnabled="{Binding HasRecommendedTasks}"/>
-                            <CollectionView ItemsSource="{Binding RecommendedTasks}" Margin="0,8,0,0">
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate x:DataType="models:ProjectTask">
-                                        <Grid ColumnDefinitions="*,Auto" Padding="0,4">
-                                            <Label Text="{Binding Title}" VerticalOptions="Center" TextColor="White"/>
-                                            <Button Text="Accept" Command="{Binding Source={RelativeSource AncestorType={x:Type pageModels:ProjectDetailPageModel}}, Path=AcceptRecommendationCommand}" 
-                                                CommandParameter="{Binding .}" Grid.Column="1"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                        </VerticalStackLayout>
-                    </Border>
-                </VerticalStackLayout>
-                <!-- END: AI Recommendations Section -->
+                
+                <!-- "Accept All" recommendation button - only shown when recommendations exist -->
+                <Button 
+                    Text="Accept All Recommendations" 
+                    Command="{Binding AcceptAllRecommendationsCommand}" 
+                    IsVisible="{Binding HasRecommendedTasks}"
+                    HorizontalOptions="Start" />
+                             
 
                 <Label 
                     Text="Icon" 
@@ -203,13 +187,21 @@
                         IsVisible="{Binding HasCompletedTasks}"
                         Command="{Binding CleanTasksCommand}"
                         />
-                </Grid>
+                </Grid>                
                 <VerticalStackLayout 
-                    Spacing="{StaticResource LayoutSpacing}"
-                    BindableLayout.ItemsSource="{Binding Tasks}">
+                    Spacing="{StaticResource LayoutSpacing}">
+                    <!-- Combined list of regular tasks -->
+                    <BindableLayout.ItemsSource>
+                        <MultiBinding Converter="{StaticResource CombinedTasksConverter}">
+                            <Binding Path="Tasks" />
+                            <Binding Path="RecommendedTasks" />
+                        </MultiBinding>
+                    </BindableLayout.ItemsSource>
                     <BindableLayout.ItemTemplate>
                         <DataTemplate>
-                            <controls:TaskView TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:ProjectDetailPageModel}}, x:DataType=pageModels:ProjectDetailPageModel}" />
+                            <controls:TaskView 
+                                TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:ProjectDetailPageModel}}, x:DataType=pageModels:ProjectDetailPageModel}" 
+                                AcceptRecommendationCommand="{Binding AcceptRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:ProjectDetailPageModel}}, x:DataType=pageModels:ProjectDetailPageModel}" />
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>

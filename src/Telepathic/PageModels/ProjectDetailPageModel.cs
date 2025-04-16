@@ -17,8 +17,6 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly IChatClient _chatClient;
 
-	private ObservableCollection<ProjectTask> _recommendedTasks = new();
-	public ReadOnlyObservableCollection<ProjectTask> RecommendedTasks { get; }
 	[ObservableProperty]
 	private bool _hasRecommendations;
 
@@ -30,6 +28,9 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 
 	[ObservableProperty]
 	private List<ProjectTask> _tasks = [];
+
+	[ObservableProperty]
+	private List<ProjectTask> _recommendedTasks = [];
 
 	[ObservableProperty]
 	private List<Category> _categories = [];
@@ -83,7 +84,7 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 		_chatClient = chatClient;
 
 		Tasks = [];
-		RecommendedTasks = new ReadOnlyObservableCollection<ProjectTask>(_recommendedTasks);
+		RecommendedTasks = [];
 	}
 
 	partial void OnNameChanged(string value)
@@ -130,12 +131,13 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 					Category = bestCategory;
 					CategoryIndex = Categories.IndexOf(bestCategory);
 				}
-				_recommendedTasks.Clear();
+				var recommendedTasks = new List<ProjectTask>();
 				foreach (var t in rec.Tasks)
 				{
-					_recommendedTasks.Add(new ProjectTask { Title = t });
+					recommendedTasks.Add(new ProjectTask { Title = t, IsRecommendation = true });
 				}
-				HasRecommendations = _recommendedTasks.Count > 0;
+				RecommendedTasks = recommendedTasks;
+				HasRecommendations = RecommendedTasks.Count > 0;
 			}
 		}
 		catch (Exception ex)
@@ -299,7 +301,6 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 				}
 			}
 		}
-
 		foreach (var task in _project.Tasks)
 		{
 			if (task.ID == 0)
@@ -308,7 +309,19 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 				await _taskRepository.SaveItemAsync(task);
 			}
 		}
+		// Save any recommended tasks that the user has accepted
+		foreach (var recommendedTask in RecommendedTasks.Where(t => t.IsRecommendation && t.IsAccepted))
+		{
+			// Once we save it as part of the project, it's no longer just a recommendation
+			recommendedTask.IsRecommendation = false;
+			recommendedTask.ProjectID = _project.ID;
+			_project.Tasks.Add(recommendedTask);
+			await _taskRepository.SaveItemAsync(recommendedTask);
+		}
 
+		// Remove accepted recommendations
+		RecommendedTasks = RecommendedTasks.Where(t => !t.IsAccepted).ToList();
+		
 		await Shell.Current.GoToAsync("..");
 		await AppShell.DisplayToastAsync("Project saved");
 	}
