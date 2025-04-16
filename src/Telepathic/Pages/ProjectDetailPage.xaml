@@ -89,6 +89,19 @@
                         SelectedIndex="{Binding CategoryIndex}" />
                 </sf:SfTextInputLayout>
 
+                <controls:ActivityIndicatorView 
+                            IsVisible="{Binding IsBusy}"
+                            IsRunning="{Binding IsBusy}"
+                            HorizontalOptions="Start"
+                            Title="{Binding BusyTitle}" 
+                            Detail="{Binding BusyDetails}"
+                            WidthRequest="490"
+                            HeightRequest="100"                                 
+                            TitleTextColor="#4d999999"
+                            DetailTextColor="{toolkit:AppThemeResource TextOnBackground}"
+                            ShimmerStartColor="#FFFFFF" 
+                            ShimmerEndColor="#FFFFFF" />
+
                 <!-- BEGIN: AI Recommendations Section -->
                 <VerticalStackLayout Spacing="8" IsVisible="{Binding HasRecommendations}">
                     <Border Background="{toolkit:AppThemeResource SecondaryBackground}" Padding="12" StrokeShape="RoundRectangle 12">

@@ -50,6 +50,12 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	bool _isBusy;
 
 	[ObservableProperty]
+	string _busyTitle;
+
+	[ObservableProperty]
+	string _busyDetails;
+
+	[ObservableProperty]
 	private List<string> _icons =
 	[
 		FluentUI.ribbon_24_regular,
@@ -99,11 +105,22 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	{
 		try
 		{
-			IsBusy = true;
 			var categoryTitles = Categories?.Select(c => c.Title).ToList() ?? new List<string>();
+
+			IsBusy = true;
+			BusyTitle = "Getting task recommendations...";
+			BusyDetails = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, looking up tasks.";
+			
 			var prompt = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, pick the best matching category and suggest 3-7 tasks for this project.";// Respond as JSON: {{\"category\":\"category name\",\"tasks\":[\"task1\",\"task2\"]}}
 
+			await Task.Delay(2000);
+
 			var response = await _chatClient.GetResponseAsync<RecommendationResponse>(prompt);
+
+			BusyDetails = "Processing the recommendations.";
+
+			await Task.Delay(2000);
+
 			if (response?.Result != null)
 			{
 				var rec = response.Result;

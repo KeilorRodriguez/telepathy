@@ -41,6 +41,17 @@
                 <ScrollView>
                     <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}" Padding="{StaticResource LayoutPadding}">
                         <controls:CategoryChart />
+                        <!-- <controls:AnimatedGradientText 
+                            HorizontalOptions="Start"
+                            Text="Analyzing new controls" 
+                            HeightRequest="40" 
+                            WidthRequest="350"
+                            IsEnabled="True"
+                            IsVisible="True"
+                            ShowDebugBackground="False"
+                             /> -->
+                                
+                        <!-- Activity Indicator with properly bound visibility -->
                         <Label Text="Projects" Style="{StaticResource Title2}"/>
                         <ScrollView Orientation="Horizontal" Margin="-30,0">
                             <HorizontalStackLayout 
