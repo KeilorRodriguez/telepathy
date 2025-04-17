@@ -57,7 +57,8 @@ namespace Telepathic.Pages.Controls
                 // Restore the stroke color
                 this.SetValue(StrokeProperty, originalStroke);
 
-                // Draw our custom gradient border on top
+                // Draw our custom gradient border AFTER the base drawing
+                // This ensures the content is drawn first and our border is on top
                 DrawCustomBorder(canvas, dirtyRect);
             }
             else
@@ -77,13 +78,6 @@ namespace Telepathic.Pages.Controls
             
             canvas.SaveState();
             
-            // Handle RTL layouts - checking TextAlignment instead of using IsRTL
-            // if (HorizontalTextAlignment == TextAlignment.End)
-            // {
-            //     canvas.Translate((float)Width, 0);
-            //     canvas.Scale(-1, 1);
-            // }
-
             // Set the stroke size based on focus state - use IsFocused instead of IsLayoutFocused
             float strokeSize = (float)(IsFocused ? FocusedStrokeThickness : UnfocusedStrokeThickness);
             canvas.StrokeSize = strokeSize;
@@ -144,15 +138,59 @@ namespace Telepathic.Pages.Controls
             if (diameter > rect.Width) diameter = rect.Width;
             if (diameter > rect.Height) diameter = rect.Height;
             
-            // Draw top line (between the rounded corners)
-            RectF topLine = new RectF(
-                x + cornerRadius, 
-                y,
-                rect.Width - diameter, 
-                strokeWidth
-            );
-            canvas.SetFillPaint(StrokeBrush, topLine);
-            canvas.FillRectangle(topLine);
+            // Only show hint gap when control is focused or has text
+            bool shouldShowHintGap = ContainerType == ContainerType.Outlined && 
+                                    !string.IsNullOrEmpty(Hint) &&
+                                    (IsHintAlwaysFloated || 
+                                    (Content is Entry entry && !string.IsNullOrEmpty(entry.Text)) ||
+                                    IsFocused);
+            
+            if (shouldShowHintGap)
+            {
+                // Calculate hint text width with better precision
+                float hintWidth = Hint.Length * 9f; // Improved width calculation
+                float gapStart = x + 8;
+                float gapWidth = hintWidth + 16; // Add extra padding around text
+                
+                // Draw top line with a gap for the hint text
+                // First part of top line (before gap)
+                RectF topLine1 = new RectF(
+                    x + cornerRadius, 
+                    y,
+                    gapStart - x - cornerRadius,
+                    strokeWidth
+                );
+                if (topLine1.Width > 0)
+                {
+                    canvas.SetFillPaint(StrokeBrush, topLine1);
+                    canvas.FillRectangle(topLine1);
+                }
+                
+                // Second part of top line (after gap)
+                RectF topLine2 = new RectF(
+                    gapStart + gapWidth, 
+                    y,
+                    right - cornerRadius - (gapStart + gapWidth),
+                    strokeWidth
+                );
+                if (topLine2.Width > 0)
+                {
+                    canvas.SetFillPaint(StrokeBrush, topLine2);
+                    canvas.FillRectangle(topLine2);
+                }
+            }
+            else 
+            {
+                // Draw complete top line (between the rounded corners)
+                RectF topLine = new RectF(
+                    x + cornerRadius, 
+                    y,
+                    rect.Width - diameter, 
+                    strokeWidth
+                );
+                canvas.SetFillPaint(StrokeBrush, topLine);
+                canvas.FillRectangle(topLine);
+            }
             
             // Draw right line (between the rounded corners)
             RectF rightLine = new RectF(
@@ -270,16 +308,39 @@ namespace Telepathic.Pages.Controls
             canvas.FillColor = Colors.Transparent;
             canvas.SetFillPaint(StrokeBrush, dirtyRect);
             
-            // Draw top line
-            canvas.FillRectangle(rect.X, rect.Y, rect.Width, strokeWidth);
+            // Only show gap for hint text when control is focused or has text
+            bool shouldShowHintGap = ContainerType == ContainerType.Outlined && 
+                                    !string.IsNullOrEmpty(Hint) &&
+                                    (IsHintAlwaysFloated || 
+                                    (Content is Entry entry && !string.IsNullOrEmpty(entry.Text)) ||
+                                    IsFocused);
             
-            // Draw right line
+            if (shouldShowHintGap)
+            {
+                // Calculate hint text width with better precision
+                float hintWidth = Hint.Length * 9f; // Improved width calculation
+                float gapStart = rect.X + 8;
+                float gapWidth = hintWidth + 16; // Add extra padding around text
+                
+                // First part of top line (before gap)
+                canvas.FillRectangle(rect.X, rect.Y, gapStart - rect.X, strokeWidth);
+                
+                // Second part of top line (after gap)
+                float secondPartWidth = rect.Width - (gapStart - rect.X) - gapWidth;
+                if (secondPartWidth > 0)
+                {
+                    canvas.FillRectangle(gapStart + gapWidth, rect.Y, secondPartWidth, strokeWidth);
+                }
+            }
+            else
+            {
+                // Draw full top line
+                canvas.FillRectangle(rect.X, rect.Y, rect.Width, strokeWidth);
+            }
+            
+            // Draw right, bottom and left sides
             canvas.FillRectangle(rect.X + rect.Width - strokeWidth, rect.Y, strokeWidth, rect.Height);
-            
-            // Draw bottom line
             canvas.FillRectangle(rect.X, rect.Y + rect.Height - strokeWidth, rect.Width, strokeWidth);
-            
-            // Draw left line
             canvas.FillRectangle(rect.X, rect.Y, strokeWidth, rect.Height);
         }
         
@@ -312,34 +373,84 @@ namespace Telepathic.Pages.Controls
         /// </summary>
         private RectF GetOutlineRectF()
         {
-            // Simplified rectangle calculation - we'll use standard padding and calculations
-            // instead of accessing internal properties
+            // Use the same constants as SfTextInputLayout
+            const float outlineBorderPadding = 8f; // THE MAGIC NUMBER FROM THE ANCIENT SCROLLS!
             
+            // Calculate dimensions that match the standard SfTextInputLayout
             float x, y, width, height;
-            float padding = 12f; // Standard padding
             
-            x = padding;
-            y = padding;
-            width = (float)(Width - (padding * 2));
-            height = (float)(Height - (padding * 2));
+            // Calculate leading/trailing view adjustments
+            float leadingWidth = 0;
+            if (ShowLeadingView && LeadingView != null)
+            {
+                // Add space for leading view
+                if (LeadingViewPosition == ViewPosition.Outside)
+                {
+                    leadingWidth = (float)LeadingView.Width + 12; // 12 is the standard padding
+                }
+            }
             
-            // Adjust for container type
+            float trailingWidth = 0;
+            if (ShowTrailingView && TrailingView != null)
+            {
+                // Add space for trailing view
+                if (TrailingViewPosition == ViewPosition.Outside)
+                {
+                    trailingWidth = (float)TrailingView.Width + 12; // 12 is the standard padding
+                }
+            }
+            
+            // Calculate the outline rectangle differently based on container type
             if (ContainerType == ContainerType.Outlined)
             {
-                // Give space for the hint text at the top
-                float hintHeight = 20f; // Approximation for hint text height 
-                y += hintHeight / 2;
-                height -= hintHeight;
+                // For outlined containers
+                x = leadingWidth + 2;
+                y = outlineBorderPadding + 2;
+                width = (float)Width - leadingWidth - trailingWidth - 4;
+                
+                // IMPROVED HEIGHT CALCULATION:
+                height = (float)Height;
+
+                // Calculate space needed for floating hint (when present)
+                if (!string.IsNullOrEmpty(Hint))
+                {
+                    // Estimate floating hint height based on typical font sizes and spacing
+                    // Font size is typically 12px with ~4px padding
+                    float hintHeight = 16f;
+                    height -= hintHeight;
+                }
+                
+                // Calculate space for helper/error text (when present)
+                if (!string.IsNullOrEmpty(HelperText) || !string.IsNullOrEmpty(ErrorText))
+                {
+                    // Helper/error text is typically 12px with ~4-8px padding
+                    float textHeight = 16f;
+                    height -= textHeight;
+                }
+                
+                // Apply the outline border padding (top and bottom)
+                height -= (outlineBorderPadding * 2);
             }
-            
-            // Adjust for helper/error text at the bottom
-            float helperTextPadding = 0;
-            if (!string.IsNullOrEmpty(HelperText) || !string.IsNullOrEmpty(ErrorText))
+            else
             {
-                helperTextPadding = 24f; // Approximation for helper/error text height
+                // For filled/none containers
+                x = leadingWidth + 2;
+                y = 0;
+                width = (float)Width - leadingWidth - trailingWidth - 4;
+                height = (float)Height;
+                
+                // Adjust for helper/error text
+                if (!string.IsNullOrEmpty(HelperText) || !string.IsNullOrEmpty(ErrorText))
+                {
+                    height -= 20f; // Height for helper/error text area
+                }
+                
+                // Adjust for filled container type (no outline, just bottom line)
+                if (ContainerType == ContainerType.Filled)
+                {
+                    height -= 4f; // Small adjustment for baseline position
+                }
             }
-            
-            height -= helperTextPadding;
             
             return new RectF(x, y, width, height);
         }
@@ -349,19 +460,50 @@ namespace Telepathic.Pages.Controls
         /// </summary>
         private void GetBaseLinePoints(out PointF start, out PointF end)
         {
-            float padding = 12f; // Standard padding
-            float helperTextPadding = 0;
+            // For filled or none container types, only draw the bottom line
+            float leadingWidth = GetLeftViewPadding();
+            float trailingWidth = GetRightViewPadding();
             
-            // Adjust for helper/error text at the bottom
+            float y = (float)Height - 24f; // Position baseline slightly higher to match standard
+            
+            // Adjust for helper/error text
             if (!string.IsNullOrEmpty(HelperText) || !string.IsNullOrEmpty(ErrorText))
             {
-                helperTextPadding = 24f; // Approximation for helper/error text height
+                y -= 20f; // Standard height for helper/error text
             }
             
-            float y = (float)(Height - padding - helperTextPadding);
+            start = new PointF(leadingWidth, y);
+            end = new PointF((float)Width - trailingWidth, y);
+        }
+        
+        /// <summary>
+        /// Helper method to get padding for views on left side
+        /// </summary>
+        private float GetLeftViewPadding()
+        {
+            float padding = 4f; // Standard padding
             
-            start = new PointF(padding, y);
-            end = new PointF((float)(Width - padding), y);
+            if (ShowLeadingView && LeadingView != null && LeadingViewPosition == ViewPosition.Outside)
+            {
+                padding += (float)LeadingView.Width + 8f;
+            }
+            
+            return padding;
+        }
+
+        /// <summary>
+        /// Helper method to get padding for views on right side
+        /// </summary>
+        private float GetRightViewPadding()
+        {
+            float padding = 4f; // Standard padding
+            
+            if (ShowTrailingView && TrailingView != null && TrailingViewPosition == ViewPosition.Outside)
+            {
+                padding += (float)TrailingView.Width + 8f;
+            }
+            
+            return padding;
         }
     }
 }
