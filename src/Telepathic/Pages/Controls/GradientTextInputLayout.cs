@@ -1,6 +1,7 @@
 using Microsoft.Maui.Graphics;
 using Syncfusion.Maui.Toolkit.TextInputLayout;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Telepathic.Pages.Controls
 {
@@ -79,7 +80,7 @@ namespace Telepathic.Pages.Controls
             canvas.SaveState();
             
             // Set the stroke size based on focus state - use IsFocused instead of IsLayoutFocused
-            float strokeSize = (float)(IsFocused ? FocusedStrokeThickness : UnfocusedStrokeThickness);
+            float strokeSize = (float)(Content.IsFocused ? FocusedStrokeThickness : UnfocusedStrokeThickness);
             canvas.StrokeSize = strokeSize;
             
             // For outlined container type
@@ -142,7 +143,7 @@ namespace Telepathic.Pages.Controls
             bool shouldShowHintGap = ContainerType == ContainerType.Outlined && 
                                     !string.IsNullOrEmpty(Hint) &&
                                     ShowHint &&
-                                    (IsFocused || 
+                                    (Content.IsFocused || 
                                      IsHintAlwaysFloated || 
                                      (Content is Entry entry && !string.IsNullOrEmpty(entry.Text)));
             
@@ -313,7 +314,7 @@ namespace Telepathic.Pages.Controls
             bool shouldShowHintGap = ContainerType == ContainerType.Outlined && 
                                     !string.IsNullOrEmpty(Hint) &&
                                     ShowHint &&
-                                    (IsFocused || 
+                                    (Content.IsFocused || 
                                      IsHintAlwaysFloated || 
                                      (Content is Entry entry && !string.IsNullOrEmpty(entry.Text)));
             
