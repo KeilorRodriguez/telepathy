@@ -138,19 +138,20 @@ namespace Telepathic.Pages.Controls
             if (diameter > rect.Width) diameter = rect.Width;
             if (diameter > rect.Height) diameter = rect.Height;
             
-            // Only show hint gap when control is focused or has text
+            // Only show hint gap when the hint is actually floating above the input
             bool shouldShowHintGap = ContainerType == ContainerType.Outlined && 
                                     !string.IsNullOrEmpty(Hint) &&
-                                    (IsHintAlwaysFloated || 
-                                    (Content is Entry entry && !string.IsNullOrEmpty(entry.Text)) ||
-                                    IsFocused);
+                                    ShowHint &&
+                                    (IsFocused || 
+                                     IsHintAlwaysFloated || 
+                                     (Content is Entry entry && !string.IsNullOrEmpty(entry.Text)));
             
             if (shouldShowHintGap)
             {
                 // Calculate hint text width with better precision
                 float hintWidth = Hint.Length * 9f; // Improved width calculation
-                float gapStart = x + 8;
-                float gapWidth = hintWidth + 16; // Add extra padding around text
+                float gapStart = x + 12;
+                float gapWidth = hintWidth + 24; // Add extra padding around text
                 
                 // Draw top line with a gap for the hint text
                 // First part of top line (before gap)
@@ -308,12 +309,13 @@ namespace Telepathic.Pages.Controls
             canvas.FillColor = Colors.Transparent;
             canvas.SetFillPaint(StrokeBrush, dirtyRect);
             
-            // Only show gap for hint text when control is focused or has text
+            // Only show hint gap when the hint is actually floating above the input
             bool shouldShowHintGap = ContainerType == ContainerType.Outlined && 
                                     !string.IsNullOrEmpty(Hint) &&
-                                    (IsHintAlwaysFloated || 
-                                    (Content is Entry entry && !string.IsNullOrEmpty(entry.Text)) ||
-                                    IsFocused);
+                                    ShowHint &&
+                                    (IsFocused || 
+                                     IsHintAlwaysFloated || 
+                                     (Content is Entry entry && !string.IsNullOrEmpty(entry.Text)));
             
             if (shouldShowHintGap)
             {
