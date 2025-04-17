@@ -53,7 +53,7 @@
             SelectedTagTemplate="{StaticResource SelectedTagTemplate}"/>
 
         <toolkit:BoolToObjectConverter x:Key="IsTelepathyEnabledConverter" 
-                                          TrueObject="{StaticResource Primary}" 
+                                          TrueObject="{StaticResource AIBrush}" 
                                           FalseObject="{StaticResource White}" />
     </ContentPage.Resources>
 
@@ -69,8 +69,9 @@
     <Grid>
         <ScrollView>
             <VerticalStackLayout Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
-                <sf:SfTextInputLayout 
-                    Stroke="{Binding IsTelepathyEnabled,Converter={StaticResource IsTelepathyEnabledConverter}}" 
+                <controls:GradientTextInputLayout 
+                    ContainerType="Outlined"
+                    StrokeBrush="{Binding IsTelepathyEnabled,Converter={StaticResource IsTelepathyEnabledConverter}}" 
                     Hint="Name" >
                     <Entry 
                         Text="{Binding Name}">
@@ -78,7 +79,7 @@
                             <toolkit:EventToCommandBehavior EventName="Unfocused" Command="{Binding NameUnfocusedCommand}"/>
                         </Entry.Behaviors>
                     </Entry>
-                </sf:SfTextInputLayout>
+                </controls:GradientTextInputLayout>
 
                 <sf:SfTextInputLayout 
                     Hint="Description">
