@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using Telepathic.Models;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Extensions.AI;
+using System.Diagnostics;
 
 namespace Telepathic.PageModels;
 
@@ -574,30 +575,48 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 				
 				sb.AppendLine($"- Task '{task.Title}', Project: '{projectName}', Due: {(task.DueDate.HasValue ? task.DueDate.Value.ToString("d") : "No due date")}, Priority: {task.Priority}");
 			}
-			
-			// Instructions for the AI
+					// Instructions for the AI
 			sb.AppendLine("\nINSTRUCTIONS:");
-			sb.AppendLine("Based on all the context above, identify which tasks should be prioritized right now. Consider:");
+			sb.AppendLine($"Based on all the context above, identify which tasks should be prioritized for the NEXT {PRIORITY_CHECK_HOURS} HOURS ONLY, starting from the current time ({now:t}). Consider:");
 			sb.AppendLine("1. Tasks that are due soon or today");
-			sb.AppendLine("2. Tasks that relate to upcoming calendar events");
+			sb.AppendLine("2. Tasks that relate to upcoming calendar events in the next few hours");
 			sb.AppendLine("3. Tasks that might be relevant to my current location");
 			sb.AppendLine("4. Tasks that align with my personal preferences in the 'About Me' section");
 			sb.AppendLine("5. Only include uncompleted tasks");
+			sb.AppendLine("6. ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");
+			sb.AppendLine("7. For each task you prioritize, provide a brief reason WHY it's being prioritized now");
+			
 			sb.AppendLine("\nRETURN FORMAT:");
-			sb.AppendLine("Return a JSON object with a single property 'priorityTaskIds' that contains an array of task IDs (as integers) that should be prioritized. Example:");
-			sb.AppendLine("{ \"priorityTaskIds\": [1, 2, 3] }");
+			sb.AppendLine("Return a JSON object with the following properties:");
+			sb.AppendLine("1. 'priorityTaskIds': An array of task IDs (as integers) that should be prioritized");
+			sb.AppendLine("2. 'taskReasons': A dictionary mapping task IDs (as strings) to reasons (as strings) explaining why each task is prioritized");
+			sb.AppendLine("Example: { \"priorityTaskIds\": [1, 2, 3], \"taskReasons\": {\"1\": \"Due today and matches your morning routine\", \"2\": \"Related to your upcoming meeting at 11am\", \"3\": \"You're near the location where this task needs to be done\"} }");
 			
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 					// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
 			if (_chatClient != null)
 			{
 				try 
-				{
-					var apiResponse = await _chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());					if (apiResponse?.Result?.PriorityTaskIds != null)
+				{					var apiResponse = await _chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
+					if (apiResponse?.Result?.PriorityTaskIds != null)
 					{
 						// Get the priority tasks
 						var priorityIds = new HashSet<int>(apiResponse.Result.PriorityTaskIds);
 						PriorityTasks = Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted).ToList();
+						
+						// Set the reasoning for each prioritized task
+						if (apiResponse.Result.TaskReasons != null)
+						{
+							foreach (var task in PriorityTasks)
+							{
+								if (apiResponse.Result.TaskReasons.TryGetValue(task.ID.ToString(), out var reason))
+								{
+									task.PriorityReasoning = reason;
+									Debug.WriteLine($"Task '{task.Title}' prioritized because: {reason}");
+								}
+							}
+						}
+						
 						HasPriorityTasks = PriorityTasks.Any();
 						
 						// Record when we last checked priorities
@@ -632,10 +651,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		else
 			return "Night";
 	}
-	
-	private class PriorityTaskResult
+		private class PriorityTaskResult
 	{
 		[System.Text.Json.Serialization.JsonPropertyName("priorityTaskIds")]
 		public List<int>? PriorityTaskIds { get; set; }
+		
+		[System.Text.Json.Serialization.JsonPropertyName("taskReasons")]
+		public Dictionary<string, string>? TaskReasons { get; set; }
 	}
 }

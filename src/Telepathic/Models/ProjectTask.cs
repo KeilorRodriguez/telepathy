@@ -9,6 +9,9 @@ public class ProjectTask
 	public bool IsCompleted { get; set; }
 	public DateTime? DueDate { get; set; }
 	public int Priority { get; set; }
+	
+	[JsonIgnore]
+	public string PriorityReasoning { get; set; } = string.Empty;
 
 	[JsonIgnore]
 	public int ProjectID { get; set; }
