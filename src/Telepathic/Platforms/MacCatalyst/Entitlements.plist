@@ -9,6 +9,8 @@
         <true/>
         <key>com.apple.security.personal-information.calendar</key>
         <true/>
+        <key>com.apple.security.personal-information.location</key>
+        <true/>
     </dict>
 </plist>
 

@@ -8,6 +8,7 @@
              xmlns:pullToRefresh="clr-namespace:Syncfusion.Maui.Toolkit.PullToRefresh;assembly=Syncfusion.Maui.Toolkit"
              xmlns:bottomSheet="clr-namespace:Syncfusion.Maui.Toolkit.BottomSheet;assembly=Syncfusion.Maui.Toolkit"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:aloha="clr-namespace:AlohaKit.Animations;assembly=AlohaKit.Animations"
              x:Class="Telepathic.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
              Title="{Binding Today}">
@@ -28,6 +29,8 @@
             <toolkit:BoolToObjectConverter x:Key="TelepathyIconConverter" 
                                           TrueObject="{StaticResource IconSettingsEnabled}" 
                                           FalseObject="{StaticResource IconSettings}" />
+            <toolkit:MathExpressionConverter x:Key="MathExpressionConverter" />
+            <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>    <ContentPage.ToolbarItems>
         <ToolbarItem 
@@ -43,9 +46,14 @@
             IsRefreshing="{Binding IsRefreshing}"
             RefreshCommand="{Binding RefreshCommand}">
             <pullToRefresh:SfPullToRefresh.PullableContent>
-                <ScrollView>
-                    <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}" Padding="{StaticResource LayoutPadding}">
-                        <controls:CategoryChart />
+                <ScrollView x:Name="ScrollView">
+                    <VisualElement.Behaviors>
+                        <aloha:ScrollViewScrollBehavior x:Name="ScrollBehavior"/>
+                    </VisualElement.Behaviors>
+                    <VerticalStackLayout 
+                        x:Name="ScrollContent"
+                        Spacing="{StaticResource LayoutSpacing}" Padding="{StaticResource LayoutPadding}">
+                        <controls:CategoryChart />                        
 
                         <!-- <controls:ActivityIndicatorView 
                             HorizontalOptions="Start"
@@ -59,6 +67,7 @@
                             HorizontalOptions="Start"
                             Text="Analyzing new controls" 
                             
+
                             WidthRequest="350"
                             HeightRequest="40"
                             GradientStartColor="#4a90e2" 
@@ -74,6 +83,7 @@
                             GradientEndColor="#9b59b6"
                             /> -->
                                 
+
                         <!-- Activity Indicator with properly bound visibility -->
                         <Label Text="Projects" Style="{StaticResource Title2}"/>
                         <ScrollView Orientation="Horizontal" Margin="-30,0">
@@ -112,6 +122,9 @@
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
+
+                        
+
                     </VerticalStackLayout>
                 </ScrollView>
             </pullToRefresh:SfPullToRefresh.PullableContent>
@@ -119,7 +132,49 @@
 
         <controls:AddButton 
             IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
-            Command="{Binding AddTaskCommand}" />
+            Command="{Binding AddTaskCommand}">            
+                <VisualElement.Behaviors>
+                    <aloha:AnimateProgressDouble
+                        x:Name="AddButtonAnimation"
+                        TargetProperty="VisualElement.Opacity"
+                        Progress="{Binding ScrollY, Source={x:Reference ScrollBehavior}, x:DataType=aloha:ScrollViewScrollBehavior}" 
+                        Minimum="{Binding Maximum, Source={x:Reference AddButtonAnimation}, x:DataType=aloha:AnimateProgressDouble,Converter={StaticResource MathExpressionConverter}, ConverterParameter='x-100', Mode=OneWay}"                        
+                        From="1"
+                        To="0">                        
+                        <aloha:AnimateProgressDouble.Maximum>
+                            <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
+                                ConverterParameter="x1-x0">
+                                <Binding Path="Height" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
+                                <Binding Path="Height" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
+                            </MultiBinding>
+                        </aloha:AnimateProgressDouble.Maximum>
+                    </aloha:AnimateProgressDouble>
+                </VisualElement.Behaviors>
+                                
+            </controls:AddButton>
+
+            <VerticalStackLayout
+                IsVisible="False"
+                Background="Black"
+                VerticalOptions="End"
+                HorizontalOptions="End"
+                Margin="0,0,30,300">
+                <Label Text="{Binding Height, Source={x:Reference ScrollView},x:DataType=ScrollView, StringFormat='ScrollView: {0}'}" />
+                
+                <Label Text="{Binding Height, Source={x:Reference ScrollContent},x:DataType=VerticalStackLayout, StringFormat='ScrollContent: {0}'}" />
+                <Label Text="{Binding Maximum, Source={x:Reference AddButtonAnimation}, x:DataType=aloha:AnimateProgressDouble,Converter={StaticResource MathExpressionConverter}, ConverterParameter='x-100', StringFormat='Min: {0}'}" />
+                <Label>
+                    <Label.Text>
+                        <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
+                            ConverterParameter="x1-x0" StringFormat="Max: {0}">
+                            <Binding Path="Height" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
+                            <Binding Path="Height" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
+                        </MultiBinding>
+                    </Label.Text>
+                </Label>
+                <Label Text="{Binding ScrollY, Source={x:Reference ScrollBehavior}, StringFormat='ScrollY: {0}', Mode=OneWay}" />
+                <!-- <Label Text="{Binding ContentSize.Height, Source={x:Reference ScrollView}, StringFormat='ContentSize.Height: {0}'}" /> -->
+            </VerticalStackLayout>
 
             <!-- Settings Bottom Sheet -->
         <bottomSheet:SfBottomSheet x:Name="SettingsSheet"
@@ -135,6 +190,30 @@
                         
                         <sf:SfTextInputLayout IsHintAlwaysFloated="True" Hint="Enable Telepathy" Padding="8">
                             <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}" OnColor="{toolkit:AppThemeResource Primary}" />
+                        </sf:SfTextInputLayout>
+
+                        <!-- Location Services -->
+                        <sf:SfTextInputLayout IsHintAlwaysFloated="True" Hint="Enable Location Services" Padding="8">
+                            <VerticalStackLayout Spacing="8">
+                                <Switch IsToggled="{Binding IsLocationEnabled, Mode=TwoWay}" OnColor="{toolkit:AppThemeResource Primary}" />
+                                
+                                <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding IsLocationEnabled}">
+                                    <Label Text="{Binding CurrentLocation}" 
+                                           VerticalOptions="Center" 
+                                           Margin="0,8,0,0"/>
+                                    
+                                    <Button Grid.Column="1" 
+                                            Text="Refresh" 
+                                            Command="{Binding RefreshLocationCommand}"
+                                            IsVisible="{Binding IsLocationEnabled}"
+                                            IsEnabled="{Binding IsGettingLocation, Converter={StaticResource InvertedBoolConverter}}"
+                                            Margin="8,0,0,0"/>
+                                </Grid>
+                                
+                                <ActivityIndicator IsRunning="{Binding IsGettingLocation}" 
+                                                  IsVisible="{Binding IsGettingLocation}"
+                                                  HorizontalOptions="Start" />
+                            </VerticalStackLayout>
                         </sf:SfTextInputLayout>
 
                         <sf:SfTextInputLayout 
@@ -182,7 +261,7 @@
                         <sf:SfTextInputLayout 
                             Hint="About Me" >
                             <Editor Text="{Binding AboutMeText, Mode=TwoWay}" 
-                                HorizontalOptions="Start"
+                                HorizontalOptions="Fill"
                                 HeightRequest="100" 
                                 Placeholder="Tell me about yourself..." />
                         </sf:SfTextInputLayout>

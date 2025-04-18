@@ -4,6 +4,7 @@ using Microsoft.Maui.Storage;
 using Plugin.Maui.CalendarStore;
 using System.Collections.ObjectModel;
 using Telepathic.Models;
+using Microsoft.Maui.Devices.Sensors;
 
 namespace Telepathic.PageModels;
 
@@ -17,6 +18,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly SeedDataService _seedDataService;
 	private readonly ICalendarStore _calendarStore;
+	private CancellationTokenSource? _cancelTokenSource;
+	private bool _isCheckingLocation;
 
 	[ObservableProperty]
 	private List<CategoryChartData> _todoCategoryData = [];
@@ -63,6 +66,15 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	private bool _hasLoadedCalendars;
 
+	[ObservableProperty]
+	private bool _isLocationEnabled = Preferences.Default.Get("location_enabled", false);
+
+	[ObservableProperty]
+	private string _currentLocation = "Location not available";
+
+	[ObservableProperty]
+	private bool _isGettingLocation;
+
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
 
@@ -79,6 +91,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		
 		// Load saved calendar choices
 		LoadSavedCalendars();
+
+		// Initialize location if enabled
+		if (IsLocationEnabled)
+		{
+			_ = GetCurrentLocationAsync();
+		}
 	}
 
 	private async Task LoadData()
@@ -333,5 +351,67 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		CalendarButtonText = "Connect";
 		Preferences.Default.Set("calendar_connected", false);
 		await AppShell.DisplayToastAsync("All calendars disconnected!");
+	}
+
+	partial void OnIsLocationEnabledChanged(bool value)
+	{
+		Preferences.Default.Set("location_enabled", value);
+
+		if (value)
+		{
+			_ = GetCurrentLocationAsync();
+		}
+		else
+		{
+			CurrentLocation = "Location not available";
+			if (_cancelTokenSource != null && !_cancelTokenSource.IsCancellationRequested)
+				_cancelTokenSource.Cancel();
+		}
+	}
+
+	[RelayCommand]
+	public async Task RefreshLocationAsync()
+	{
+		if (IsLocationEnabled)
+		{
+			await GetCurrentLocationAsync();
+		}
+	}
+
+	public async Task GetCurrentLocationAsync()
+	{
+		try
+		{
+			IsGettingLocation = true;
+			_cancelTokenSource = new CancellationTokenSource();
+
+			var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(10));
+			var location = await Geolocation.GetLocationAsync(request, _cancelTokenSource.Token);
+
+			if (location != null)
+			{
+				CurrentLocation = $"Lat: {location.Latitude:F4}, Long: {location.Longitude:F4}";
+			}
+			else
+			{
+				CurrentLocation = "Location unavailable";
+			}
+		}
+		catch (FeatureNotSupportedException)
+		{
+			CurrentLocation = "Location not supported on this device";
+		}
+		catch (PermissionException)
+		{
+			CurrentLocation = "Location permission not granted";
+		}
+		catch (Exception ex)
+		{
+			CurrentLocation = $"Error: {ex.Message}";
+		}
+		finally
+		{
+			IsGettingLocation = false;
+		}
 	}
 }
