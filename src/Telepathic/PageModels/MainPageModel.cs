@@ -22,6 +22,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly IChatClient? _chatClient;
 	private CancellationTokenSource? _cancelTokenSource;
 	private bool _isCheckingLocation;
+	private DateTime _lastPriorityCheck = DateTime.MinValue;
+	private const int PRIORITY_CHECK_HOURS = 4;
 
 	[ObservableProperty]
 	private List<CategoryChartData> _todoCategoryData = [];
@@ -479,23 +481,37 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			IsGettingLocation = false;
 		}
 	}
-	
-	/// <summary>
+		/// <summary>
 	/// Analyzes tasks based on calendar events, location, time of day, and personal preferences
 	/// to identify priority tasks that should be highlighted to the user.
 	/// </summary>
 	private async Task AnalyzeAndPrioritizeTasks()
 	{
-		// Reset priority tasks
-		PriorityTasks = [];
-		HasPriorityTasks = false;
-		
-		// Only proceed if telepathy is enabled and we have an API client
+		// Early exit if telepathy is disabled or we're missing the API client
 		if (!IsTelepathyEnabled || _chatClient == null || string.IsNullOrWhiteSpace(OpenAIApiKey))
 		{
+			PriorityTasks = [];
+			HasPriorityTasks = false;
 			IsAnalyzingContext = false;
 			return;
 		}
+		
+		// Check if we already have priority tasks that aren't completed yet
+		var incompletePriorityTasks = PriorityTasks.Where(t => !t.IsCompleted).ToList();
+		var timeToRecheck = (DateTime.Now - _lastPriorityCheck).TotalHours >= PRIORITY_CHECK_HOURS;
+		
+		// Don't reanalyze if we have incomplete priority tasks and it hasn't been 4 hours
+		if (incompletePriorityTasks.Any() && !timeToRecheck)
+		{
+			// Keep existing prioritized tasks
+			HasPriorityTasks = incompletePriorityTasks.Any();
+			PriorityTasks = incompletePriorityTasks;
+			return;
+		}
+		
+		// Continue with analysis - we need to generate new priority tasks
+		PriorityTasks = [];
+		HasPriorityTasks = false;
 		
 		try
 		{
@@ -577,13 +593,15 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				try 
 				{
-					var apiResponse = await _chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
-					if (apiResponse?.Result?.PriorityTaskIds != null)
+					var apiResponse = await _chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());					if (apiResponse?.Result?.PriorityTaskIds != null)
 					{
 						// Get the priority tasks
 						var priorityIds = new HashSet<int>(apiResponse.Result.PriorityTaskIds);
 						PriorityTasks = Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted).ToList();
 						HasPriorityTasks = PriorityTasks.Any();
+						
+						// Record when we last checked priorities
+						_lastPriorityCheck = DateTime.Now;
 					}
 				}
 				catch (Exception ex)
