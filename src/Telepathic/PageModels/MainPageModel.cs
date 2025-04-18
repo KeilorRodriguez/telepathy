@@ -34,7 +34,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	private List<ProjectTask> _tasks = [];
-	
+
 	[ObservableProperty]
 	private List<ProjectTask> _priorityTasks = [];
 
@@ -46,16 +46,16 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	bool _isRefreshing;
-	
+
 	[ObservableProperty]
 	bool _isAnalyzingContext;
-	
+
 	[ObservableProperty]
 	string _analysisStatusTitle = "Scanning your task universe";
-	
+
 	[ObservableProperty]
 	string _analysisStatusDetail = "Gathering your location, time, and calendar events to determine which tasks require your immediate attention...";
-	
+
 	[ObservableProperty]
 	bool _hasPriorityTasks;
 
@@ -109,7 +109,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_seedDataService = seedDataService;
 		_calendarStore = calendarStore;
 		_chatClient = chatClient;
-		
+
 		// Load saved calendar choices
 		LoadSavedCalendars();
 
@@ -119,30 +119,30 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			_ = GetCurrentLocationAsync();
 		}
 	}
-		/// <summary>
+	/// <summary>
 	/// Retrieves calendar events for the connected calendars for today
 	/// </summary>
 	private async Task<List<CalendarEvent>> GetCalendarEventsAsync()
 	{
 		var results = new List<CalendarEvent>();
-		
+
 		try
 		{
 			// Only proceed if we have selected calendars
 			if (!UserCalendars.Any(c => c.IsSelected))
 				return results;
-				
+
 			// Get events for today
 			var today = DateTime.Today;
 			var tomorrow = today.AddDays(1);
-			
+
 			// Get all calendars first
 			var calendars = await _calendarStore.GetCalendars();
-			
+
 			// Filter to only selected calendars by ID
 			var selectedCalendarIds = UserCalendars.Where(c => c.IsSelected).Select(c => c.Id).ToHashSet();
 			var selectedCalendars = calendars.Where(c => selectedCalendarIds.Contains(c.Id)).ToList();
-			
+
 			foreach (var calendar in selectedCalendars)
 			{
 				try
@@ -162,7 +162,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			_errorHandler.HandleError(ex);
 		}
-		
+
 		return results;
 	}
 
@@ -252,7 +252,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			await Refresh();
 		}
-		
+
 		// Analyze tasks based on context (location, time, calendar)
 		await AnalyzeAndPrioritizeTasks();
 	}
@@ -266,13 +266,13 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			// Synchronize the completion status
 			originalTask.IsCompleted = task.IsCompleted;
 		}
-		
+
 		// Save the updated task to the database
 		await _taskRepository.SaveItemAsync(originalTask ?? task);
-		
+
 		// Update UI
 		OnPropertyChanged(nameof(HasCompletedTasks));
-		
+
 		// Update priority tasks list if needed
 		var priorityTask = PriorityTasks.FirstOrDefault(t => t.ID == task.ID);
 		if (priorityTask != null && priorityTask != task)
@@ -317,7 +317,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		Preferences.Default.Set("openai_api_key", value);
 	}
-	
+
 	partial void OnAboutMeTextChanged(string value)
 	{
 		Preferences.Default.Set("about_me_text", value);
@@ -334,7 +334,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		Preferences.Default.Set("openai_api_key", OpenAIApiKey);
 		await AppShell.DisplayToastAsync("API Key saved!");
 	}
-	
+
 	private void LoadSavedCalendars()
 	{
 		var savedCalendarsJson = Preferences.Default.Get("saved_calendars", string.Empty);
@@ -348,13 +348,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 					UserCalendars = new ObservableCollection<CalendarInfo>(savedCalendars);
 					HasLoadedCalendars = true;
 				}
-			}			catch
+			}
+			catch
 			{
 				// Silent fail, will reload calendars
 			}
 		}
 	}
-	
+
 	private void SaveSelectedCalendars()
 	{
 		var calendarsJson = System.Text.Json.JsonSerializer.Serialize(UserCalendars);
@@ -366,26 +367,26 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		if (IsLoadingCalendars)
 			return;
-			
+
 		try
 		{
 			IsLoadingCalendars = true;
-			
+
 			var calendars = await _calendarStore.GetCalendars();
 			var tempCalendars = new List<CalendarInfo>();
-			
+
 			// If we already have saved calendars, preserve selections
 			var existingCalendars = UserCalendars.ToDictionary(c => c.Id, c => c);
-			
+
 			foreach (var calendar in calendars)
 			{
 				bool isSelected = existingCalendars.ContainsKey(calendar.Id) && existingCalendars[calendar.Id].IsSelected;
 				tempCalendars.Add(new CalendarInfo(calendar.Id, calendar.Name, isSelected));
 			}
-			
+
 			UserCalendars = new ObservableCollection<CalendarInfo>(tempCalendars);
 			SaveSelectedCalendars();
-			
+
 			HasLoadedCalendars = true;
 			CalendarButtonText = UserCalendars.Any(c => c.IsSelected) ? "Manage Calendars" : "Connect";
 			Preferences.Default.Set("calendar_connected", UserCalendars.Any(c => c.IsSelected));
@@ -399,12 +400,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			IsLoadingCalendars = false;
 		}
 	}
-	
+
 	[RelayCommand]
 	private async Task ToggleCalendarSelection(CalendarInfo calendar)
 	{
 		SaveSelectedCalendars();
-		
+
 		CalendarButtonText = UserCalendars.Any(c => c.IsSelected) ? "Manage Calendars" : "Connect";
 		Preferences.Default.Set("calendar_connected", UserCalendars.Any(c => c.IsSelected));
 		await AppShell.DisplayToastAsync($"Calendar '{calendar.Name}' {(calendar.IsSelected ? "connected" : "disconnected")}!");
@@ -423,7 +424,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		// 	// We already have calendars, so this is just to show the calendar section
 		// }
 	}
-	
+
 	[RelayCommand]
 	private async Task DisconnectAllCalendars()
 	{
@@ -431,7 +432,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			calendar.IsSelected = false;
 		}
-		
+
 		SaveSelectedCalendars();
 		CalendarButtonText = "Connect";
 		Preferences.Default.Set("calendar_connected", false);
@@ -499,7 +500,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			IsGettingLocation = false;
 		}
 	}
-		/// <summary>
+	/// <summary>
 	/// Analyzes tasks based on calendar events, location, time of day, and personal preferences
 	/// to identify priority tasks that should be highlighted to the user.
 	/// </summary>
@@ -513,11 +514,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			IsAnalyzingContext = false;
 			return;
 		}
-		
+
 		// Check if we already have priority tasks that aren't completed yet
 		var incompletePriorityTasks = PriorityTasks.Where(t => !t.IsCompleted).ToList();
 		var timeToRecheck = (DateTime.Now - _lastPriorityCheck).TotalHours >= PRIORITY_CHECK_HOURS;
-		
+
 		// Don't reanalyze if we have incomplete priority tasks and it hasn't been 4 hours
 		if (incompletePriorityTasks.Any() && !timeToRecheck)
 		{
@@ -526,39 +527,39 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			PriorityTasks = incompletePriorityTasks;
 			return;
 		}
-		
+
 		// Continue with analysis - we need to generate new priority tasks
 		PriorityTasks = [];
 		HasPriorityTasks = false;
-		
+
 		try
 		{
 			IsAnalyzingContext = true;
 			AnalysisStatusTitle = "Scanning your task universe";
 			AnalysisStatusDetail = "Gathering your location, time, and calendar events to determine which tasks require your immediate attention...";
-			
+
 			// Get calendar events
 			var events = await GetCalendarEventsAsync();
 			AnalysisStatusDetail = "Analyzing calendar events and tasks...";
-			
+
 			// Create a context description for the AI
 			var sb = new System.Text.StringBuilder();
-			
+
 			// Add basic context information
 			sb.AppendLine("CONTEXT INFORMATION:");
-			
+
 			// Current time
 			var now = DateTime.Now;
 			sb.AppendLine($"Current Date and Time: {now}");
 			sb.AppendLine($"Day of Week: {now.DayOfWeek}");
 			sb.AppendLine($"Time of Day: {GetTimeOfDayDescription(now)}");
-			
+
 			// Location
 			if (IsLocationEnabled)
 			{
 				sb.AppendLine($"Current Location: {CurrentLocation}");
 			}
-			
+
 			// Calendar events
 			sb.AppendLine($"Calendar Events for Today ({events.Count}):");
 			if (events.Any())
@@ -572,14 +573,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				sb.AppendLine("- No calendar events for today");
 			}
-			
+
 			// About me
 			if (!string.IsNullOrWhiteSpace(AboutMeText))
 			{
 				sb.AppendLine("\nABOUT ME:");
 				sb.AppendLine(AboutMeText);
 			}
-					// Add only incomplete tasks - no need to process completed ones!
+			// Add only incomplete tasks - no need to process completed ones!
 			sb.AppendLine("\nACTIVE TASKS:");
 			foreach (var task in Tasks.Where(t => !t.IsCompleted))
 			{
@@ -589,10 +590,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 				{
 					projectName = project.Name;
 				}
-				
+
 				sb.AppendLine($"- Task '{task.Title}', Project: '{projectName}', Due: {(task.DueDate.HasValue ? task.DueDate.Value.ToString("d") : "No due date")}, Priority: {task.Priority}");
 			}
-					// Instructions for the AI
+			// Instructions for the AI
 			sb.AppendLine("\nINSTRUCTIONS:");
 			sb.AppendLine($"Based on all the context above, identify which tasks should be prioritized for the NEXT {PRIORITY_CHECK_HOURS} HOURS ONLY, starting from the current time ({now:t}). Consider:");
 			sb.AppendLine("1. Tasks that are due soon or today");
@@ -602,13 +603,13 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("5. Only include uncompleted tasks");
 			sb.AppendLine("6. ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");
 			sb.AppendLine("7. For each task you prioritize, provide a brief reason WHY it's being prioritized now");
-			
+
 			sb.AppendLine("\nRETURN FORMAT:");
 			sb.AppendLine("Return a JSON object with the following properties:");
 			sb.AppendLine("1. 'priorityTaskIds': An array of task IDs (as integers) that should be prioritized");
 			sb.AppendLine("2. 'taskReasons': A dictionary mapping task IDs (as strings) to reasons (as strings) explaining why each task is prioritized");
 			sb.AppendLine("Example: { \"priorityTaskIds\": [1, 2, 3], \"taskReasons\": {\"1\": \"Due today and matches your morning routine\", \"2\": \"Related to your upcoming meeting at 11am\", \"3\": \"You're near the location where this task needs to be done\"} }");
-			
+
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
 			if (_chatClient != null)
@@ -649,7 +650,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 					// Record when we last checked priorities
 					_lastPriorityCheck = DateTime.Now;
 				}
-				
+
 				catch (Exception ex)
 				{
 					System.Diagnostics.Debug.WriteLine($"Error calling AI for task prioritization: {ex.Message}");
@@ -665,7 +666,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			IsAnalyzingContext = false;
 		}
 	}
-	
+
 	private string GetTimeOfDayDescription(DateTime time)
 	{
 		var hour = time.Hour;
@@ -678,12 +679,18 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		else
 			return "Night";
 	}
-		private class PriorityTaskResult
+	private class PriorityTaskResult
 	{
 		[System.Text.Json.Serialization.JsonPropertyName("priorityTaskIds")]
 		public List<int>? PriorityTaskIds { get; set; }
-		
+
 		[System.Text.Json.Serialization.JsonPropertyName("taskReasons")]
 		public Dictionary<string, string>? TaskReasons { get; set; }
+	}
+
+	[RelayCommand]
+	private async Task VoiceRecord()
+	{
+		await AppShell.Current.GoToAsync("voice");
 	}
 }

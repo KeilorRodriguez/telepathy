@@ -119,6 +119,12 @@
                 Color="#8855FF"
                 Size="{StaticResource IconSize}" />
 
+        <FontImageSource x:Key="IconMicrophone"
+                Glyph="{x:Static f:FluentUI.mic_48_regular}"
+                FontFamily="{x:Static f:FluentUI.FontFamily}"
+                Color="{toolkit:AppThemeResource TextOnBackground}"
+                Size="{StaticResource IconSize}" />
+
     <Style TargetType="Label">
         <Setter Property="TextColor"
                 Value="{toolkit:AppThemeResource TextOnBackground}" />

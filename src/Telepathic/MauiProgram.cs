@@ -2,6 +2,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using OpenAI;
+using Plugin.Maui.Audio;
 using Plugin.Maui.CalendarStore;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using Syncfusion.Maui.Toolkit.Hosting;
@@ -21,7 +22,25 @@ public static class MauiProgram
 			.ConfigureMauiHandlers(handlers =>
 			{
 			})
-
+			.AddAudio(
+				playbackOptions =>
+				{
+#if IOS || MACCATALYST
+					playbackOptions.Category = AVFoundation.AVAudioSessionCategory.Playback;
+#endif
+#if ANDROID
+					playbackOptions.AudioContentType = Android.Media.AudioContentType.Music;
+					playbackOptions.AudioUsageKind = Android.Media.AudioUsageKind.Media;
+#endif
+				},
+				recordingOptions =>
+				{
+#if IOS || MACCATALYST
+					recordingOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
+					recordingOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
+					recordingOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.MixWithOthers;
+#endif
+				})
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -43,8 +62,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SeedDataService>();
 		builder.Services.AddSingleton<ModalErrorHandler>();
 		builder.Services.AddSingleton<MainPageModel>();
-		builder.Services.AddSingleton<ProjectListPageModel>();
-		builder.Services.AddSingleton<ManageMetaPageModel>();
+		builder.Services.AddSingleton<ProjectListPageModel>();		builder.Services.AddSingleton<ManageMetaPageModel>();
+		builder.Services.AddSingleton<IAudioService, AudioService>();
+		// builder.Services.AddSingleton(AudioManager.Current);
+		builder.Services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
 
 		var openAiApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
 		if (!string.IsNullOrEmpty(openAiApiKey))
@@ -53,9 +74,9 @@ public static class MauiProgram
 				.AddChatClient(new OpenAIClient(openAiApiKey).GetChatClient(model: "gpt-4o-mini").AsIChatClient())
 				.UseLogging();
 		}
-
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
+		builder.Services.AddTransientWithShellRoute<Pages.VoiceModalPage, PageModels.VoiceModalPageModel>("voice");
 		
 		return builder.Build();
 	}

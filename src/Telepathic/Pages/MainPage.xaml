@@ -189,7 +189,34 @@
                     </aloha:AnimateProgressDouble>
                 </VisualElement.Behaviors>
                                 
-            </controls:AddButton>
+        </controls:AddButton>
+
+        <ImageButton
+            VerticalOptions="End"
+            HorizontalOptions="End"
+            TranslationX="-100"
+            Source="{StaticResource IconSettings}" 
+            IsVisible="{Binding IsTelepathyEnabled}"
+            Command="{Binding VoiceRecordCommand}">            
+                <VisualElement.Behaviors>
+                    <aloha:AnimateProgressDouble
+                        x:Name="VoiceButtonAnimation"
+                        TargetProperty="VisualElement.Opacity"
+                        Progress="{Binding ScrollY, Source={x:Reference ScrollBehavior}, x:DataType=aloha:ScrollViewScrollBehavior}" 
+                        Minimum="{Binding Maximum, Source={x:Reference VoiceButtonAnimation}, x:DataType=aloha:AnimateProgressDouble,Converter={StaticResource MathExpressionConverter}, ConverterParameter='x-100', Mode=OneWay}"                        
+                        From="1"
+                        To="0">                        
+                        <aloha:AnimateProgressDouble.Maximum>
+                            <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
+                                ConverterParameter="x1-x0">
+                                <Binding Path="Height" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
+                                <Binding Path="Height" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
+                            </MultiBinding>
+                        </aloha:AnimateProgressDouble.Maximum>
+                    </aloha:AnimateProgressDouble>
+                </VisualElement.Behaviors>
+                                
+        </ImageButton>
 
             <VerticalStackLayout
                 IsVisible="False"

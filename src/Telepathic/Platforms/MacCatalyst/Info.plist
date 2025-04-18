@@ -50,5 +50,8 @@
 		<key>TemporaryFullAccuracyUsageDescription</key>
 		<string>This app wants your location to provide personalized recommendations.</string>
 	</dict>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs your permission to record audio.</string>
 </dict>
 </plist>
