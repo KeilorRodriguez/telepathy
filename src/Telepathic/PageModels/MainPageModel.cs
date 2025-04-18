@@ -317,7 +317,6 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[RelayCommand]
 	private async Task ToggleCalendarSelection(CalendarInfo calendar)
 	{
-		calendar.IsSelected = !calendar.IsSelected;
 		SaveSelectedCalendars();
 		
 		CalendarButtonText = UserCalendars.Any(c => c.IsSelected) ? "Manage Calendars" : "Connect";
