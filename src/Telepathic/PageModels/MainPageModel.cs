@@ -5,6 +5,7 @@ using Plugin.Maui.CalendarStore;
 using System.Collections.ObjectModel;
 using Telepathic.Models;
 using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Extensions.AI;
 
 namespace Telepathic.PageModels;
 
@@ -18,6 +19,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly SeedDataService _seedDataService;
 	private readonly ICalendarStore _calendarStore;
+	private readonly IChatClient? _chatClient;
 	private CancellationTokenSource? _cancelTokenSource;
 	private bool _isCheckingLocation;
 
@@ -29,6 +31,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	private List<ProjectTask> _tasks = [];
+	
+	[ObservableProperty]
+	private List<ProjectTask> _priorityTasks = [];
 
 	[ObservableProperty]
 	private List<Project> _projects = [];
@@ -38,6 +43,18 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	bool _isRefreshing;
+	
+	[ObservableProperty]
+	bool _isAnalyzingContext;
+	
+	[ObservableProperty]
+	string _analysisStatusTitle = "Scanning your task universe";
+	
+	[ObservableProperty]
+	string _analysisStatusDetail = "Gathering your location, time, and calendar events to determine which tasks require your immediate attention...";
+	
+	[ObservableProperty]
+	bool _hasPriorityTasks;
 
 	[ObservableProperty]
 	private string _today = DateTime.Now.ToString("dddd, MMM d");
@@ -80,7 +97,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
-		ICalendarStore calendarStore)
+		ICalendarStore calendarStore, IChatClient? chatClient = null)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -88,6 +105,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_errorHandler = errorHandler;
 		_seedDataService = seedDataService;
 		_calendarStore = calendarStore;
+		_chatClient = chatClient;
 		
 		// Load saved calendar choices
 		LoadSavedCalendars();
@@ -97,6 +115,52 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			_ = GetCurrentLocationAsync();
 		}
+	}
+		/// <summary>
+	/// Retrieves calendar events for the connected calendars for today
+	/// </summary>
+	private async Task<List<CalendarEvent>> GetCalendarEventsAsync()
+	{
+		var results = new List<CalendarEvent>();
+		
+		try
+		{
+			// Only proceed if we have selected calendars
+			if (!UserCalendars.Any(c => c.IsSelected))
+				return results;
+				
+			// Get events for today
+			var today = DateTime.Today;
+			var tomorrow = today.AddDays(1);
+			
+			// Get all calendars first
+			var calendars = await _calendarStore.GetCalendars();
+			
+			// Filter to only selected calendars by ID
+			var selectedCalendarIds = UserCalendars.Where(c => c.IsSelected).Select(c => c.Id).ToHashSet();
+			var selectedCalendars = calendars.Where(c => selectedCalendarIds.Contains(c.Id)).ToList();
+			
+			foreach (var calendar in selectedCalendars)
+			{
+				try
+				{
+					// Get events from the calendar for today
+					var events = await _calendarStore.GetEvents(calendar.Id, today, tomorrow);
+					results.AddRange(events);
+				}
+				catch (Exception ex)
+				{
+					// Log but continue with other calendars
+					System.Diagnostics.Debug.WriteLine($"Error getting events for calendar {calendar.Name}: {ex.Message}");
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+		
+		return results;
 	}
 
 	private async Task LoadData()
@@ -171,7 +235,6 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[RelayCommand]
 	private void NavigatedFrom() =>
 		_isNavigatedTo = false;
-
 	[RelayCommand]
 	private async Task Appearing()
 	{
@@ -186,6 +249,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			await Refresh();
 		}
+		
+		// Analyze tasks based on context (location, time, calendar)
+		await AnalyzeAndPrioritizeTasks();
 	}
 
 	[RelayCommand]
@@ -412,5 +478,146 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			IsGettingLocation = false;
 		}
+	}
+	
+	/// <summary>
+	/// Analyzes tasks based on calendar events, location, time of day, and personal preferences
+	/// to identify priority tasks that should be highlighted to the user.
+	/// </summary>
+	private async Task AnalyzeAndPrioritizeTasks()
+	{
+		// Reset priority tasks
+		PriorityTasks = [];
+		HasPriorityTasks = false;
+		
+		// Only proceed if telepathy is enabled and we have an API client
+		if (!IsTelepathyEnabled || _chatClient == null || string.IsNullOrWhiteSpace(OpenAIApiKey))
+		{
+			IsAnalyzingContext = false;
+			return;
+		}
+		
+		try
+		{
+			IsAnalyzingContext = true;
+			AnalysisStatusTitle = "Scanning your task universe";
+			AnalysisStatusDetail = "Gathering your location, time, and calendar events to determine which tasks require your immediate attention...";
+			
+			// Get calendar events
+			var events = await GetCalendarEventsAsync();
+			AnalysisStatusDetail = "Analyzing calendar events and tasks...";
+			
+			// Create a context description for the AI
+			var sb = new System.Text.StringBuilder();
+			
+			// Add basic context information
+			sb.AppendLine("CONTEXT INFORMATION:");
+			
+			// Current time
+			var now = DateTime.Now;
+			sb.AppendLine($"Current Date and Time: {now}");
+			sb.AppendLine($"Day of Week: {now.DayOfWeek}");
+			sb.AppendLine($"Time of Day: {GetTimeOfDayDescription(now)}");
+			
+			// Location
+			if (IsLocationEnabled)
+			{
+				sb.AppendLine($"Current Location: {CurrentLocation}");
+			}
+			
+			// Calendar events
+			sb.AppendLine($"Calendar Events for Today ({events.Count}):");
+			if (events.Any())
+			{
+				foreach (var evt in events.OrderBy(e => e.StartDate))
+				{
+					sb.AppendLine($"- {evt.Title} ({evt.StartDate:t} - {evt.EndDate:t})");
+				}
+			}
+			else
+			{
+				sb.AppendLine("- No calendar events for today");
+			}
+			
+			// About me
+			if (!string.IsNullOrWhiteSpace(AboutMeText))
+			{
+				sb.AppendLine("\nABOUT ME:");
+				sb.AppendLine(AboutMeText);
+			}
+					// Add only incomplete tasks - no need to process completed ones!
+			sb.AppendLine("\nACTIVE TASKS:");
+			foreach (var task in Tasks.Where(t => !t.IsCompleted))
+			{
+				var projectName = "";
+				var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
+				if (project != null)
+				{
+					projectName = project.Name;
+				}
+				
+				sb.AppendLine($"- Task '{task.Title}', Project: '{projectName}', Due: {(task.DueDate.HasValue ? task.DueDate.Value.ToString("d") : "No due date")}, Priority: {task.Priority}");
+			}
+			
+			// Instructions for the AI
+			sb.AppendLine("\nINSTRUCTIONS:");
+			sb.AppendLine("Based on all the context above, identify which tasks should be prioritized right now. Consider:");
+			sb.AppendLine("1. Tasks that are due soon or today");
+			sb.AppendLine("2. Tasks that relate to upcoming calendar events");
+			sb.AppendLine("3. Tasks that might be relevant to my current location");
+			sb.AppendLine("4. Tasks that align with my personal preferences in the 'About Me' section");
+			sb.AppendLine("5. Only include uncompleted tasks");
+			sb.AppendLine("\nRETURN FORMAT:");
+			sb.AppendLine("Return a JSON object with a single property 'priorityTaskIds' that contains an array of task IDs (as integers) that should be prioritized. Example:");
+			sb.AppendLine("{ \"priorityTaskIds\": [1, 2, 3] }");
+			
+			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
+					// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
+			if (_chatClient != null)
+			{
+				try 
+				{
+					var apiResponse = await _chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
+					if (apiResponse?.Result?.PriorityTaskIds != null)
+					{
+						// Get the priority tasks
+						var priorityIds = new HashSet<int>(apiResponse.Result.PriorityTaskIds);
+						PriorityTasks = Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted).ToList();
+						HasPriorityTasks = PriorityTasks.Any();
+					}
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"Error calling AI for task prioritization: {ex.Message}");
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+		finally
+		{
+			IsAnalyzingContext = false;
+		}
+	}
+	
+	private string GetTimeOfDayDescription(DateTime time)
+	{
+		var hour = time.Hour;
+		if (hour >= 5 && hour < 12)
+			return "Morning";
+		else if (hour >= 12 && hour < 17)
+			return "Afternoon";
+		else if (hour >= 17 && hour < 21)
+			return "Evening";
+		else
+			return "Night";
+	}
+	
+	private class PriorityTaskResult
+	{
+		[System.Text.Json.Serialization.JsonPropertyName("priorityTaskIds")]
+		public List<int>? PriorityTaskIds { get; set; }
 	}
 }

@@ -53,6 +53,44 @@
                     <VerticalStackLayout 
                         x:Name="ScrollContent"
                         Spacing="{StaticResource LayoutSpacing}" Padding="{StaticResource LayoutPadding}">
+                        
+                        <!-- Activity Indicator for telepathic analysis -->
+                        <controls:ActivityIndicatorView 
+                            IsVisible="{Binding IsAnalyzingContext}"
+                            HorizontalOptions="Start"
+                            Title="{Binding AnalysisStatusTitle}" 
+                            Detail="{Binding AnalysisStatusDetail}"
+                            MinimumWidthRequest="200"
+                            MinimumHeightRequest="100"
+                            ShimmerStartColor="#4a90e2"
+                            ShimmerEndColor="#9b59b6"
+                            />
+
+                        <!-- Priority Tasks Section -->
+                        <VerticalStackLayout 
+                            IsVisible="{Binding HasPriorityTasks}"
+                            Spacing="{StaticResource LayoutSpacing}">
+                            <Label Text="Priority Tasks" Style="{StaticResource Title2}" TextColor="{toolkit:AppThemeResource Primary}"/>
+                            <Label Text="These tasks require your cosmic attention right now!" 
+                                   Style="{StaticResource Caption}" 
+                                   TextColor="{toolkit:AppThemeResource Secondary}"/>
+                            <VerticalStackLayout Spacing="15"
+                                BindableLayout.ItemsSource="{Binding PriorityTasks}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <controls:TaskView TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}">
+                                            <controls:TaskView.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                    <GradientStop Color="#4a90e2" Offset="0.0" />
+                                                    <GradientStop Color="#9b59b6" Offset="1.0" />
+                                                </LinearGradientBrush>
+                                            </controls:TaskView.Background>
+                                        </controls:TaskView>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                        
                         <controls:CategoryChart />                        
 
                         <!-- <controls:ActivityIndicatorView 
