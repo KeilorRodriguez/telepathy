@@ -12,6 +12,9 @@ public class ProjectTask
 	
 	[JsonIgnore]
 	public string PriorityReasoning { get; set; } = string.Empty;
+	
+	[JsonIgnore]
+	public bool IsPriority { get; set; }
 
 	[JsonIgnore]
 	public int ProjectID { get; set; }

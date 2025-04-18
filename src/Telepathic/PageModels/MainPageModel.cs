@@ -256,12 +256,29 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		// Analyze tasks based on context (location, time, calendar)
 		await AnalyzeAndPrioritizeTasks();
 	}
-
 	[RelayCommand]
-	private Task Completed(ProjectTask task)
+	private async Task Completed(ProjectTask task)
 	{
+		// Find and update the original task in the main Tasks collection
+		var originalTask = Tasks.FirstOrDefault(t => t.ID == task.ID);
+		if (originalTask != null)
+		{
+			// Synchronize the completion status
+			originalTask.IsCompleted = task.IsCompleted;
+		}
+		
+		// Save the updated task to the database
+		await _taskRepository.SaveItemAsync(originalTask ?? task);
+		
+		// Update UI
 		OnPropertyChanged(nameof(HasCompletedTasks));
-		return _taskRepository.SaveItemAsync(task);
+		
+		// Update priority tasks list if needed
+		var priorityTask = PriorityTasks.FirstOrDefault(t => t.ID == task.ID);
+		if (priorityTask != null && priorityTask != task)
+		{
+			priorityTask.IsCompleted = task.IsCompleted;
+		}
 	}
 
 	[RelayCommand]
@@ -593,36 +610,46 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("Example: { \"priorityTaskIds\": [1, 2, 3], \"taskReasons\": {\"1\": \"Due today and matches your morning routine\", \"2\": \"Related to your upcoming meeting at 11am\", \"3\": \"You're near the location where this task needs to be done\"} }");
 			
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
-					// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
+			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
 			if (_chatClient != null)
 			{
-				try 
-				{					var apiResponse = await _chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
+				try
+				{
+					var apiResponse = await _chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
 					if (apiResponse?.Result?.PriorityTaskIds != null)
-					{
-						// Get the priority tasks
+					{                       // Mark tasks as prioritized rather than creating copies
 						var priorityIds = new HashSet<int>(apiResponse.Result.PriorityTaskIds);
-						PriorityTasks = Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted).ToList();
-						
-						// Set the reasoning for each prioritized task
+
+						// Reset priority status on all tasks first
+						foreach (var task in Tasks)
+						{
+							task.PriorityReasoning = string.Empty;
+						}
+
+						// Update priority reasoning for prioritized tasks
 						if (apiResponse.Result.TaskReasons != null)
 						{
-							foreach (var task in PriorityTasks)
+							foreach (var taskId in priorityIds)
 							{
-								if (apiResponse.Result.TaskReasons.TryGetValue(task.ID.ToString(), out var reason))
+								var task = Tasks.FirstOrDefault(t => t.ID == taskId && !t.IsCompleted);
+								if (task != null && apiResponse.Result.TaskReasons.TryGetValue(taskId.ToString(), out var reason))
 								{
 									task.PriorityReasoning = reason;
 									Debug.WriteLine($"Task '{task.Title}' prioritized because: {reason}");
 								}
 							}
 						}
-						
-						HasPriorityTasks = PriorityTasks.Any();
-						
-						// Record when we last checked priorities
-						_lastPriorityCheck = DateTime.Now;
+
+						// Create a VIEW of prioritized tasks (not copies)
+						PriorityTasks = Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted).ToList();
 					}
+
+					HasPriorityTasks = PriorityTasks.Any();
+
+					// Record when we last checked priorities
+					_lastPriorityCheck = DateTime.Now;
 				}
+				
 				catch (Exception ex)
 				{
 					System.Diagnostics.Debug.WriteLine($"Error calling AI for task prioritization: {ex.Message}");

@@ -71,6 +71,8 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 		FluentUI.bot_24_regular
 	];
 
+	public bool IsNewProject => _project?.IsNullOrNew() ?? true;
+
 	public bool HasCompletedTasks
 		=> _project?.Tasks.Any(t => t.IsCompleted) ?? false;
 
@@ -284,6 +286,7 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 		{
 			IsBusy = false;
 			OnPropertyChanged(nameof(HasCompletedTasks));
+			OnPropertyChanged(nameof(IsNewProject));
 		}
 	}
 

@@ -7,8 +7,8 @@
              xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.TextInputLayout;assembly=Syncfusion.Maui.Toolkit"
              xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
              xmlns:fonts="clr-namespace:Fonts"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:aloha="clr-namespace:AlohaKit.Animations;assembly=AlohaKit.Animations"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"             xmlns:aloha="clr-namespace:AlohaKit.Animations;assembly=AlohaKit.Animations"
+             xmlns:converters="clr-namespace:Telepathic.Converters"
              x:Class="Telepathic.Pages.ProjectDetailPage"
              x:DataType="pageModels:ProjectDetailPageModel"
              Title="Project">
@@ -51,11 +51,14 @@
         <pages:ChipDataTemplateSelector 
             x:Key="ChipDataTemplateSelector"
             NormalTagTemplate="{StaticResource NormalTagTemplate}"
-            SelectedTagTemplate="{StaticResource SelectedTagTemplate}"/>
-
-        <toolkit:BoolToObjectConverter x:Key="IsTelepathyEnabledConverter" 
+            SelectedTagTemplate="{StaticResource SelectedTagTemplate}"/>        <toolkit:BoolToObjectConverter x:Key="IsTelepathyEnabledConverter" 
                                           TrueObject="{StaticResource AIBrush}" 
                                           FalseObject="{StaticResource White}" />
+                                          
+        <converters:BothBooleanConverter x:Key="BothTrueConverter"
+                                         TrueObject="{StaticResource AIBrush}"
+                                         FalseObject="{StaticResource White}" />
+                                        
         <toolkit:MathExpressionConverter x:Key="MathExpressionConverter" />
         <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter" />
     </ContentPage.Resources>
@@ -77,8 +80,13 @@
             <VerticalStackLayout x:Name="ScrollContent" Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
                 <controls:GradientTextInputLayout 
                     ContainerType="Outlined"
-                    StrokeBrush="{Binding IsTelepathyEnabled,Converter={StaticResource IsTelepathyEnabledConverter}}" 
-                    Hint="Name" >
+                    Hint="Name" >                    
+                    <controls:GradientTextInputLayout.StrokeBrush>
+                        <MultiBinding Converter="{StaticResource BothTrueConverter}">
+                            <Binding Path="IsTelepathyEnabled" />
+                            <Binding Path="IsNewProject" />
+                        </MultiBinding>
+                    </controls:GradientTextInputLayout.StrokeBrush>
                     <Entry 
                         Text="{Binding Name}">
                         <Entry.Behaviors>
