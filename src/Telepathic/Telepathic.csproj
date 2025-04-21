@@ -4,7 +4,7 @@
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
+		<!-- <TargetFrameworks>$(TargetFrameworks);net10.0-tizen</TargetFrameworks> -->
 
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
@@ -23,7 +23,7 @@
 		<NoWarn>XC0103</NoWarn>
 		<MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 
-		<MauiVersion>9.0.60</MauiVersion>
+		<!-- <MauiVersion>9.0.60</MauiVersion> -->
 
 		<!-- Display name -->
 		<ApplicationTitle>Telepathic</ApplicationTitle>
@@ -46,19 +46,36 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+	<!-- <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-ios|AnyCPU'">
 		<CreatePackage>false</CreatePackage>
 		<EnableCodeSigning>true</EnableCodeSigning>
 		<CodesignRequireProvisioningProfile>true</CodesignRequireProvisioningProfile>
 		<DisableCodesignVerification>true</DisableCodesignVerification>
+		
+	</PropertyGroup> -->
+
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
+		<CodesignProvision>Automatic</CodesignProvision>
 	</PropertyGroup>
+
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+		<CreatePackage>false</CreatePackage>
+		<CodesignProvision>Automatic</CodesignProvision>
+		<CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
+	</PropertyGroup>
+
+	<!-- <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+	  <CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
+	  <CodesignProvision>Telepathic Development</CodesignProvision>
+	</PropertyGroup> -->
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#235C57" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#235C57" BaseSize="128,128" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />

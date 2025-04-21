@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.SegmentedControl;assembly=Syncfusion.Maui.Toolkit"
     xmlns:pages="clr-namespace:Telepathic.Pages"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     Shell.FlyoutBehavior="Flyout"
     Title="Telepathic">
 
@@ -26,15 +27,25 @@
         ContentTemplate="{DataTemplate pages:ManageMetaPage}"
         Route="manage" />
 
+    <Shell.FlyoutHeader>
+        <Grid HorizontalOptions="Fill" VerticalOptions="Start">
+            <Image Source="flyoutheader.png" 
+                VerticalOptions="Start" 
+                HorizontalOptions="Fill"
+                Aspect="AspectFit"  />
+        </Grid>
+    </Shell.FlyoutHeader>
+
     <Shell.FlyoutFooter>
         <Grid Padding="15">
             <sf:SfSegmentedControl x:Name="ThemeSegmentedControl" 
-                VerticalOptions="Center" HorizontalOptions="Center" SelectionChanged="SfSegmentedControl_SelectionChanged"
-                SegmentWidth="40" SegmentHeight="40">
+                VerticalOptions="Center" HorizontalOptions="Center" 
+                SelectionChanged="SfSegmentedControl_SelectionChanged"
+                SegmentWidth="40" SegmentHeight="40">                
                 <sf:SfSegmentedControl.ItemsSource>
                     <x:Array Type="{x:Type sf:SfSegmentItem}">
-                        <sf:SfSegmentItem ImageSource="{StaticResource IconLight}"/>
-                        <sf:SfSegmentItem ImageSource="{StaticResource IconDark}"/>
+                        <sf:SfSegmentItem ImageSource="{StaticResource IconLight}" SelectedSegmentBackground="{toolkit:AppThemeResource Primary}"/>
+                        <sf:SfSegmentItem ImageSource="{StaticResource IconDark}" SelectedSegmentBackground="{toolkit:AppThemeResource Primary}"/>
                     </x:Array>
                 </sf:SfSegmentedControl.ItemsSource>
             </sf:SfSegmentedControl>

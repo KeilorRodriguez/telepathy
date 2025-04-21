@@ -6,11 +6,12 @@
              x:Class="Telepathic.App"><Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Colors.telepathic.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/AppStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-              <!-- Converters for our cosmic mission! -->            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+              <!-- Converters for our cosmic mission! -->            
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:CombinedTasksConverter x:Key="CombinedTasksConverter" />
             <converters:PhaseToRecordingBoolConverter x:Key="PhaseToRecordingBool" />
             <converters:PhaseToReviewBoolConverter x:Key="PhaseToReviewBool" />

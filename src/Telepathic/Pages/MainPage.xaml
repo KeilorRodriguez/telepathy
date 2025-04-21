@@ -52,7 +52,8 @@
                     </VisualElement.Behaviors>
                     <VerticalStackLayout 
                         x:Name="ScrollContent"
-                        Spacing="{StaticResource LayoutSpacing}" Padding="{StaticResource LayoutPadding}">
+                        Spacing="{StaticResource LayoutSpacing}" 
+                        Padding="{StaticResource LayoutPadding}">
                         
                         <!-- Activity Indicator for telepathic analysis -->
                         <controls:ActivityIndicatorView 
@@ -69,22 +70,29 @@
                         <!-- Priority Tasks Section -->
                         <VerticalStackLayout 
                             IsVisible="{Binding HasPriorityTasks}"
-                            Spacing="{StaticResource LayoutSpacing}">
-                            <Label Text="Priority Tasks" Style="{StaticResource Title2}" TextColor="{toolkit:AppThemeResource Primary}"/>
-                            <Label Text="These tasks require your cosmic attention right now!" 
+                            Spacing="{StaticResource LayoutSpacing}"
+                            Margin="0,0,0,12">
+                            <Label Text="Priority Tasks" 
+                                Style="{StaticResource Title2}" 
+                                TextColor="{toolkit:AppThemeResource Primary}"/>
+                            <Label Text="How about tackling these tasks first?" 
                                    Style="{StaticResource Caption}" 
-                                   TextColor="{toolkit:AppThemeResource Secondary}"/>
-                            <VerticalStackLayout Spacing="15"
+                                   TextColor="{toolkit:AppThemeResource Secondary}"
+                                   Margin="0,0,0,12"/>
+                            <VerticalStackLayout 
+                                Spacing="{StaticResource LayoutSpacing}" 
                                 BindableLayout.ItemsSource="{Binding PriorityTasks}">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate>
-                                        <controls:TaskView TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}">
-                                            <controls:TaskView.Background>
+                                        <controls:TaskView 
+                                            Background="{StaticResource AIBrush}"
+                                            TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}">
+                                            <!-- <controls:TaskView.Background>
                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                                     <GradientStop Color="#4a90e2" Offset="0.0" />
                                                     <GradientStop Color="#9b59b6" Offset="1.0" />
                                                 </LinearGradientBrush>
-                                            </controls:TaskView.Background>
+                                            </controls:TaskView.Background> -->
                                         </controls:TaskView>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
@@ -196,7 +204,7 @@
             HorizontalOptions="End"
             TranslationX="-100"
             Source="{StaticResource IconSettings}" 
-            IsVisible="{Binding IsTelepathyEnabled}"
+            IsVisible="false"
             Command="{Binding VoiceRecordCommand}">            
                 <VisualElement.Behaviors>
                     <aloha:AnimateProgressDouble

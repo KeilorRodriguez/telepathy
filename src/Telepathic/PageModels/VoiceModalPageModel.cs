@@ -234,37 +234,17 @@ public partial class VoiceModalPageModel : ObservableObject
             _logger.LogInformation("Starting task extraction from transcript");
             _stopwatch.Restart();
 
+            // ignore the audio and just see if we can get something meaningful from this text
+            Transcript = "Tonight we are going to the Good Friday service at church, but we need to get Nolan from the airport around 9:30. This weekend we have an easter egg hunt at church and then after church Sunday morning we are going to Mammy's house for lunch and an egg hunt. We need to take a dish and the bag of candy for filling eggs.";
+
             // Create a prompt that will extract projects and tasks from the transcript
             var prompt = $@"
 Extract projects and tasks from this voice memo transcript. 
-Analyze the text to identify:
-1. Projects with their associated tasks
-2. Standalone tasks not associated with any project
-3. Any mentioned due dates in YYYY-MM-DD format
-4. Any mentioned priority levels (1-5, where 5 is highest)
-
-Return the data in this format:
-{{
-  ""projects"": [
-    {{
-      ""name"": ""Project Name"",
-      ""tasks"": [
-        {{
-          ""title"": ""Task description"",
-          ""dueDate"": ""YYYY-MM-DD"",
-          ""priority"": 3
-        }}
-      ]
-    }}
-  ],
-  ""standaloneTasks"": [
-    {{
-      ""title"": ""Task description"",
-      ""dueDate"": null,
-      ""priority"": null
-    }}
-  ]
-}}
+Analyze the text to identify actionable tasks I need to keep track of. Use the following instructions:
+1. Tasks are actionable items that can be completed, such as 'Buy groceries' or 'Call Mom'.
+2. Projects are larger tasks that may contain multiple smaller tasks, such as 'Plan birthday party' or 'Organize closet'.
+3. Tasks must be grouped under a project and cannot be grouped under multiple projects.
+4. Any mentioned due dates use the YYYY-MM-DD format
 
 Here's the transcript: {Transcript}";
 
