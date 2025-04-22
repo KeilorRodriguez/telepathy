@@ -123,6 +123,18 @@
                 Color="{toolkit:AppThemeResource TextOnBackground}"
                 Size="{StaticResource IconSize}" />
 
+        <FontImageSource x:Key="IconKeyboard"
+                Glyph="{x:Static f:FluentUI.keyboard_24_regular}"
+                FontFamily="{x:Static f:FluentUI.FontFamily}"
+                Color="{toolkit:AppThemeResource TextOnBackground}"
+                Size="{StaticResource IconSize}" />
+        
+        <FontImageSource x:Key="IconCamera"
+                Glyph="{x:Static f:FluentUI.camera_dome_48_regular}"
+                FontFamily="{x:Static f:FluentUI.FontFamily}"
+                Color="{toolkit:AppThemeResource TextOnBackground}"
+                Size="{StaticResource IconSize}" />
+
     <Style TargetType="Page" ApplyToDerivedTypes="True">
         <Setter Property="Padding" Value="0"/>
         <Setter Property="BackgroundColor" Value="{toolkit:AppThemeResource Background}" />

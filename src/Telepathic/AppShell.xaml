@@ -29,7 +29,7 @@
 
     <Shell.FlyoutHeader>
         <Grid HorizontalOptions="Fill" VerticalOptions="Start">
-            <Image Source="flyoutheader.png" 
+            <Image Source="{AppThemeBinding Light=flyoutheader_light.png, Dark=flyoutheader_dark.png}" 
                 VerticalOptions="Start" 
                 HorizontalOptions="Fill"
                 Aspect="AspectFit"  />

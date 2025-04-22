@@ -5,6 +5,7 @@
              xmlns:models="clr-namespace:Telepathic.Models"
              xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
              xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.TextInputLayout;assembly=Syncfusion.Maui.Toolkit"
+             xmlns:b="clr-namespace:Syncfusion.Maui.Toolkit.Buttons;assembly=Syncfusion.Maui.Toolkit"
              xmlns:pullToRefresh="clr-namespace:Syncfusion.Maui.Toolkit.PullToRefresh;assembly=Syncfusion.Maui.Toolkit"
              xmlns:bottomSheet="clr-namespace:Syncfusion.Maui.Toolkit.BottomSheet;assembly=Syncfusion.Maui.Toolkit"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
@@ -23,7 +24,9 @@
         <toolkit:EventToCommandBehavior
                 EventName="Appearing"                
                 Command="{Binding AppearingCommand}" />
-    </ContentPage.Behaviors>    <ContentPage.Resources>
+    </ContentPage.Behaviors>    
+    
+    <ContentPage.Resources>
         <ResourceDictionary>
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <toolkit:BoolToObjectConverter x:Key="TelepathyIconConverter" 
@@ -90,7 +93,6 @@
                                 TextColor="{toolkit:AppThemeResource Primary}"/>
                             <Label Text="How about tackling these tasks first?" 
                                    Style="{StaticResource Caption1}" 
-                                   TextColor="{toolkit:AppThemeResource Secondary}"
                                    Margin="0,0,0,12"/>
                             <VerticalStackLayout 
                                 Spacing="{StaticResource LayoutSpacing}" 
@@ -188,78 +190,93 @@
             </pullToRefresh:SfPullToRefresh.PullableContent>
         </pullToRefresh:SfPullToRefresh>
 
-        <controls:AddButton 
-            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
-            Command="{Binding AddTaskCommand}">            
-                <VisualElement.Behaviors>
-                    <aloha:AnimateProgressDouble
-                        x:Name="AddButtonAnimation"
-                        TargetProperty="VisualElement.Opacity"
-                        Progress="{Binding ScrollY, Source={x:Reference ScrollBehavior}, x:DataType=aloha:ScrollViewScrollBehavior}" 
-                        Minimum="{Binding Maximum, Source={x:Reference AddButtonAnimation}, x:DataType=aloha:AnimateProgressDouble,Converter={StaticResource MathExpressionConverter}, ConverterParameter='x-100', Mode=OneWay}"                        
-                        From="1"
-                        To="0">                        
-                        <aloha:AnimateProgressDouble.Maximum>
-                            <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
-                                ConverterParameter="x1-x0">
-                                <Binding Path="Height" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
-                                <Binding Path="Height" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
-                            </MultiBinding>
-                        </aloha:AnimateProgressDouble.Maximum>
-                    </aloha:AnimateProgressDouble>
-                </VisualElement.Behaviors>
-                                
-        </controls:AddButton>
-
-        <ImageButton
-            VerticalOptions="End"
-            HorizontalOptions="End"
-            TranslationX="-100"
-            Source="{StaticResource IconSettings}" 
-            IsVisible="false"
-            Command="{Binding VoiceRecordCommand}">            
-                <VisualElement.Behaviors>
-                    <aloha:AnimateProgressDouble
-                        x:Name="VoiceButtonAnimation"
-                        TargetProperty="VisualElement.Opacity"
-                        Progress="{Binding ScrollY, Source={x:Reference ScrollBehavior}, x:DataType=aloha:ScrollViewScrollBehavior}" 
-                        Minimum="{Binding Maximum, Source={x:Reference VoiceButtonAnimation}, x:DataType=aloha:AnimateProgressDouble,Converter={StaticResource MathExpressionConverter}, ConverterParameter='x-100', Mode=OneWay}"                        
-                        From="1"
-                        To="0">                        
-                        <aloha:AnimateProgressDouble.Maximum>
-                            <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
-                                ConverterParameter="x1-x0">
-                                <Binding Path="Height" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
-                                <Binding Path="Height" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
-                            </MultiBinding>
-                        </aloha:AnimateProgressDouble.Maximum>
-                    </aloha:AnimateProgressDouble>
-                </VisualElement.Behaviors>
-                                
-        </ImageButton>
-
-            <VerticalStackLayout
-                IsVisible="False"
+        <VerticalStackLayout
+                IsVisible="true"
                 Background="Black"
-                VerticalOptions="End"
-                HorizontalOptions="End"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
                 Margin="0,0,30,300">
-                <Label Text="{Binding Height, Source={x:Reference ScrollView},x:DataType=ScrollView, StringFormat='ScrollView: {0}'}" />
-                
-                <Label Text="{Binding Height, Source={x:Reference ScrollContent},x:DataType=VerticalStackLayout, StringFormat='ScrollContent: {0}'}" />
-                <Label Text="{Binding Maximum, Source={x:Reference AddButtonAnimation}, x:DataType=aloha:AnimateProgressDouble,Converter={StaticResource MathExpressionConverter}, ConverterParameter='x-100', StringFormat='Min: {0}'}" />
+                <Label Text="{Binding HeightRequest, Source={x:Reference ScrollView}, x:DataType=ScrollView, StringFormat='ScrollView: {0}'}" />
+                <Label Text="{Binding HeightRequest, Source={x:Reference ScrollContent}, x:DataType=VerticalStackLayout, StringFormat='ScrollContent: {0}'}" />
                 <Label>
                     <Label.Text>
                         <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
                             ConverterParameter="x1-x0" StringFormat="Max: {0}">
-                            <Binding Path="Height" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
-                            <Binding Path="Height" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
+                            <Binding Path="HeightRequest" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
+                            <Binding Path="HeightRequest" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
                         </MultiBinding>
                     </Label.Text>
                 </Label>
-                <Label Text="{Binding ScrollY, Source={x:Reference ScrollBehavior}, StringFormat='ScrollY: {0}', Mode=OneWay}" />
+                
                 <!-- <Label Text="{Binding ContentSize.Height, Source={x:Reference ScrollView}, StringFormat='ContentSize.Height: {0}'}" /> -->
+                <Label Text="{Binding Minimum, 
+                    Source={x:Reference AddButtonAnimation}, StringFormat='Minimum: {0}', Mode=OneWay}" />
+                <Label Text="{Binding Maximum, 
+                    Source={x:Reference AddButtonAnimation}, StringFormat='Maximum: {0}', Mode=OneWay}" />
+                <Label Text="{Binding ScrollY, Source={x:Reference ScrollBehavior}, StringFormat='ScrollY: {0}', Mode=OneWay}" />
             </VerticalStackLayout>
+
+        <VerticalStackLayout
+            Spacing="{StaticResource LayoutSpacing}"
+            VerticalOptions="End" 
+            HorizontalOptions="End"
+            Margin="30">
+            <VerticalStackLayout.Behaviors>
+                    <aloha:AnimateProgressDouble
+                        x:Name="AddButtonAnimation"
+                        TargetProperty="VisualElement.Opacity"
+                        Progress="{Binding ScrollY, Source={x:Reference ScrollBehavior}, x:DataType=aloha:ScrollViewScrollBehavior}" 
+                        From="0"
+                        To="1">                        
+                        <aloha:AnimateProgressDouble.Maximum>
+                            <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
+                                ConverterParameter="x1-x0">
+                                <Binding Path="HeightRequest" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
+                                <Binding Path="HeightRequest" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
+                            </MultiBinding>
+                        </aloha:AnimateProgressDouble.Maximum>
+                        <aloha:AnimateProgressDouble.Minimum>
+                            <Binding 
+                                Path="Maximum"
+                                Converter="{StaticResource MathExpressionConverter}" 
+                                ConverterParameter="x-100" 
+                                Mode="OneWay"
+                                Source="{x:Reference AddButtonAnimation}" 
+                                x:DataType="aloha:AnimateProgressDouble" />
+                        </aloha:AnimateProgressDouble.Minimum>
+                    </aloha:AnimateProgressDouble>
+                </VerticalStackLayout.Behaviors>
+
+              <Button 
+                ImageSource="{StaticResource IconCamera}" 
+                BackgroundColor="{toolkit:AppThemeResource Primary}" 
+                CornerRadius="30" 
+                HeightRequest="60" 
+                WidthRequest="60"  />
+             
+             <Button 
+                ImageSource="{StaticResource IconMicrophone}" 
+                BackgroundColor="{toolkit:AppThemeResource Primary}" 
+                CornerRadius="30" 
+                HeightRequest="60" 
+                WidthRequest="60"  
+                Command="{Binding VoiceRecordCommand}"/>
+             <Button 
+                ImageSource="{StaticResource IconKeyboard}" 
+                BackgroundColor="{toolkit:AppThemeResource Primary}" 
+                CornerRadius="30" 
+                HeightRequest="60" 
+                WidthRequest="60"  />
+
+            <controls:AddButton 
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                Command="{Binding AddTaskCommand}"/>
+
+        </VerticalStackLayout>
+
+    
+
+            
 
             <!-- Settings Bottom Sheet -->
         <bottomSheet:SfBottomSheet x:Name="SettingsSheet"

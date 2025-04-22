@@ -58,11 +58,11 @@
 		<CodesignProvision>Automatic</CodesignProvision>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+	<!-- <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
 		<CreatePackage>false</CreatePackage>
 		<CodesignProvision>Automatic</CodesignProvision>
 		<CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
-	</PropertyGroup>
+	</PropertyGroup> -->
 
 	<!-- <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 	  <CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>

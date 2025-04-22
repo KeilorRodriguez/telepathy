@@ -80,6 +80,8 @@
             <VerticalStackLayout x:Name="ScrollContent" Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
                 <controls:GradientTextInputLayout 
                     ContainerType="Outlined"
+                    UnfocusedStrokeThickness="4"
+                    FocusedStrokeThickness="4"
                     Hint="Name" >                    
                     <controls:GradientTextInputLayout.StrokeBrush>
                         <MultiBinding Converter="{StaticResource BothTrueConverter}">
@@ -240,8 +242,8 @@
                     <aloha:AnimateProgressDouble.Maximum>
                         <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
                             ConverterParameter="x1-x0">
-                            <Binding Path="Height" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
-                            <Binding Path="Height" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
+                            <Binding Path="HeightRequest" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
+                            <Binding Path="HeightRequest" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
                         </MultiBinding>
                     </aloha:AnimateProgressDouble.Maximum>
                 </aloha:AnimateProgressDouble>
