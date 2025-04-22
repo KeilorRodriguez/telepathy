@@ -46,13 +46,12 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
-	<!-- <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-ios|AnyCPU'">
-		<CreatePackage>false</CreatePackage>
-		<EnableCodeSigning>true</EnableCodeSigning>
-		<CodesignRequireProvisioningProfile>true</CodesignRequireProvisioningProfile>
-		<DisableCodesignVerification>true</DisableCodesignVerification>
-		
-	</PropertyGroup> -->
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+    <CreatePackage>false</CreatePackage>
+    <EnableCodeSigning>true</EnableCodeSigning>
+    <CodesignRequireProvisioningProfile>true</CodesignRequireProvisioningProfile>
+    <DisableCodesignVerification>true</DisableCodesignVerification>
+  </PropertyGroup>
 
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
@@ -72,14 +71,13 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#235C57" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.noir.svg" Color="#1C201E" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#235C57" BaseSize="128,128" />
+		<MauiSplashScreen Include="Resources\Splash\splash.noir.svg" Color="#1C201E" BaseSize="384,384" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
-		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
 
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />

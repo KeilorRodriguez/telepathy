@@ -123,6 +123,25 @@
                 Color="{toolkit:AppThemeResource TextOnBackground}"
                 Size="{StaticResource IconSize}" />
 
+    <Style TargetType="Page" ApplyToDerivedTypes="True">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="BackgroundColor" Value="{toolkit:AppThemeResource Background}" />
+    </Style>
+
+    <Style TargetType="Shell" ApplyToDerivedTypes="True">
+        <Setter Property="Shell.BackgroundColor" Value="{toolkit:AppThemeResource Background}" />
+        <Setter Property="Shell.ForegroundColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource SecondaryDarkText}}" />
+        <Setter Property="Shell.TitleColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource SecondaryDarkText}}" />
+        <Setter Property="Shell.DisabledColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}" />
+        <Setter Property="Shell.UnselectedColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray200}}" />
+        <Setter Property="Shell.NavBarHasShadow" Value="False" />
+        <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light={StaticResource LightBackground}, Dark={StaticResource DarkBackground}}" />
+        <Setter Property="Shell.TabBarForegroundColor" Value="{toolkit:AppThemeResource TextOnBackground}" />
+        <Setter Property="Shell.TabBarTitleColor" Value="{toolkit:AppThemeResource TextOnBackground}" />
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray200}}" />
+        <Setter Property="Shell.FlyoutBackground" Value="{toolkit:AppThemeResource Background}"/>
+    </Style>
+
     <Style TargetType="Label">
         <Setter Property="TextColor"
                 Value="{toolkit:AppThemeResource TextOnBackground}" />
