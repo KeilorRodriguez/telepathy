@@ -7,6 +7,8 @@ using Telepathic.Models;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Extensions.AI;
 using System.Diagnostics;
+using OpenAI;
+using Microsoft.Extensions.Logging;
 
 namespace Telepathic.PageModels;
 
@@ -19,9 +21,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly SeedDataService _seedDataService;
-	private readonly ICalendarStore _calendarStore;
-	private readonly IChatClient? _chatClient;
-	private CancellationTokenSource? _cancelTokenSource;
+	private readonly ICalendarStore _calendarStore;	private readonly IChatClientService _chatClientService;
+    private readonly ILogger _logger;
+    private CancellationTokenSource? _cancelTokenSource;
 	private bool _isCheckingLocation;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
@@ -97,10 +99,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
-
 	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
-		ICalendarStore calendarStore, IChatClient? chatClient = null)
+		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -108,7 +109,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_errorHandler = errorHandler;
 		_seedDataService = seedDataService;
 		_calendarStore = calendarStore;
-		_chatClient = chatClient;
+		_chatClientService = chatClientService;
+		_logger = logger;
 
 		// Load saved calendar choices
 		LoadSavedCalendars();
@@ -315,6 +317,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	partial void OnOpenAIApiKeyChanged(string value)
 	{
+		_logger.LogInformation($"OpenAI API Key changed");
 		Preferences.Default.Set("openai_api_key", value);
 	}
 
@@ -327,12 +330,23 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private void ShowSettings()
 	{
 		IsSettingsSheetOpen = true;
-	}
-	[RelayCommand]
+	}	[RelayCommand]
 	private async Task SaveApiKey()
 	{
+		_logger.LogInformation($"OpenAI API Key saved");
 		Preferences.Default.Set("openai_api_key", OpenAIApiKey);
-		await AppShell.DisplayToastAsync("API Key saved!");
+		
+		// Update the chat client with the new API key
+		try
+		{
+			_chatClientService.UpdateClient(OpenAIApiKey);
+			await AppShell.DisplayToastAsync("API Key saved and chat client updated!");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Failed to update chat client with new API key");
+			await AppShell.DisplayToastAsync("API Key saved, but failed to initialize chat client. Please check your key and try again.");
+		}
 	}
 
 	private void LoadSavedCalendars()
@@ -499,15 +513,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			IsGettingLocation = false;
 		}
-	}
-	/// <summary>
+	}	/// <summary>
 	/// Analyzes tasks based on calendar events, location, time of day, and personal preferences
 	/// to identify priority tasks that should be highlighted to the user.
 	/// </summary>
 	private async Task AnalyzeAndPrioritizeTasks()
 	{
 		// Early exit if telepathy is disabled or we're missing the API client
-		if (!IsTelepathyEnabled || _chatClient == null || string.IsNullOrWhiteSpace(OpenAIApiKey))
+		if (!IsTelepathyEnabled || !_chatClientService.IsInitialized || string.IsNullOrWhiteSpace(OpenAIApiKey))
 		{
 			PriorityTasks = [];
 			HasPriorityTasks = false;
@@ -612,11 +625,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
-			if (_chatClient != null)
+			var chatClient = _chatClientService.GetClient();
+			if (chatClient != null)
 			{
 				try
 				{
-					var apiResponse = await _chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
+					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
 					if (apiResponse?.Result?.PriorityTaskIds != null)
 					{                       // Mark tasks as prioritized rather than creating copies
 						var priorityIds = new HashSet<int>(apiResponse.Result.PriorityTaskIds);

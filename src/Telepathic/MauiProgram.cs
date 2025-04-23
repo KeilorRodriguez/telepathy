@@ -64,16 +64,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<MainPageModel>();
 		builder.Services.AddSingleton<ProjectListPageModel>();		builder.Services.AddSingleton<ManageMetaPageModel>();
 		builder.Services.AddSingleton<IAudioService, AudioService>();
-		// builder.Services.AddSingleton(AudioManager.Current);
 		builder.Services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
-
-		var openAiApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
-		if (!string.IsNullOrEmpty(openAiApiKey))
-		{
-			builder.Services
-				.AddChatClient(new OpenAIClient(openAiApiKey).GetChatClient(model: "gpt-4o-mini").AsIChatClient())
-				.UseLogging();
-		}
+		builder.Services.AddSingleton<IChatClientService, ChatClientService>();
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
 		builder.Services.AddTransientWithShellRoute<Pages.VoiceModalPage, PageModels.VoiceModalPageModel>("voice");

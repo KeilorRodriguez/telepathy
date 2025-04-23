@@ -22,7 +22,7 @@ public partial class VoiceModalPageModel : ObservableObject
     IAudioRecorder _recorder;
     readonly ITranscriptionService _transcriber;
     readonly ModalErrorHandler _errorHandler;
-    readonly IChatClient _chat;
+    readonly IChatClientService _chatClientService;
     readonly ILogger<VoiceModalPageModel> _logger;
 
     [ObservableProperty] bool isRecording;
@@ -47,7 +47,7 @@ public partial class VoiceModalPageModel : ObservableObject
         IAudioManager audioManager,
         ITranscriptionService transcriber,
         ModalErrorHandler errorHandler,
-        IChatClient chat,
+        IChatClientService chatClientService,
         ProjectRepository projectRepository,
         TaskRepository taskRepository,
         ILogger<VoiceModalPageModel> logger)
@@ -56,7 +56,7 @@ public partial class VoiceModalPageModel : ObservableObject
         _audioManager = audioManager;
         _transcriber = transcriber;
         _errorHandler = errorHandler;
-        _chat = chat;
+        _chatClientService = chatClientService;
         _projectRepository = projectRepository;
         _taskRepository = taskRepository;
         _logger = logger;
@@ -215,9 +215,9 @@ public partial class VoiceModalPageModel : ObservableObject
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(Transcript) || _chat == null)
+            if (string.IsNullOrWhiteSpace(Transcript) || !_chatClientService.IsInitialized)
             {
-                _logger.LogWarning("Cannot extract tasks: transcript is empty or chat client is null");
+                _logger.LogWarning("Cannot extract tasks: transcript is empty or chat client is not initialized");
                 return;
             }
 
@@ -242,7 +242,8 @@ Analyze the text to identify actionable tasks I need to keep track of. Use the f
 Here's the transcript: {Transcript}";
 
             // Get response from the AI service
-            var response = await _chat.GetResponseAsync<ProjectsJson>(prompt);
+            var chatClient = _chatClientService.GetClient();
+            var response = await chatClient.GetResponseAsync<ProjectsJson>(prompt);
 
             _stopwatch.Stop();
             _logger.LogInformation("Task extraction completed in {ExtractionDuration}ms", _stopwatch.ElapsedMilliseconds);

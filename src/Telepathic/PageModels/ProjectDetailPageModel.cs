@@ -13,9 +13,8 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	private readonly ProjectRepository _projectRepository;
 	private readonly TaskRepository _taskRepository;
 	private readonly CategoryRepository _categoryRepository;
-	private readonly TagRepository _tagRepository;
-	private readonly ModalErrorHandler _errorHandler;
-	private readonly IChatClient _chatClient;
+	private readonly TagRepository _tagRepository;	private readonly ModalErrorHandler _errorHandler;
+	private readonly IChatClientService _chatClientService;
 
 	[ObservableProperty]
 	private bool _hasRecommendations;
@@ -79,14 +78,14 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	public bool HasRecommendedTasks
 	 	=> _recommendedTasks?.Count > 0;
 
-	public ProjectDetailPageModel(ProjectRepository projectRepository, TaskRepository taskRepository, CategoryRepository categoryRepository, TagRepository tagRepository, ModalErrorHandler errorHandler, IChatClient chatClient)
+	public ProjectDetailPageModel(ProjectRepository projectRepository, TaskRepository taskRepository, CategoryRepository categoryRepository, TagRepository tagRepository, ModalErrorHandler errorHandler, IChatClientService chatClientService)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
 		_categoryRepository = categoryRepository;
 		_tagRepository = tagRepository;
 		_errorHandler = errorHandler;
-		_chatClient = chatClient;
+		_chatClientService = chatClientService;
 
 		Tasks = [];
 		RecommendedTasks = [];
@@ -117,13 +116,12 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 			BusyTitle = "Getting task recommendations.";
 			BusyDetails = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, looking up tasks.";
 			
-			string _aboutMeText = Preferences.Default.Get("about_me_text", string.Empty);
-
-			var prompt = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, pick the best matching category and suggest 3-7 tasks for this project. Use these details about me so the writing sounds like me: {_aboutMeText}";// Respond as JSON: {{\"category\":\"category name\",\"tasks\":[\"task1\",\"task2\"]}}
+			string _aboutMeText = Preferences.Default.Get("about_me_text", string.Empty);			var prompt = $"Given a project named '{projectName}', and these categories: {string.Join(", ", categoryTitles)}, pick the best matching category and suggest 3-7 tasks for this project. Use these details about me so the writing sounds like me: {_aboutMeText}";// Respond as JSON: {{\"category\":\"category name\",\"tasks\":[\"task1\",\"task2\"]}}
 
 			await Task.Delay(2000);
 
-			var response = await _chatClient.GetResponseAsync<RecommendationResponse>(prompt);
+			var chatClient = _chatClientService.GetClient();
+			var response = await chatClient.GetResponseAsync<RecommendationResponse>(prompt);
 
 			BusyDetails = "Processing the recommendations.";
 			BusyDetails = $"We have {response?.Result.Tasks.Count} tasks to recommend that we think could be amazing.";
@@ -147,6 +145,9 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 				RecommendedTasks = recommendedTasks;
 				HasRecommendations = RecommendedTasks.Count > 0;
 			}
+		}		catch (InvalidOperationException ex)
+		{
+			_errorHandler.HandleError(new Exception("Chat client is not initialized. Please add your OpenAI API key in settings.", ex));
 		}
 		catch (Exception ex)
 		{
@@ -157,6 +158,7 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 			IsBusy = false;
 		}
 	}
+	
 	[RelayCommand]
 	private void AcceptRecommendation(ProjectTask task)
 	{
