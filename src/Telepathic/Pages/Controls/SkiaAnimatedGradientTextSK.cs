@@ -26,6 +26,28 @@ public sealed class SkiaAnimatedGradientTextSK : SKCanvasView
                 }
             );
 
+    public static readonly BindableProperty IsRunningProperty =
+        BindableProperty.Create(nameof(IsRunning), typeof(bool),
+            typeof(SkiaAnimatedGradientTextSK), false,
+            propertyChanged: (bindable, oldValue, newValue) =>
+                {
+                    var ctrl = (SkiaAnimatedGradientTextSK)bindable;
+                    bool isRunning = (bool)newValue;
+                    
+                    // Start or stop the animation based on IsRunning
+                    if (isRunning)
+                    {
+                        ctrl.StartAnimation();
+                    }
+                    else
+                    {
+                        ctrl.StopAnimation();
+                    }
+                    
+                    ctrl.InvalidateSurface(); // Redraw when running state changes
+                }
+            );
+
     public static readonly BindableProperty BaseFontColorProperty =
         BindableProperty.Create(nameof(BaseFontColor), typeof(Color),
             typeof(SkiaAnimatedGradientTextSK), Color.FromArgb("#8c8c8c"),
@@ -86,6 +108,12 @@ public sealed class SkiaAnimatedGradientTextSK : SKCanvasView
         set => SetValue(TextProperty, value);
     }
 
+    public bool IsRunning
+    {
+        get => (bool)GetValue(IsRunningProperty);
+        set => SetValue(IsRunningProperty, value);
+    }
+
     public bool ShowDebugBackground
     {
         get => (bool)GetValue(ShowDebugBackgroundProperty);
@@ -118,6 +146,8 @@ public sealed class SkiaAnimatedGradientTextSK : SKCanvasView
 
     /*───────────────────────────  Internals  ───────────────────────────*/
     private float _progress; // 0 → 1
+    private string _animationName = "shimmer";
+    private bool _isAnimationRunning = false;
 
     public SkiaAnimatedGradientTextSK()
     {
@@ -127,18 +157,51 @@ public sealed class SkiaAnimatedGradientTextSK : SKCanvasView
         // Register the paint surface handler
         PaintSurface += OnPaintSurface;
         
-        StartAnimation();
+        // Animation will be started when IsRunning is set to true, not in the constructor
     }
 
-    private void StartAnimation()
+    public void StartAnimation()
     {
+        // Only start the animation if it's not already running
+        if (_isAnimationRunning)
+            return;
+
+        _isAnimationRunning = true;
+        
+        // Stop any existing animation first
+        this.AbortAnimation(_animationName);
+        
+        // Create a repeating animation that runs at 30 FPS (rate = 30)
         new Animation(v =>
             {
                 _progress = (float)v;
-                InvalidateSurface();
+                InvalidateSurface(); // Force redraw with new progress value
             },
             0, 1, Easing.Linear)
-        .Commit(this, "shimmer", 16, 1250, finished: (_, __) => StartAnimation());
+        .Commit(this, _animationName, 30, 1500, Easing.Linear, (v, c) => 
+        {
+            // Only restart if IsRunning is still true
+            if (IsRunning)
+            {
+                // Immediately restart the animation to make it continuous
+                StartAnimation();
+            }
+            else
+            {
+                _isAnimationRunning = false;
+            }
+        }, () => IsRunning); // Only run when IsRunning is true
+    }
+
+    public void StopAnimation()
+    {
+        if (_isAnimationRunning)
+        {
+            this.AbortAnimation(_animationName);
+            _isAnimationRunning = false;
+            _progress = 0; // Reset progress
+            InvalidateSurface(); // Redraw without animation
+        }
     }
     
     // Converting Maui Color to SKColor
@@ -171,23 +234,38 @@ public sealed class SkiaAnimatedGradientTextSK : SKCanvasView
         string text = Text ?? "";
         if (string.IsNullOrWhiteSpace(text)) return;
         
+        // Debug - draw a rectangle to show the control bounds are working
+        if (ShowDebugBackground)
+        {
+            using var debugBorderPaint = new SKPaint
+            {
+                Color = SKColors.Red,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = 2
+            };
+            canvas.DrawRect(0, 0, e.Info.Width, e.Info.Height, debugBorderPaint);
+        }
+        
+        // Create font for text
+        using var skTypeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+        using var skFont = new SKFont(skTypeface, FontSize);
+        
         // Create paint for text
         using var textPaint = new SKPaint
         {
             IsAntialias = true,
             Style = SKPaintStyle.Fill,
-            Color = ToSKColor(BaseFontColor),
-            TextSize = FontSize,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+            Color = ToSKColor(BaseFontColor)
         };
         
         // Measure text
-        SKRect textBounds = new SKRect();
-        textPaint.MeasureText(text, ref textBounds);
+        var textWidth = skFont.MeasureText(text);
         
-        // Calculate position
+        // Calculate correct position for text drawing
         float x = 0;
-        float y = (e.Info.Height + textBounds.Height) / 2f; // Center vertically
+        // For vertical centering, we need the text height which is roughly equal to font size
+        float textHeight = FontSize; 
+        float y = (e.Info.Height + textHeight) / 2f; // Center vertically
         
         // Debug background
         if (ShowDebugBackground)
@@ -209,46 +287,61 @@ public sealed class SkiaAnimatedGradientTextSK : SKCanvasView
             canvas.DrawRect(0, 0, e.Info.Width, e.Info.Height, framePaint);
         }
         
-        // Draw base text
-        canvas.DrawText(text, x, y, textPaint);
+        // Always draw the text with standard paint when not animating,
+        // or as the base layer when animating
+        canvas.DrawText(text, x, y, SKTextAlign.Left, skFont, textPaint);
         
-        // Setup shimmer
-        float bandWidth = textBounds.Width * 2f;
-        float offset = (_progress * bandWidth) - bandWidth;
-        
-        // Create gradient for shimmer effect
-        using var gradientPaint = new SKPaint
+        // Only draw shimmer effect if IsRunning is true AND the animation is actually running
+        if (IsRunning && _isAnimationRunning)
         {
-            IsAntialias = true,
-            Style = SKPaintStyle.Fill,
-            TextSize = FontSize,
-            Typeface = textPaint.Typeface
-        };
-        
-        // Create shader with gradient
-        using var shader = SKShader.CreateLinearGradient(
-            new SKPoint(x + offset, 0),
-            new SKPoint(x + offset + bandWidth, 0),
-            new[]
-            {
-                SKColors.Transparent,
-                WithAlpha(GradientStartColor, 0.55f),
-                WithAlpha(GradientEndColor, 0.85f),
-                WithAlpha(GradientStartColor, 0.55f),
-                SKColors.Transparent
-            },
-            new float[] { 0.0f, 0.35f, 0.5f, 0.65f, 1.0f },
-            SKShaderTileMode.Clamp);
+            // Setup shimmer
+            float bandWidth = textWidth * 2f;
+            float offset = (_progress * bandWidth) - bandWidth;
             
-        gradientPaint.Shader = shader;
-        
-        // Apply clipping to the shimmer effect area
-        canvas.Save();
-        canvas.ClipRect(new SKRect(x, y - textBounds.Height, x + textBounds.Width, y));
-        
-        // Draw shimmer text
-        canvas.DrawText(text, x, y, gradientPaint);
-        canvas.Restore();
+            // Create gradient for shimmer effect
+            using var gradientPaint = new SKPaint
+            {
+                IsAntialias = true,
+                Style = SKPaintStyle.Fill
+            };
+            
+            // Create shader with gradient
+            using var shader = SKShader.CreateLinearGradient(
+                new SKPoint(x + offset, 0),
+                new SKPoint(x + offset + bandWidth, 0),
+                new[]
+                {
+                    SKColors.Transparent,
+                    WithAlpha(GradientStartColor, 0.55f),
+                    WithAlpha(GradientEndColor, 0.85f),
+                    WithAlpha(GradientStartColor, 0.55f),
+                    SKColors.Transparent
+                },
+                new float[] { 0.0f, 0.35f, 0.5f, 0.65f, 1.0f },
+                SKShaderTileMode.Clamp);
+                
+            gradientPaint.Shader = shader;
+            
+            // Apply clipping to the shimmer effect area
+            canvas.Save();
+            // Get proper text bounds including descenders
+            var textBounds = new SKRect();
+            skFont.MeasureText(text, out textBounds);
+            
+            // Create a clip rect that accounts for the full text height including descenders
+            // The bounds from MeasureText are relative to baseline, so we need to adjust y position
+            // Make the clipping area slightly larger to ensure all descenders are covered
+            canvas.ClipRect(new SKRect(
+                x,                         // Left
+                y + textBounds.Top - 2,    // Top (adding the negative top offset from baseline with extra padding)
+                x + textWidth,             // Right
+                y + textBounds.Bottom + 2  // Bottom (adding the positive bottom offset from baseline with extra padding)
+            ));
+            
+            // Draw shimmer text
+            canvas.DrawText(text, x, y, SKTextAlign.Left, skFont, gradientPaint);
+            canvas.Restore();
+        }
     }
 
     // Unsubscribe from events when the control is unloaded
@@ -260,7 +353,7 @@ public sealed class SkiaAnimatedGradientTextSK : SKCanvasView
         {
             // Control is being removed from the visual tree
             PaintSurface -= OnPaintSurface;
-            this.AbortAnimation("shimmer");
+            StopAnimation(); // Ensure animation is stopped when control is unloaded
         }
     }
 }
