@@ -611,7 +611,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine($"Based on all the context above, identify which tasks should be prioritized for the NEXT {PRIORITY_CHECK_HOURS} HOURS ONLY, starting from the current time ({now:t}). Consider:");
 			// sb.AppendLine("1. Tasks that are due soon or today");
 			sb.AppendLine("- Tasks that relate to upcoming calendar events in the next few hours");
-			sb.AppendLine("- Tasks that might be relevant to my current location");
+			sb.AppendLine("- Tasks that might be relevant to my current location should come first and exclude all other tasks unrelated to the location");
 			sb.AppendLine("- Tasks that align with my personal preferences in the 'About Me' section, unless they don't meet the location or timeframe criteria");
 			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");
 			sb.AppendLine("- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
