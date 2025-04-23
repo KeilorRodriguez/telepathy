@@ -20,12 +20,15 @@
 
             <Label 
                 HorizontalOptions="Start"
-                VerticalOptions="Start">
+                VerticalOptions="Start"
+                TextColor="{toolkit:AppThemeResource TextOnBackground}">
                 <Label.FormattedText>
                     <FormattedString>
-                        <Span Text="Let's talk" Style="{StaticResource Title1}" />
+                        <Span Text="Let's talk" Style="{StaticResource Title1}" 
+                            TextColor="{toolkit:AppThemeResource Primary}"/>
                         <Span Text="&#x0a;" />
-                        <Span Text="Hit record and tell me what needs doing." />
+                        <Span Text="Hit record and tell me what needs doing." 
+                            TextColor="{toolkit:AppThemeResource TextOnBackground}"/>
                     </FormattedString>
                 </Label.FormattedText>
             </Label>
@@ -162,9 +165,9 @@
                                         <BindableLayout.ItemTemplate>
                                             <DataTemplate x:DataType="models:ProjectTask">
                                                 <controls:TaskView 
-                                                    TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}"
-                                                    AcceptRecommendationCommand="{Binding AcceptRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}"
-                                                    RejectRecommendationCommand="{Binding RejectRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}" />
+                                                    TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoiceModalPageModel}}, x:DataType=pageModels:VoiceModalPageModel}"
+                                                    AcceptRecommendationCommand="{Binding AcceptRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoiceModalPageModel}}, x:DataType=pageModels:VoiceModalPageModel}"
+                                                    RejectRecommendationCommand="{Binding RejectRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoiceModalPageModel}}, x:DataType=pageModels:VoiceModalPageModel}" />
                                             </DataTemplate>
                                         </BindableLayout.ItemTemplate>
                                     </VerticalStackLayout>

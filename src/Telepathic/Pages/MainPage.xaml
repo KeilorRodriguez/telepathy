@@ -92,7 +92,7 @@
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate>
                                         <controls:TaskView
-                                            TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}">
+                                            TaskCompletedCommand="{Binding CompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}">
                                             <!-- <controls:TaskView.Background>
                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                                     <GradientStop Color="#4a90e2" Offset="0.0" />
@@ -149,7 +149,7 @@
                                              BindableLayout.ItemsSource="{Binding Tasks}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <controls:TaskView TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}"/>
+                                    <controls:TaskView TaskCompletedCommand="{Binding CompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}"/>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
@@ -158,7 +158,7 @@
             </pullToRefresh:SfPullToRefresh.PullableContent>
         </pullToRefresh:SfPullToRefresh>
 
-        <VerticalStackLayout
+        <!-- <VerticalStackLayout
             IsVisible="False"
             Background="Black"
             VerticalOptions="Center"
@@ -181,13 +181,13 @@
                 </Label.Text>
             </Label>
 
-            <!-- <Label Text="{Binding ContentSize.Height, Source={x:Reference ScrollView}, StringFormat='ContentSize.Height: {0}'}" /> -->
+            
             <Label Text="{Binding Minimum, 
                     Source={x:Reference AddButtonAnimation}, StringFormat='Minimum: {0}', Mode=OneWay}"/>
             <Label Text="{Binding Maximum, 
                     Source={x:Reference AddButtonAnimation}, StringFormat='Maximum: {0}', Mode=OneWay}"/>
             <Label Text="{Binding ScrollY, Source={x:Reference ScrollBehavior}, StringFormat='ScrollY: {0}', Mode=OneWay}"/>
-        </VerticalStackLayout>
+        </VerticalStackLayout> -->
 
         <VerticalStackLayout
             Spacing="{StaticResource LayoutSpacing}"
@@ -230,8 +230,7 @@
                     HeightRequest="60"
                     WidthRequest="60"
                     Opacity="0"
-                    IsVisible="{OnIdiom Desktop=False, Default=True}"
-                    InputTransparent="{Binding Opacity, Source={x:Reference CameraButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}"/>
+                    IsVisible="{OnIdiom Desktop=False, Default=True}"/>
 
             <Button x:Name="MicrophoneButton"
                     ImageSource="{toolkit:AppThemeResource IconMicrophone}"
@@ -240,8 +239,7 @@
                     HeightRequest="60"
                     WidthRequest="60"
                     Command="{Binding VoiceRecordCommand}"
-                    Opacity="0"
-                    InputTransparent="{Binding Opacity, Source={x:Reference MicrophoneButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}"/>
+                    Opacity="0"/>
 
             <Button x:Name="KeyboardButton"
                     ImageSource="{StaticResource IconKeyboard}"
@@ -250,8 +248,7 @@
                     HeightRequest="60"
                     WidthRequest="60"
                     Opacity="0"
-                    Command="{Binding AddTaskCommand}"
-                    InputTransparent="{Binding Opacity, Source={x:Reference KeyboardButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}"/>
+                    Command="{Binding AddTaskCommand}"/>
 
             <controls:AddButton x:Name="ActionToggleButton"
                                 Margin="0,0,0,30"

@@ -15,7 +15,6 @@ public enum VoicePhase { Recording, Transcribing, Reviewing }
 public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageModel
 {
     readonly IAudioManager _audioManager;
-    readonly IAudioService? _audio;
 
     IAudioSource? _audioSource = null;
 
@@ -66,30 +65,22 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
         _taskRepository = taskRepository;
         _logger = logger;
 
-        ToggleRecordingCommand = new AsyncRelayCommand(ToggleRecordingAsync);
-        ReRecordCommand = new AsyncRelayCommand(ReRecordAsync);
-        SaveCommand = new AsyncRelayCommand(SaveAsync);
-        NavigateToTaskCommand = new AsyncRelayCommand<ProjectTask>(NavigateToTask);
-
         _logger.LogInformation("Voice Modal Page Model initialized");
     }
-
-    public IAsyncRelayCommand ToggleRecordingCommand { get; }
-    public IAsyncRelayCommand ReRecordCommand { get; }
-    public IAsyncRelayCommand SaveCommand { get; }
-    public IAsyncRelayCommand<ProjectTask> NavigateToTaskCommand { get; }
 
     /// <summary>
     /// Navigate to the task detail page for a specific task
     /// </summary>
+    [RelayCommand]
     private Task NavigateToTask(ProjectTask? task)
     {
         if (task == null) return Task.CompletedTask;
-        
+
         _logger.LogInformation("Navigating to task details page for task: {TaskTitle}", task.Title);
         return Shell.Current.GoToAsync($"task?id={task.ID}");
     }
 
+    [RelayCommand]
     private async Task ToggleRecordingAsync()
     {
         if (!IsRecording)
@@ -141,6 +132,12 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
         {
             try
             {
+                if (_recorder == null)
+                {
+                    _logger.LogWarning("Recorder is null - cannot stop recording");
+                    return;
+                }
+
                 _audioSource = await _recorder.StopAsync();
                 IsRecording = false;
                 RecordButtonText = "🎤 Record";
@@ -383,28 +380,33 @@ Here's the transcript: {Transcript}";
         }
     }
 
+    [RelayCommand]
+	private Task TaskCompleted(ProjectTask task)
+	{
+		return _taskRepository.SaveItemAsync(task);
+	}
+
     /// <summary>
     /// Accept a recommended task and add it to its project
     /// </summary>
     [RelayCommand]
-    private void AcceptRecommendation(ProjectTask? task)
+    private Task AcceptRecommendation(ProjectTask task)
     {
-        if (task == null) return;
 
         // Mark the task as no longer a recommendation
         task.IsRecommendation = false;
-        
+
         _logger.LogInformation("Accepted recommended task: {TaskTitle}", task.Title);
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Reject a recommended task
     /// </summary>
     [RelayCommand]
-    private void RejectRecommendation(ProjectTask? task)
+    private Task RejectRecommendation(ProjectTask task)
     {
-        if (task == null) return;
-
         // Find and remove the task from its project
         foreach (var project in Projects)
         {
@@ -416,11 +418,14 @@ Here's the transcript: {Transcript}";
                 break;
             }
         }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Start the recording process over
     /// </summary>
+    [RelayCommand]
     private async Task ReRecordAsync()
     {
         _logger.LogInformation("Re-starting recording process");
@@ -437,6 +442,7 @@ Here's the transcript: {Transcript}";
     /// <summary>
     /// Save all projects and tasks
     /// </summary>
+    [RelayCommand]
     private async Task SaveAsync()
     {
         try
@@ -451,7 +457,7 @@ Here's the transcript: {Transcript}";
             // Save each project and its tasks
             foreach (var projectVm in Projects)
             {
-                
+
                 // Save the project to get its ID
                 await _projectRepository.SaveItemAsync(projectVm);
                 projectCount++;

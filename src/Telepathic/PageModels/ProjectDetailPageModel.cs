@@ -50,10 +50,10 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	bool _isBusy;
 
 	[ObservableProperty]
-	string _busyTitle;
+	string _busyTitle = "Loading...";
 
 	[ObservableProperty]
-	string _busyDetails;
+	string _busyDetails = "Please wait.";
 
 	[ObservableProperty]
 	bool _isTelepathyEnabled = Preferences.Default.Get("telepathy_enabled", false);
@@ -76,7 +76,7 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 		=> _project?.Tasks.Any(t => t.IsCompleted) ?? false;
 
 	public bool HasRecommendedTasks
-	 	=> _recommendedTasks?.Count > 0;
+	 	=> RecommendedTasks?.Count > 0;
 
 	public ProjectDetailPageModel(ProjectRepository projectRepository, TaskRepository taskRepository, CategoryRepository categoryRepository, TagRepository tagRepository, ModalErrorHandler errorHandler, IChatClientService chatClientService)
 	{
@@ -135,7 +135,7 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 				if (bestCategory != null)
 				{
 					Category = bestCategory;
-					CategoryIndex = Categories.IndexOf(bestCategory);
+					CategoryIndex = Categories?.IndexOf(bestCategory) ?? -1;
 				}
 				var recommendedTasks = new List<ProjectTask>();
 				foreach (var t in rec.Tasks)
@@ -158,25 +158,26 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 			IsBusy = false;
 		}
 	}
-	
+
 	[RelayCommand]
-	private void AcceptRecommendation(ProjectTask task)
+	private Task AcceptRecommendation(ProjectTask task)
 	{
 		if (!_project.IsNullOrNew() && task != null)
 		{
 			_project.Tasks.Add(task);
 			Tasks = new List<ProjectTask>(_project.Tasks);
-			
+
 			// Remove from recommendations since we've added it directly to tasks
 			var updatedRecommendations = RecommendedTasks.ToList();
 			updatedRecommendations.Remove(task);
 			RecommendedTasks = updatedRecommendations;
 			HasRecommendations = RecommendedTasks.Count > 0;
 		}
+		return Task.CompletedTask;
 	}
-	
+
 	[RelayCommand]
-	private void RejectRecommendation(ProjectTask task)
+	private Task RejectRecommendation(ProjectTask task)
 	{
 		if (task != null && RecommendedTasks.Contains(task))
 		{
@@ -185,10 +186,12 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 			RecommendedTasks = updatedTasks;
 			HasRecommendations = RecommendedTasks.Count > 0;
 		}
+		
+		return Task.CompletedTask;
 	}
 
 	[RelayCommand]
-	private void AcceptAllRecommendations()
+	void AcceptAllRecommendations()
 	{
 		if (!_project.IsNullOrNew() && RecommendedTasks.Count > 0)
 		{

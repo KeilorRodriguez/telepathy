@@ -11,14 +11,14 @@ namespace Telepathic.Converters
         /// <summary>
         /// Object to return when all values are true
         /// </summary>
-        public object TrueObject { get; set; }
+        public object? TrueObject { get; set; }
         
         /// <summary>
         /// Object to return when any value is false
         /// </summary>
-        public object FalseObject { get; set; }
+        public object? FalseObject { get; set; }
 
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object?[] values, Type targetType, object? parameter, CultureInfo culture)
         {
             // If any value is not present or cannot be converted to bool, return false result
             if (values == null || values.Length == 0)
@@ -45,7 +45,7 @@ namespace Telepathic.Converters
             return TrueObject;
         }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        public object?[] ConvertBack(object? value, Type[] targetTypes, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException("ConvertBack method is not implemented for BothBooleanConverter");
         }

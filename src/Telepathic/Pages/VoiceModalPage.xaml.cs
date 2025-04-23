@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Telepathic.PageModels;
@@ -21,7 +22,7 @@ public partial class VoiceModalPage : ContentPage
         _model.PropertyChanged += Model_PropertyChanged;
     }
     
-    private void Model_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void Model_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(VoiceModalPageModel.IsRecording))
         {

@@ -1,13 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Maui.Storage;
 using Plugin.Maui.CalendarStore;
 using System.Collections.ObjectModel;
 using Telepathic.Models;
-using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Extensions.AI;
 using System.Diagnostics;
-using OpenAI;
 using Microsoft.Extensions.Logging;
 
 namespace Telepathic.PageModels;
@@ -24,8 +21,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly ICalendarStore _calendarStore;	private readonly IChatClientService _chatClientService;
     private readonly ILogger _logger;
     private CancellationTokenSource? _cancelTokenSource;
-	private bool _isCheckingLocation;
-	private DateTime _lastPriorityCheck = DateTime.MinValue;
+    private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
 
 	[ObservableProperty]
@@ -99,7 +95,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
-	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
+
+    public IAsyncRelayCommand<ProjectTask> AcceptRecommendationCommand => throw new NotImplementedException();
+
+    public IAsyncRelayCommand<ProjectTask> RejectRecommendationCommand => throw new NotImplementedException();
+
+    public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
 		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService)
 	{
