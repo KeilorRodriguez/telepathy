@@ -4,86 +4,119 @@
              xmlns:pageModels="clr-namespace:Telepathic.PageModels"
              xmlns:models="clr-namespace:Telepathic.Models"
              xmlns:aloha="clr-namespace:AlohaKit.Animations;assembly=AlohaKit.Animations"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
             xmlns:expander="clr-namespace:Syncfusion.Maui.Toolkit.Expander;assembly=Syncfusion.Maui.Toolkit"
             xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
              x:Class="Telepathic.Pages.VoiceModalPage"
              x:DataType="pageModels:VoiceModalPageModel"
-             Title="Let's Talk">
-    <ContentPage.Resources>
-        <Style x:Key="HeaderLabelStyle" TargetType="Label">
-            <Setter Property="FontSize" Value="Large" />
-            <Setter Property="HorizontalOptions" Value="Center" />
-            <Setter Property="Margin" Value="0,20,0,20" />
-        </Style>
-        
-        <Style x:Key="ActionButtonStyle" TargetType="Button">
-            <Setter Property="Margin" Value="5" />
-            <Setter Property="Padding" Value="15,10" />
-            <Setter Property="MinimumWidthRequest" Value="120" />
-        </Style>
-        
-        <Style x:Key="DeleteButtonStyle" TargetType="Button">
-            <Setter Property="HeightRequest" Value="40" />
-            <Setter Property="WidthRequest" Value="40" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="BackgroundColor" Value="Transparent" />
-            <Setter Property="TextColor" Value="Red" />
-        </Style>
-    </ContentPage.Resources>
+             Title="Voice">
+    
     
     <Grid Padding="20">
         <!-- Recording Phase -->
-        <StackLayout x:Name="RecordingView"
-                     IsVisible="{Binding Phase, Converter={StaticResource PhaseToRecordingBool}}"
-                     VerticalOptions="Center">
-            <Image Source="{StaticResource IconMicrophone}" 
-                   HeightRequest="100" 
-                   WidthRequest="100"
-                   HorizontalOptions="Center"
-                   IsVisible="{Binding IsRecording, Converter={StaticResource InvertedBoolConverter}}" />
-            <Label Text="Tap to Dictate Your Day" 
-                   Style="{StaticResource HeaderLabelStyle}" />
-            <Button Text="{Binding RecordButtonText}"
-                    Command="{Binding ToggleRecordingCommand}"
-                    HorizontalOptions="Center"
-                    FontSize="Large"
-                    WidthRequest="180"
-                    HeightRequest="60"
-                    Margin="0,20,0,20" />
-            <ActivityIndicator IsRunning="{Binding IsBusy}" 
+        <Grid x:Name="RecordingView"
+              IsVisible="{Binding Phase, Converter={StaticResource PhaseToRecordingBool}}"
+              RowDefinitions="*,Auto,*">
+
+            <Label 
+                HorizontalOptions="Start"
+                VerticalOptions="Start">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Let's talk" Style="{StaticResource Title1}" />
+                        <Span Text="&#x0a;" />
+                        <Span Text="Hit record and tell me what needs doing." />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+              
+            <!-- Main recording button container -->
+            <Grid Grid.Row="1" HorizontalOptions="Center" VerticalOptions="Center">
+                <!-- Ripple animations for voice sensitivity -->
+                <Grid x:Name="RippleContainer" 
+                      IsVisible="{Binding IsRecording}"
+                      HorizontalOptions="Center" 
+                      VerticalOptions="Center"
+                      InputTransparent="True">
+                    <!-- Ripple 1 - Will be animated in code -->
+                    <Ellipse x:Name="Ripple1"
+                            Fill="#80FF0000"
+                            WidthRequest="120"
+                            HeightRequest="120"
+                            Opacity="0"
+                            Scale="1"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                            
+                    <!-- Ripple 2 - Will be animated in code -->
+                    <Ellipse x:Name="Ripple2"
+                            Fill="#80FF0000"
+                            WidthRequest="120"
+                            HeightRequest="120"
+                            Opacity="0"
+                            Scale="1"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                            
+                    <!-- Ripple 3 - Will be animated in code -->
+                    <Ellipse x:Name="Ripple3"
+                            Fill="#80FF0000"
+                            WidthRequest="120"
+                            HeightRequest="120"
+                            Opacity="0"
+                            Scale="1"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                </Grid>
+                
+                <!-- Main recording button -->
+                <Border x:Name="RecordButton"
+                        Background="{toolkit:AppThemeResource Primary}"
+                        StrokeShape="RoundRectangle 80"
+                        HeightRequest="120"
+                        WidthRequest="120"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center">
+                    
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleRecordingCommand}" />
+                    </Border.GestureRecognizers>
+                    
+                    <Grid>
+                        <!-- Microphone icon -->
+                        <Image Source="{toolkit:AppThemeResource IconMicrophone}" 
+                               HeightRequest="60" 
+                               WidthRequest="60"
                                HorizontalOptions="Center"
-                               HeightRequest="50"
-                               WidthRequest="50"
-                               Margin="0,20,0,0" />
+                               VerticalOptions="Center"
+                               IsVisible="{Binding IsRecording, Converter={StaticResource InvertedBoolConverter}}" />
+                        
+                        <!-- Stop icon when recording -->
+                        <Rectangle Fill="#F2E8C4"
+                                  WidthRequest="30"
+                                  HeightRequest="30"
+                                  IsVisible="{Binding IsRecording}"
+                                  HorizontalOptions="Center"
+                                  VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+            </Grid>
             
-            <!-- Visual indicator for recording state -->
-            <Border IsVisible="{Binding IsRecording}"
-                   BackgroundColor="Red"
-                   StrokeShape="RoundRectangle 20"
-                   HeightRequest="20"
-                   WidthRequest="20"
+            <!-- Status text -->
+            <!-- <Label Text="{Binding IsRecording, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='Recording...,Tap to Record'}"
+                   Grid.Row="2"
+                   Margin="0,20,0,0"
                    HorizontalOptions="Center"
-                   Margin="0,10,0,0">
-                <!-- <Border.Triggers>
-                    <DataTrigger TargetType="Border" Binding="{Binding IsRecording}" Value="True">
-                        <DataTrigger.EnterActions>
-                                <aloha:AnimateDouble 
-                                    Easing="SinInOut"
-                                    TargetProperty="RecordingPulse.Opacity"
-                                    From="1.0"
-                                    To="0.3"
-                                    Duration="100"/>
-                        </DataTrigger.EnterActions>
-                    </DataTrigger>
-                </Border.Triggers> -->
-            </Border>
-            <Label x:Name="RecordingPulse"
-                   Text="Recording..."
-                   IsVisible="{Binding IsRecording}"
-                   HorizontalOptions="Center"
-                   TextColor="Red"
-                   Margin="0,5,0,0" />
-        </StackLayout>
+                   TextColor="{Binding IsRecording, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='Red,Default'}"/> -->
+            
+            <!-- Activity indicator for busy state -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                               Grid.Row="2"
+                               HorizontalOptions="Center"
+                               HeightRequest="30"
+                               WidthRequest="30"
+                               Margin="0,60,0,0" />
+        </Grid>
 
         <controls:ActivityIndicatorView
                             IsVisible="{Binding IsAnalyzingContext}"
@@ -143,27 +176,19 @@
                 
                 
                 <!-- Action Buttons -->
-                <Grid ColumnDefinitions="*,*" Margin="0,20,0,20">
+                <Grid ColumnDefinitions="*,*" Margin="0,20,0,20" ColumnSpacing="20">
                     <Button Grid.Column="0"
                             Text="Re-record"
                             Command="{Binding ReRecordCommand}"
-                            Style="{StaticResource ActionButtonStyle}" 
                             HorizontalOptions="End" />
                             
                     <Button Grid.Column="1"
                             Text="Save"
                             Command="{Binding SaveCommand}"
-                            Style="{StaticResource ActionButtonStyle}"
                             HorizontalOptions="Start" />
                 </Grid>
             </StackLayout>
         </ScrollView>
 
-        <!-- <Button x:Name="CloseButton"
-                Text="Exit"
-                Command="{Binding GoBackCommand}"
-                Style="{StaticResource ActionButtonStyle}"
-                HorizontalOptions="Start"
-                VerticalOptions="Start" /> -->
     </Grid>
 </ContentPage>

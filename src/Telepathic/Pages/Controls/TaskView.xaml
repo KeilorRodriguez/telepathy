@@ -74,9 +74,9 @@
                         Text="{Binding Title}"
                         VerticalOptions="Center" 
                         LineBreakMode="TailTruncation"
-                        FontAttributes="{Binding IsRecommendation, Converter={StaticResource BoolToFontAttributesConverter}}">
-                    </Label>
-                      <!-- Trashcan Button (only visible for recommendations) -->
+                        FontAttributes="{Binding IsRecommendation, Converter={StaticResource BoolToFontAttributesConverter}}"/>
+
+                    <!-- Trashcan Button (only visible for recommendations) -->
                     <Button
                         Grid.Column="2"
                         WidthRequest="40"

@@ -117,22 +117,29 @@
                 Color="#8855FF"
                 Size="{StaticResource IconSize}" />
 
-        <FontImageSource x:Key="IconMicrophone"
-                Glyph="{x:Static f:FluentUI.mic_48_regular}"
-                FontFamily="{x:Static f:FluentUI.FontFamily}"
-                Color="{toolkit:AppThemeResource TextOnBackground}"
-                Size="{StaticResource IconSize}" />
+        <toolkit:AppThemeObject x:Key="IconMicrophone"
+                Light="{FontImageSource 
+                        Glyph={x:Static f:FluentUI.mic_48_regular}, 
+                        FontFamily={x:Static f:FluentUI.FontFamily}, 
+                        Color=#F2E8C4, 
+                        Size={StaticResource IconSize}}"
+                Dark="{FontImageSource 
+                        Glyph={x:Static f:FluentUI.mic_48_regular}, 
+                        FontFamily={x:Static f:FluentUI.FontFamily}, 
+                        Color=#F2E8C4, 
+                        Size={StaticResource IconSize}}"
+                />
 
         <FontImageSource x:Key="IconKeyboard"
                 Glyph="{x:Static f:FluentUI.keyboard_24_regular}"
                 FontFamily="{x:Static f:FluentUI.FontFamily}"
-                Color="{toolkit:AppThemeResource TextOnBackground}"
+                Color="#F2E8C4"
                 Size="{StaticResource IconSize}" />
         
         <FontImageSource x:Key="IconCamera"
                 Glyph="{x:Static f:FluentUI.camera_dome_48_regular}"
                 FontFamily="{x:Static f:FluentUI.FontFamily}"
-                Color="{toolkit:AppThemeResource TextOnBackground}"
+                Color="#F2E8C4"
                 Size="{StaticResource IconSize}" />
 
     <Style TargetType="Page" ApplyToDerivedTypes="True">

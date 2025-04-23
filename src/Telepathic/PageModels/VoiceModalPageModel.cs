@@ -271,7 +271,6 @@ Analyze the text to identify actionable tasks I need to keep track of. Use the f
 2. Projects are larger tasks that may contain multiple smaller tasks, such as 'Plan birthday party' or 'Organize closet'.
 3. Tasks must be grouped under a project and cannot be grouped under multiple projects.
 4. Any mentioned due dates use the YYYY-MM-DD format
-5. Make sure IsRecommendation is set to true for all tasks
 
 Here's the transcript: {Transcript}";
 
@@ -285,6 +284,15 @@ Here's the transcript: {Transcript}";
 
             if (response?.Result != null)
             {
+                // Mark all extracted tasks as recommendations
+                foreach (var project in response.Result.Projects)
+                {
+                    foreach (var task in project.Tasks)
+                    {
+                        task.IsRecommendation = true;
+                    }
+                }
+
                 Projects = response.Result.Projects;
                 
                 _logger.LogInformation("Found {NumberOfProjects} projects", Projects.Count);

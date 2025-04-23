@@ -234,7 +234,7 @@
                     InputTransparent="{Binding Opacity, Source={x:Reference CameraButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}"/>
 
             <Button x:Name="MicrophoneButton"
-                    ImageSource="{StaticResource IconMicrophone}"
+                    ImageSource="{toolkit:AppThemeResource IconMicrophone}"
                     BackgroundColor="{toolkit:AppThemeResource Primary}"
                     CornerRadius="30"
                     HeightRequest="60"
