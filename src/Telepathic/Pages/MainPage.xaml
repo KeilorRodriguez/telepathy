@@ -85,7 +85,6 @@
                                    Style="{StaticResource Title2}"
                                    TextColor="{toolkit:AppThemeResource Primary}"/>
                             <Label Text="How about tackling these tasks first?"
-                                   Style="{StaticResource Caption1}"
                                    Margin="0,0,0,12"/>
                             <VerticalStackLayout
                                 Spacing="{StaticResource LayoutSpacing}"

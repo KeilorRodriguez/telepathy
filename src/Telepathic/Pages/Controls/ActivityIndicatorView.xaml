@@ -14,6 +14,7 @@
             FontSize="42"
             MinimumHeightRequest="40"
             MinimumWidthRequest="200"
+            ShowDebugBackground="False"
             HorizontalOptions="Fill"
             Grid.ColumnSpan="2" />
 

@@ -88,9 +88,30 @@ public partial class ActivityIndicatorView : ContentView
     {
         if (bindable is ActivityIndicatorView view)
         {
-            // AnimatedGradientText is always running its animation,
-            // we just need to control visibility
-            view.IsVisible = (bool)newValue;
+            bool isRunning = (bool)newValue;
+            // Restore original visibility behavior - only show when running
+            view.IsVisible = isRunning;
+            
+            // Update the IsRunning property on the SkiaAnimatedGradientTextSK control
+            if (view.TitleText != null)
+            {
+                // Set the IsRunning property and explicitly start the animation if needed
+                view.TitleText.IsRunning = isRunning;
+                
+                if (isRunning)
+                {
+                    // Explicitly call StartAnimation to ensure it begins
+                    view.TitleText.StartAnimation();
+                }
+                else
+                {
+                    // Explicitly stop animation when not running
+                    view.TitleText.StopAnimation();
+                }
+                
+                // Force a redraw
+                view.TitleText.InvalidateSurface();
+            }
         }
     }
     
@@ -126,7 +147,15 @@ public partial class ActivityIndicatorView : ContentView
         if (TitleText == null)
             return;
             
-        TitleText.BaseFontColor = TitleTextColor;
+        // Make sure BaseFontColor is always visible by ensuring it has sufficient opacity
+        var color = TitleTextColor;
+        // Ensure alpha is at least 0.7 (roughly 178 in byte value) for visibility
+        if (color.Alpha < 0.7)
+        {
+            color = color.WithAlpha(0.7f);
+        }
+        
+        TitleText.BaseFontColor = color;
         TitleText.GradientStartColor = ShimmerStartColor;
         TitleText.GradientEndColor = ShimmerEndColor;
     }

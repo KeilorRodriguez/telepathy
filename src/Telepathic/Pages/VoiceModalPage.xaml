@@ -8,8 +8,7 @@
             xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
              x:Class="Telepathic.Pages.VoiceModalPage"
              x:DataType="pageModels:VoiceModalPageModel"
-             Shell.PresentationMode="ModalAnimated"
-             Title="Dictate Your Day">
+             Title="Let's Talk">
     <ContentPage.Resources>
         <Style x:Key="HeaderLabelStyle" TargetType="Label">
             <Setter Property="FontSize" Value="Large" />
@@ -85,11 +84,24 @@
                    TextColor="Red"
                    Margin="0,5,0,0" />
         </StackLayout>
+
+        <controls:ActivityIndicatorView
+                            IsVisible="{Binding IsAnalyzingContext}"
+                            IsRunning="{Binding IsAnalyzingContext}"
+                            HorizontalOptions="Start"
+                            Title="{Binding AnalysisStatusTitle}"
+                            Detail="{Binding AnalysisStatusDetail}"
+                            MinimumWidthRequest="200"
+                            MinimumHeightRequest="100"
+                            ShimmerStartColor="#4a90e2"
+                            ShimmerEndColor="#9b59b6"/>
         
         <!-- Review Phase -->
-        
-            <StackLayout Padding="20" Spacing="20"
-                IsVisible="{Binding Phase, Converter={StaticResource PhaseToReviewBool}}">
+        <ScrollView IsVisible="{Binding Phase, Converter={StaticResource PhaseToReviewBool}}"> 
+            <StackLayout Padding="20" Spacing="20">
+
+                
+
                 <!-- Transcript Section -->
                 <!-- <expander:SfExpander IsExpanded="False">
                     <expander:SfExpander.Header>
@@ -102,19 +114,24 @@
                 
                 <!-- Projects Section -->
                 <StackLayout IsVisible="{Binding Projects.Count, Converter={StaticResource CountToBoolConverter}}"
-                    Margin="0,20,0,0">
-                    <Label Text="Projects" FontSize="Large" FontAttributes="Bold" Margin="0,10,0,5" />
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Projects}">
+                    Spacing="{StaticResource LayoutSpacing}"
+                    >
+                    <Label Text="Projects" Style="{StaticResource Title1}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Projects}"
+                        Spacing="{StaticResource LayoutSpacing}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="models:Project">
-                                <VerticalStackLayout>
+                                <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}">
                                     <Label Text="{Binding Name}" 
-                                        FontSize="Medium" 
-                                        FontAttributes="Bold" />
-                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Tasks}">
+                                        Style="{StaticResource Title2}" />
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Tasks}"
+                                        Spacing="{StaticResource LayoutSpacing}">
                                         <BindableLayout.ItemTemplate>
                                             <DataTemplate x:DataType="models:ProjectTask">
-                                                <controls:TaskView />
+                                                <controls:TaskView 
+                                                    TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}"
+                                                    AcceptRecommendationCommand="{Binding AcceptRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}"
+                                                    RejectRecommendationCommand="{Binding RejectRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}" />
                                             </DataTemplate>
                                         </BindableLayout.ItemTemplate>
                                     </VerticalStackLayout>
@@ -140,12 +157,13 @@
                             HorizontalOptions="Start" />
                 </Grid>
             </StackLayout>
+        </ScrollView>
 
-        <Button x:Name="CloseButton"
+        <!-- <Button x:Name="CloseButton"
                 Text="Exit"
                 Command="{Binding GoBackCommand}"
                 Style="{StaticResource ActionButtonStyle}"
                 HorizontalOptions="Start"
-                VerticalOptions="Start" />
+                VerticalOptions="Start" /> -->
     </Grid>
 </ContentPage>

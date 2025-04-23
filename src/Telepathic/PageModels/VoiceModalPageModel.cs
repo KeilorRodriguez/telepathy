@@ -12,14 +12,14 @@ namespace Telepathic.PageModels;
 
 public enum VoicePhase { Recording, Transcribing, Reviewing }
 
-public partial class VoiceModalPageModel : ObservableObject
+public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageModel
 {
     readonly IAudioManager _audioManager;
-    readonly IAudioService _audio;
+    readonly IAudioService? _audio;
 
-    IAudioSource _audioSource = null;
+    IAudioSource? _audioSource = null;
 
-    IAudioRecorder _recorder;
+    IAudioRecorder? _recorder;
     readonly ITranscriptionService _transcriber;
     readonly ModalErrorHandler _errorHandler;
     readonly IChatClientService _chatClientService;
@@ -30,6 +30,11 @@ public partial class VoiceModalPageModel : ObservableObject
     [ObservableProperty] VoicePhase phase = VoicePhase.Recording;
     [ObservableProperty] string recordButtonText = "🎤 Record";
     [ObservableProperty] string transcript = string.Empty;
+
+    // Status indicator properties
+    [ObservableProperty] bool isAnalyzingContext;
+    [ObservableProperty] string analysisStatusTitle = "Processing";
+    [ObservableProperty] string analysisStatusDetail = "Preparing to analyze your recording...";
 
     // Extracted projects and tasks
     [ObservableProperty] List<Project> projects = new();
@@ -64,6 +69,7 @@ public partial class VoiceModalPageModel : ObservableObject
         ToggleRecordingCommand = new AsyncRelayCommand(ToggleRecordingAsync);
         ReRecordCommand = new AsyncRelayCommand(ReRecordAsync);
         SaveCommand = new AsyncRelayCommand(SaveAsync);
+        NavigateToTaskCommand = new AsyncRelayCommand<ProjectTask>(NavigateToTask);
 
         _logger.LogInformation("Voice Modal Page Model initialized");
     }
@@ -71,6 +77,18 @@ public partial class VoiceModalPageModel : ObservableObject
     public IAsyncRelayCommand ToggleRecordingCommand { get; }
     public IAsyncRelayCommand ReRecordCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
+    public IAsyncRelayCommand<ProjectTask> NavigateToTaskCommand { get; }
+
+    /// <summary>
+    /// Navigate to the task detail page for a specific task
+    /// </summary>
+    private Task NavigateToTask(ProjectTask? task)
+    {
+        if (task == null) return Task.CompletedTask;
+        
+        _logger.LogInformation("Navigating to task details page for task: {TaskTitle}", task.Title);
+        return Shell.Current.GoToAsync($"task?id={task.ID}");
+    }
 
     private async Task ToggleRecordingAsync()
     {
@@ -151,6 +169,9 @@ public partial class VoiceModalPageModel : ObservableObject
         try
         {
             IsBusy = true;
+            IsAnalyzingContext = true;
+            AnalysisStatusTitle = "Processing Audio";
+            AnalysisStatusDetail = "Preparing your recording for transcription...";
             
             // Create a temporary file path to save our recording
             string audioFilePath = Path.Combine(FileSystem.CacheDirectory, $"recording_{DateTime.Now:yyyyMMddHHmmss}.wav");
@@ -160,6 +181,7 @@ public partial class VoiceModalPageModel : ObservableObject
             // Save the audio source to a file
             if (_audioSource != null)
             {
+                AnalysisStatusDetail = "Saving audio recording...";
                 await using (var fileStream = File.Create(audioFilePath))
                 {
                     var audioStream = _audioSource.GetAudioStream();
@@ -184,11 +206,18 @@ public partial class VoiceModalPageModel : ObservableObject
             // Transcribe the audio using Whisper
             _logger.LogInformation("Starting audio transcription");
             _stopwatch.Restart();
+            
+            AnalysisStatusTitle = "Transcribing";
+            AnalysisStatusDetail = "Converting your voice to text using AI...";
+            
             Transcript = await _transcriber.TranscribeAsync(audioFilePath, CancellationToken.None);
             _stopwatch.Stop();
             _logger.LogInformation("Audio transcription completed in {TranscriptionDuration}ms, length: {TranscriptLength}",
                 _stopwatch.ElapsedMilliseconds, Transcript?.Length ?? 0);
 
+            AnalysisStatusTitle = "Analyzing";
+            AnalysisStatusDetail = "Identifying projects and tasks from your recording...";
+            
             // Extract projects and tasks from the transcript
             await ExtractTasksAsync();
 
@@ -205,6 +234,7 @@ public partial class VoiceModalPageModel : ObservableObject
         finally
         {
             IsBusy = false;
+            IsAnalyzingContext = false;
         }
     }
 
@@ -226,9 +256,12 @@ public partial class VoiceModalPageModel : ObservableObject
 
             _logger.LogInformation("Starting task extraction from transcript");
             _stopwatch.Restart();
+            
+            AnalysisStatusTitle = "Analyzing Content";
+            AnalysisStatusDetail = "Using AI to identify tasks and projects in your recording...";
 
             // ignore the audio and just see if we can get something meaningful from this text
-            Transcript = "Tonight we are going to the Good Friday service at church, but we need to get Nolan from the airport around 9:30. This weekend we have an easter egg hunt at church and then after church Sunday morning we are going to Mammy's house for lunch and an egg hunt. We need to take a dish and the bag of candy for filling eggs.";
+            Transcript = "This week we are going to the Good Friday service at church, but we need to get Nolan from the airport around 9:30. This weekend we have an easter egg hunt at church and then after church Sunday morning we are going to Mammy's house for lunch and an egg hunt. We need to take a dish and the bag of candy for filling eggs.";
 
             // Create a prompt that will extract projects and tasks from the transcript
             var prompt = $@"
@@ -238,6 +271,7 @@ Analyze the text to identify actionable tasks I need to keep track of. Use the f
 2. Projects are larger tasks that may contain multiple smaller tasks, such as 'Plan birthday party' or 'Organize closet'.
 3. Tasks must be grouped under a project and cannot be grouped under multiple projects.
 4. Any mentioned due dates use the YYYY-MM-DD format
+5. Make sure IsRecommendation is set to true for all tasks
 
 Here's the transcript: {Transcript}";
 
@@ -251,9 +285,8 @@ Here's the transcript: {Transcript}";
 
             if (response?.Result != null)
             {
-
                 Projects = response.Result.Projects;
-
+                
                 _logger.LogInformation("Found {NumberOfProjects} projects", Projects.Count);
                 _logger.LogInformation("Found {NumberOfTasks} tasks", Projects.Sum(p => p.Tasks.Count));
 
@@ -343,6 +376,41 @@ Here's the transcript: {Transcript}";
     }
 
     /// <summary>
+    /// Accept a recommended task and add it to its project
+    /// </summary>
+    [RelayCommand]
+    private void AcceptRecommendation(ProjectTask? task)
+    {
+        if (task == null) return;
+
+        // Mark the task as no longer a recommendation
+        task.IsRecommendation = false;
+        
+        _logger.LogInformation("Accepted recommended task: {TaskTitle}", task.Title);
+    }
+
+    /// <summary>
+    /// Reject a recommended task
+    /// </summary>
+    [RelayCommand]
+    private void RejectRecommendation(ProjectTask? task)
+    {
+        if (task == null) return;
+
+        // Find and remove the task from its project
+        foreach (var project in Projects)
+        {
+            if (project.Tasks.Contains(task))
+            {
+                project.Tasks.Remove(task);
+                _logger.LogInformation("Rejected recommended task: {TaskTitle} from project: {ProjectName}",
+                    task.Title, project.Name);
+                break;
+            }
+        }
+    }
+
+    /// <summary>
     /// Start the recording process over
     /// </summary>
     private async Task ReRecordAsync()
@@ -394,10 +462,10 @@ Here's the transcript: {Transcript}";
                 projectCount, taskCount, _stopwatch.ElapsedMilliseconds);
 
             // Close the modal
-            await Shell.Current.Navigation.PopModalAsync();
+            await Shell.Current.GoToAsync("..");
 
             // Notify the user that everything was saved
-            await Shell.Current.DisplayAlert("Success", "Your voice memo has been saved as projects and tasks.", "OK");
+            await Shell.Current.DisplayAlert("Success", "Your projects and tasks are save and secure.", "OK");
         }
         catch (Exception ex)
         {
