@@ -29,8 +29,8 @@ public static class MauiProgram
 					playbackOptions.Category = AVFoundation.AVAudioSessionCategory.Playback;
 #endif
 #if ANDROID
-					playbackOptions.AudioContentType = Android.Media.AudioContentType.Music;
-					playbackOptions.AudioUsageKind = Android.Media.AudioUsageKind.Media;
+					// playbackOptions.AudioContentType = Android.Media.AudioContentType.Music;
+					// playbackOptions.AudioUsageKind = Android.Media.AudioUsageKind.Media;
 #endif
 				},
 				recordingOptions =>
@@ -62,14 +62,15 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SeedDataService>();
 		builder.Services.AddSingleton<ModalErrorHandler>();
 		builder.Services.AddSingleton<MainPageModel>();
-		builder.Services.AddSingleton<ProjectListPageModel>();		builder.Services.AddSingleton<ManageMetaPageModel>();
+		builder.Services.AddSingleton<ProjectListPageModel>();
+		builder.Services.AddSingleton<ManageMetaPageModel>();
 		builder.Services.AddSingleton<IAudioService, AudioService>();
 		builder.Services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
 		builder.Services.AddSingleton<IChatClientService, ChatClientService>();
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
 		builder.Services.AddTransientWithShellRoute<Pages.VoiceModalPage, PageModels.VoiceModalPageModel>("voice");
-		
+
 		return builder.Build();
 	}
 }

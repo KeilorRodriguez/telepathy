@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:pageModels="clr-namespace:Telepathic.PageModels"             
+             xmlns:pageModels="clr-namespace:Telepathic.PageModels"
              xmlns:models="clr-namespace:Telepathic.Models"
              xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
              xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.TextInputLayout;assembly=Syncfusion.Maui.Toolkit"
@@ -16,46 +16,39 @@
 
     <ContentPage.Behaviors>
         <toolkit:EventToCommandBehavior
-                EventName="NavigatedTo"
-                Command="{Binding NavigatedToCommand}" />
+            EventName="NavigatedTo"
+            Command="{Binding NavigatedToCommand}"/>
         <toolkit:EventToCommandBehavior
-                EventName="NavigatedFrom"
-                Command="{Binding NavigatedFromCommand}" />
+            EventName="NavigatedFrom"
+            Command="{Binding NavigatedFromCommand}"/>
         <toolkit:EventToCommandBehavior
-                EventName="Appearing"                
-                Command="{Binding AppearingCommand}" />
-    </ContentPage.Behaviors>    
-    
+            EventName="Appearing"
+            Command="{Binding AppearingCommand}"/>
+        <toolkit:StatusBarBehavior StatusBarColor="{toolkit:AppThemeResource Background}"/>
+    </ContentPage.Behaviors>
+
     <ContentPage.Resources>
         <ResourceDictionary>
-            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
-            <toolkit:BoolToObjectConverter x:Key="TelepathyIconConverter" 
-                                          TrueObject="icon_telepathy_on.png" 
-                                          FalseObject="icon_telepathy_off.png" />
-            <toolkit:MathExpressionConverter x:Key="MathExpressionConverter" />
-            <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter" />
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <toolkit:BoolToObjectConverter x:Key="TelepathyIconConverter"
+                                           TrueObject="icon_telepathy_on.png"
+                                           FalseObject="icon_telepathy_off.png"/>
+            <toolkit:MathExpressionConverter x:Key="MathExpressionConverter"/>
+            <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter"/>
         </ResourceDictionary>
-    </ContentPage.Resources>    
+    </ContentPage.Resources>
 
     <Shell.TitleView>
         <Grid>
-            <ImageButton Source="{Binding IsTelepathyEnabled, Converter={StaticResource TelepathyIconConverter}}" 
-                HorizontalOptions="End" 
-                VerticalOptions="Center" 
-                Aspect="AspectFit" 
-                HeightRequest="44" 
-                WidthRequest="44"
-                Command="{Binding ShowSettingsCommand}"/>
+            <ImageButton Source="{Binding IsTelepathyEnabled, Converter={StaticResource TelepathyIconConverter}}"
+                         HorizontalOptions="End"
+                         VerticalOptions="Center"
+                         Aspect="AspectFit"
+                         HeightRequest="44"
+                         WidthRequest="44"
+                         Command="{Binding ShowSettingsCommand}"/>
         </Grid>
     </Shell.TitleView>
-    <!-- <ContentPage.ToolbarItems>
-        <ToolbarItem 
-            Text="Settings" 
-            IconImageSource="{Binding IsTelepathyEnabled, Converter={StaticResource TelepathyIconConverter}}" 
-            Order="Primary" 
-            Priority="0" 
-            Command="{Binding ShowSettingsCommand}" />
-    </ContentPage.ToolbarItems> -->
 
     <Grid>
         <pullToRefresh:SfPullToRefresh
@@ -66,40 +59,40 @@
                     <VisualElement.Behaviors>
                         <aloha:ScrollViewScrollBehavior x:Name="ScrollBehavior"/>
                     </VisualElement.Behaviors>
-                    <VerticalStackLayout 
+                    <VerticalStackLayout
                         x:Name="ScrollContent"
-                        Spacing="{StaticResource LayoutSpacing}" 
+                        Spacing="{StaticResource LayoutSpacing}"
                         Padding="{StaticResource LayoutPadding}">
-                        
+
                         <!-- Activity Indicator for telepathic analysis -->
-                        <controls:ActivityIndicatorView 
+                        <controls:ActivityIndicatorView
                             IsVisible="{Binding IsAnalyzingContext}"
+                            IsRunning="{Binding IsAnalyzingContext}"
                             HorizontalOptions="Start"
-                            Title="{Binding AnalysisStatusTitle}" 
+                            Title="{Binding AnalysisStatusTitle}"
                             Detail="{Binding AnalysisStatusDetail}"
                             MinimumWidthRequest="200"
                             MinimumHeightRequest="100"
                             ShimmerStartColor="#4a90e2"
-                            ShimmerEndColor="#9b59b6"
-                            />
+                            ShimmerEndColor="#9b59b6"/>
 
                         <!-- Priority Tasks Section -->
-                        <VerticalStackLayout 
+                        <VerticalStackLayout
                             IsVisible="{Binding HasPriorityTasks}"
                             Spacing="{StaticResource LayoutSpacing}"
                             Margin="0,0,0,12">
-                            <Label Text="Priority Tasks" 
-                                Style="{StaticResource Title2}" 
-                                TextColor="{toolkit:AppThemeResource Primary}"/>
-                            <Label Text="How about tackling these tasks first?" 
-                                   Style="{StaticResource Caption1}" 
+                            <Label Text="Priority Tasks"
+                                   Style="{StaticResource Title2}"
+                                   TextColor="{toolkit:AppThemeResource Primary}"/>
+                            <Label Text="How about tackling these tasks first?"
+                                   Style="{StaticResource Caption1}"
                                    Margin="0,0,0,12"/>
-                            <VerticalStackLayout 
-                                Spacing="{StaticResource LayoutSpacing}" 
+                            <VerticalStackLayout
+                                Spacing="{StaticResource LayoutSpacing}"
                                 BindableLayout.ItemsSource="{Binding PriorityTasks}">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate>
-                                        <controls:TaskView 
+                                        <controls:TaskView
                                             TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}">
                                             <!-- <controls:TaskView.Background>
                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
@@ -112,58 +105,37 @@
                                 </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>
                         </VerticalStackLayout>
-                        
-                        <controls:CategoryChart />                        
 
-                        <!-- <controls:ActivityIndicatorView 
-                            HorizontalOptions="Start"
-                            Title="Achieving cosmic victory" 
-                            Detail="Your MAUI project's project management superpowers have been fully restored! Users across the cosmos will marvel at the smooth, shimmering animations while they organize their tasks and projects with your magnificent app!" 
-                            MinimumWidthRequest="200"
-                            MinimumHeightRequest="100"
-                            /> -->
-<!-- 
-                        <controls:AnimatedGradientText 
-                            HorizontalOptions="Start"
-                            Text="Analyzing new controls" 
-                            
+                        <controls:CategoryChart/>
 
-                            WidthRequest="350"
-                            HeightRequest="40"
-                            GradientStartColor="#4a90e2" 
-                            GradientEndColor="#9b59b6"
-                             />
+                        <Label Text="Projects"
+                                Style="{StaticResource Title2}"/>
 
-                        <controls:SkiaAnimatedGradientTextSK 
-                            Text="Analyzing new controls" 
-                            FontSize="42" 
-                            WidthRequest="350"
-                            HeightRequest="40"                             
-                            GradientStartColor="#4a90e2" 
-                            GradientEndColor="#9b59b6"
-                            /> -->
-                                
-
-                        <!-- Activity Indicator with properly bound visibility -->
-                        <Label Text="Projects" Style="{StaticResource Title2}"/>
-                        <ScrollView Orientation="Horizontal" Margin="-30,0">
-                            <HorizontalStackLayout 
-                                Spacing="15" Padding="30,0"
+                        <ScrollView Orientation="Horizontal"
+                                Margin="-30,0">
+                            <HorizontalStackLayout
+                                Spacing="15"
+                                    Padding="30,0"
                                 BindableLayout.ItemsSource="{Binding Projects}">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="models:Project">
                                         <controls:ProjectCardView WidthRequest="200">
                                             <controls:ProjectCardView.GestureRecognizers>
-                                                <TapGestureRecognizer Command="{Binding NavigateToProjectCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}" CommandParameter="{Binding .}"/>
+                                                <TapGestureRecognizer Command="{Binding NavigateToProjectCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}"
+                                                        CommandParameter="{Binding .}"/>
                                             </controls:ProjectCardView.GestureRecognizers>
                                         </controls:ProjectCardView>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
                             </HorizontalStackLayout>
                         </ScrollView>
+
                         <Grid HeightRequest="44">
-                            <Label Text="Tasks" Style="{StaticResource Title2}" VerticalOptions="Center"/>
-                            <ImageButton 
+                            <Label Text="Tasks"
+                                    Style="{StaticResource Title2}"
+                                    VerticalOptions="Center"/>
+
+                            <ImageButton
                                 Source="{StaticResource IconClean}"
                                 HorizontalOptions="End"
                                 VerticalOptions="Center"
@@ -171,221 +143,237 @@
                                 HeightRequest="44"
                                 WidthRequest="44"
                                 IsVisible="{Binding HasCompletedTasks}"
-                                Command="{Binding CleanTasksCommand}"
-                                />
+                                Command="{Binding CleanTasksCommand}"/>
                         </Grid>
+
                         <VerticalStackLayout Spacing="15"
-                            BindableLayout.ItemsSource="{Binding Tasks}">
+                                             BindableLayout.ItemsSource="{Binding Tasks}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <controls:TaskView TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}" />
+                                    <controls:TaskView TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}"/>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
-
-                        
-
                     </VerticalStackLayout>
                 </ScrollView>
             </pullToRefresh:SfPullToRefresh.PullableContent>
         </pullToRefresh:SfPullToRefresh>
 
         <VerticalStackLayout
-                IsVisible="False"
-                Background="Black"
-                VerticalOptions="Center"
-                HorizontalOptions="Center"
-                Margin="0,0,30,300">
-                <Label Text="{Binding HeightRequest, Source={x:Reference ScrollView}, x:DataType=ScrollView, StringFormat='ScrollView: {0}'}" />
-                <Label Text="{Binding HeightRequest, Source={x:Reference ScrollContent}, x:DataType=VerticalStackLayout, StringFormat='ScrollContent: {0}'}" />
-                <Label>
-                    <Label.Text>
-                        <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
-                            ConverterParameter="x1-x0" StringFormat="Max: {0}">
-                            <Binding Path="HeightRequest" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
-                            <Binding Path="HeightRequest" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
-                        </MultiBinding>
-                    </Label.Text>
-                </Label>
-                
-                <!-- <Label Text="{Binding ContentSize.Height, Source={x:Reference ScrollView}, StringFormat='ContentSize.Height: {0}'}" /> -->
-                <Label Text="{Binding Minimum, 
-                    Source={x:Reference AddButtonAnimation}, StringFormat='Minimum: {0}', Mode=OneWay}" />
-                <Label Text="{Binding Maximum, 
-                    Source={x:Reference AddButtonAnimation}, StringFormat='Maximum: {0}', Mode=OneWay}" />
-                <Label Text="{Binding ScrollY, Source={x:Reference ScrollBehavior}, StringFormat='ScrollY: {0}', Mode=OneWay}" />
-            </VerticalStackLayout>
+            IsVisible="False"
+            Background="Black"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            Margin="0,0,30,300">
+            <Label Text="{Binding HeightRequest, Source={x:Reference ScrollView}, x:DataType=ScrollView, StringFormat='ScrollView: {0}'}"/>
+            <Label Text="{Binding HeightRequest, Source={x:Reference ScrollContent}, x:DataType=VerticalStackLayout, StringFormat='ScrollContent: {0}'}"/>
+            <Label>
+                <Label.Text>
+                    <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
+                                  ConverterParameter="x1-x0"
+                            StringFormat="Max: {0}">
+                        <Binding Path="HeightRequest"
+                                Source="{x:Reference ScrollView}"
+                                x:DataType="ScrollView"/>
+                        <Binding Path="HeightRequest"
+                                Source="{x:Reference ScrollContent}"
+                                x:DataType="VerticalStackLayout"/>
+                    </MultiBinding>
+                </Label.Text>
+            </Label>
 
-        
-        
+            <!-- <Label Text="{Binding ContentSize.Height, Source={x:Reference ScrollView}, StringFormat='ContentSize.Height: {0}'}" /> -->
+            <Label Text="{Binding Minimum, 
+                    Source={x:Reference AddButtonAnimation}, StringFormat='Minimum: {0}', Mode=OneWay}"/>
+            <Label Text="{Binding Maximum, 
+                    Source={x:Reference AddButtonAnimation}, StringFormat='Maximum: {0}', Mode=OneWay}"/>
+            <Label Text="{Binding ScrollY, Source={x:Reference ScrollBehavior}, StringFormat='ScrollY: {0}', Mode=OneWay}"/>
+        </VerticalStackLayout>
+
         <VerticalStackLayout
             Spacing="{StaticResource LayoutSpacing}"
-            VerticalOptions="End" 
+            VerticalOptions="End"
             HorizontalOptions="End"
             Margin="30">
             <VerticalStackLayout.Behaviors>
-                    <aloha:AnimateProgressDouble
-                        x:Name="AddButtonAnimation"
-                        TargetProperty="VisualElement.Opacity"
-                        Progress="{Binding ScrollY, Source={x:Reference ScrollBehavior}, x:DataType=aloha:ScrollViewScrollBehavior}" 
-                        From="0"
-                        To="1">                        
-                        <aloha:AnimateProgressDouble.Maximum>
-                            <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
-                                ConverterParameter="x1-x0">
-                                <Binding Path="HeightRequest" Source="{x:Reference ScrollView}" x:DataType="ScrollView" />
-                                <Binding Path="HeightRequest" Source="{x:Reference ScrollContent}" x:DataType="VerticalStackLayout" />
-                            </MultiBinding>
-                        </aloha:AnimateProgressDouble.Maximum>
-                        <aloha:AnimateProgressDouble.Minimum>
-                            <Binding 
-                                Path="Maximum"
-                                Converter="{StaticResource MathExpressionConverter}" 
-                                ConverterParameter="x-100" 
-                                Mode="OneWay"
-                                Source="{x:Reference AddButtonAnimation}" 
-                                x:DataType="aloha:AnimateProgressDouble" />
-                        </aloha:AnimateProgressDouble.Minimum>
-                    </aloha:AnimateProgressDouble>
-                </VerticalStackLayout.Behaviors>              
-                  <Button x:Name="CameraButton"
-                    ImageSource="{StaticResource IconCamera}" 
-                    BackgroundColor="{toolkit:AppThemeResource Primary}" 
-                    CornerRadius="30" 
-                    HeightRequest="60" 
+                <aloha:AnimateProgressDouble
+                    x:Name="AddButtonAnimation"
+                    TargetProperty="VisualElement.Opacity"
+                    Progress="{Binding ScrollY, Source={x:Reference ScrollBehavior}, x:DataType=aloha:ScrollViewScrollBehavior}"
+                    From="0"
+                    To="1">
+                    <aloha:AnimateProgressDouble.Maximum>
+                        <MultiBinding Converter="{StaticResource MultiMathExpressionConverter}"
+                                      ConverterParameter="x1-x0">
+                            <Binding Path="HeightRequest"
+                                    Source="{x:Reference ScrollView}"
+                                    x:DataType="ScrollView"/>
+                            <Binding Path="HeightRequest"
+                                    Source="{x:Reference ScrollContent}"
+                                    x:DataType="VerticalStackLayout"/>
+                        </MultiBinding>
+                    </aloha:AnimateProgressDouble.Maximum>
+                    <aloha:AnimateProgressDouble.Minimum>
+                        <Binding
+                            Path="Maximum"
+                            Converter="{StaticResource MathExpressionConverter}"
+                            ConverterParameter="x-100"
+                            Mode="OneWay"
+                            Source="{x:Reference AddButtonAnimation}"
+                            x:DataType="aloha:AnimateProgressDouble"/>
+                    </aloha:AnimateProgressDouble.Minimum>
+                </aloha:AnimateProgressDouble>
+            </VerticalStackLayout.Behaviors>
+            <Button x:Name="CameraButton"
+                    ImageSource="{StaticResource IconCamera}"
+                    BackgroundColor="{toolkit:AppThemeResource Primary}"
+                    CornerRadius="30"
+                    HeightRequest="60"
                     WidthRequest="60"
                     Opacity="0"
                     IsVisible="{OnIdiom Desktop=False, Default=True}"
-                    InputTransparent="{Binding Opacity, Source={x:Reference CameraButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}" />
-             
-             <Button x:Name="MicrophoneButton"
-                ImageSource="{StaticResource IconMicrophone}" 
-                BackgroundColor="{toolkit:AppThemeResource Primary}" 
-                CornerRadius="30" 
-                HeightRequest="60" 
-                WidthRequest="60"  
-                Command="{Binding VoiceRecordCommand}"
-                Opacity="0"
-                InputTransparent="{Binding Opacity, Source={x:Reference MicrophoneButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}" />
-             
-             <Button x:Name="KeyboardButton"
-                ImageSource="{StaticResource IconKeyboard}" 
-                BackgroundColor="{toolkit:AppThemeResource Primary}" 
-                CornerRadius="30" 
-                HeightRequest="60" 
-                WidthRequest="60"
-                Opacity="0"
-                Command="{Binding AddTaskCommand}"
-                InputTransparent="{Binding Opacity, Source={x:Reference KeyboardButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}" />
+                    InputTransparent="{Binding Opacity, Source={x:Reference CameraButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}"/>
+
+            <Button x:Name="MicrophoneButton"
+                    ImageSource="{StaticResource IconMicrophone}"
+                    BackgroundColor="{toolkit:AppThemeResource Primary}"
+                    CornerRadius="30"
+                    HeightRequest="60"
+                    WidthRequest="60"
+                    Command="{Binding VoiceRecordCommand}"
+                    Opacity="0"
+                    InputTransparent="{Binding Opacity, Source={x:Reference MicrophoneButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}"/>
+
+            <Button x:Name="KeyboardButton"
+                    ImageSource="{StaticResource IconKeyboard}"
+                    BackgroundColor="{toolkit:AppThemeResource Primary}"
+                    CornerRadius="30"
+                    HeightRequest="60"
+                    WidthRequest="60"
+                    Opacity="0"
+                    Command="{Binding AddTaskCommand}"
+                    InputTransparent="{Binding Opacity, Source={x:Reference KeyboardButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}"/>
 
             <controls:AddButton x:Name="ActionToggleButton"
-                Margin="0,0,0,30"
-                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
-                Clicked="ToggleActionButtons_Clicked">
-                
+                                Margin="0,0,0,30"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                                Clicked="ToggleActionButtons_Clicked">
+
             </controls:AddButton>
 
         </VerticalStackLayout>
 
-    
-
-            
-
-            <!-- Settings Bottom Sheet -->
+        <!-- Settings Bottom Sheet -->
         <bottomSheet:SfBottomSheet x:Name="SettingsSheet"
-                                    IsOpen="{Binding IsSettingsSheetOpen, Mode=TwoWay}"
-                                    VerticalOptions="Fill"
-                                    MinimumHeightRequest="400"
-                                    Background="{toolkit:AppThemeResource SecondaryBackground}"
-                                    CornerRadius="24">
+                                   IsOpen="{Binding IsSettingsSheetOpen, Mode=TwoWay}"
+                                   VerticalOptions="Fill"
+                                   MinimumHeightRequest="400"
+                                   Background="{toolkit:AppThemeResource SecondaryBackground}"
+                                   CornerRadius="24">
             <bottomSheet:SfBottomSheet.BottomSheetContent>
                 <ScrollView>
-                    <VerticalStackLayout Padding="24" Spacing="24">
-                        <Label Text="Settings" FontAttributes="Bold" FontSize="24" HorizontalOptions="Center"/>
-                        
-                        <sf:SfTextInputLayout IsHintAlwaysFloated="True" Hint="Enable Telepathy" Padding="8">
-                            <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}" OnColor="{toolkit:AppThemeResource Primary}" />
+                    <VerticalStackLayout Padding="24"
+                            Spacing="24">
+                        <Label Text="Settings"
+                                FontAttributes="Bold"
+                                FontSize="24"
+                                HorizontalOptions="Center"/>
+
+                        <sf:SfTextInputLayout IsHintAlwaysFloated="True"
+                                Hint="Enable Telepathy"
+                                Padding="8">
+                            <Switch IsToggled="{Binding IsTelepathyEnabled, Mode=TwoWay}"
+                                    OnColor="{toolkit:AppThemeResource Primary}"/>
                         </sf:SfTextInputLayout>
 
                         <!-- Location Services -->
-                        <sf:SfTextInputLayout IsHintAlwaysFloated="True" Hint="Enable Location Services" Padding="8">
+                        <sf:SfTextInputLayout IsHintAlwaysFloated="True"
+                                Hint="Enable Location Services"
+                                Padding="8">
                             <VerticalStackLayout Spacing="8">
-                                <Switch IsToggled="{Binding IsLocationEnabled, Mode=TwoWay}" OnColor="{toolkit:AppThemeResource Primary}" />
-                                
-                                <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding IsLocationEnabled}">
-                                    <Label Text="{Binding CurrentLocation}" 
-                                           VerticalOptions="Center" 
+                                <Switch IsToggled="{Binding IsLocationEnabled, Mode=TwoWay}"
+                                        OnColor="{toolkit:AppThemeResource Primary}"/>
+
+                                <Grid ColumnDefinitions="*, Auto"
+                                        IsVisible="{Binding IsLocationEnabled}">
+                                    <Label Text="{Binding CurrentLocation}"
+                                           VerticalOptions="Center"
                                            Margin="0,8,0,0"/>
-                                    
-                                    <Button Grid.Column="1" 
-                                            Text="Refresh" 
+
+                                    <Button Grid.Column="1"
+                                            Text="Refresh"
                                             Command="{Binding RefreshLocationCommand}"
                                             IsVisible="{Binding IsLocationEnabled}"
                                             IsEnabled="{Binding IsGettingLocation, Converter={StaticResource InvertedBoolConverter}}"
                                             Margin="8,0,0,0"/>
                                 </Grid>
-                                
-                                <ActivityIndicator IsRunning="{Binding IsGettingLocation}" 
-                                                  IsVisible="{Binding IsGettingLocation}"
-                                                  HorizontalOptions="Start" />
+
+                                <ActivityIndicator IsRunning="{Binding IsGettingLocation}"
+                                                   IsVisible="{Binding IsGettingLocation}"
+                                                   HorizontalOptions="Start"/>
                             </VerticalStackLayout>
                         </sf:SfTextInputLayout>
 
-                        <sf:SfTextInputLayout 
+                        <sf:SfTextInputLayout
                             Hint="OpenAI API Key">
-                            <Entry Text="{Binding OpenAIApiKey, Mode=TwoWay}" Placeholder="Enter API Key" IsPassword="True" />
-                        </sf:SfTextInputLayout>                
-                        
-                        <sf:SfTextInputLayout IsHintAlwaysFloated="True" Hint="Calendar(s)" Padding="8">
-                            
+                            <Entry Text="{Binding OpenAIApiKey, Mode=TwoWay}"
+                                    Placeholder="Enter API Key"
+                                    IsPassword="True"/>
+                        </sf:SfTextInputLayout>
+
+                        <sf:SfTextInputLayout IsHintAlwaysFloated="True"
+                                Hint="Calendar(s)"
+                                Padding="8">
+
                             <VerticalStackLayout Spacing="10">
-                                <ActivityIndicator IsRunning="{Binding IsLoadingCalendars}" 
-                                                IsVisible="{Binding IsLoadingCalendars}"
-                                                HorizontalOptions="Start" />
-                                                
-                                <VerticalStackLayout 
-                                    Spacing="10" 
+                                <ActivityIndicator IsRunning="{Binding IsLoadingCalendars}"
+                                                   IsVisible="{Binding IsLoadingCalendars}"
+                                                   HorizontalOptions="Start"/>
+
+                                <VerticalStackLayout
+                                    Spacing="10"
                                     IsVisible="{Binding HasLoadedCalendars}"
                                     Padding="8"
                                     BindableLayout.ItemsSource="{Binding UserCalendars}">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="models:CalendarInfo">
-                                            <Grid ColumnDefinitions="*, Auto" Padding="0,5">
-                                                <Label Text="{Binding Name}" 
-                                                    VerticalOptions="Center" />
+                                            <Grid ColumnDefinitions="*, Auto"
+                                                    Padding="0,5">
+                                                <Label Text="{Binding Name}"
+                                                       VerticalOptions="Center"/>
                                                 <CheckBox Grid.Column="1"
-                                                        IsChecked="{Binding IsSelected}" 
-                                                        Color="{toolkit:AppThemeResource Primary}"
-                                                        CheckedChanged="CalendarCheckBox_CheckedChanged"/>
+                                                          IsChecked="{Binding IsSelected}"
+                                                          Color="{toolkit:AppThemeResource Primary}"
+                                                          CheckedChanged="CalendarCheckBox_CheckedChanged"/>
                                             </Grid>
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
-                                
+
                                 <!-- <Button Text="Disconnect All" 
                                         Command="{Binding DisconnectAllCalendarsCommand}"
                                         HorizontalOptions="Start"
                                         IsVisible="{Binding HasLoadedCalendars}" /> -->
-                                <Button 
-                                    Text="{Binding CalendarButtonText}" 
+                                <Button
+                                    Text="{Binding CalendarButtonText}"
                                     Command="{Binding ToggleCalendarCommand}"
-                                    HorizontalOptions="Start" />
+                                    HorizontalOptions="Start"/>
                             </VerticalStackLayout>
-                        </sf:SfTextInputLayout>                
-                        
-                        <sf:SfTextInputLayout 
-                            Hint="About Me" >
-                            <Editor Text="{Binding AboutMeText, Mode=TwoWay}" 
-                                HorizontalOptions="Fill"
-                                HeightRequest="100" 
-                                Placeholder="Tell me about yourself..." />
                         </sf:SfTextInputLayout>
-                            
+
+                        <sf:SfTextInputLayout
+                            Hint="About Me">
+                            <Editor Text="{Binding AboutMeText, Mode=TwoWay}"
+                                    HorizontalOptions="Fill"
+                                    HeightRequest="100"
+                                    Placeholder="Tell me about yourself..."/>
+                        </sf:SfTextInputLayout>
+
                     </VerticalStackLayout>
                 </ScrollView>
             </bottomSheet:SfBottomSheet.BottomSheetContent>
         </bottomSheet:SfBottomSheet>
     </Grid>
 
-    
+
 </ContentPage>
