@@ -23,7 +23,7 @@
 		<NoWarn>XC0103</NoWarn>
 		<MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 
-		<!-- <MauiVersion>9.0.60</MauiVersion> -->
+		<MauiVersion>9.0.60</MauiVersion>
 
 		<!-- Display name -->
 		<ApplicationTitle>Telepathic</ApplicationTitle>

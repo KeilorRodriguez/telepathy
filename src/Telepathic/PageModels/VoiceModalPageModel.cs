@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
+using Telepathic.Models;
 using Telepathic.Services;
 
 namespace Telepathic.PageModels;
@@ -31,9 +32,8 @@ public partial class VoiceModalPageModel : ObservableObject
     [ObservableProperty] string transcript = string.Empty;
 
     // Extracted projects and tasks
-    [ObservableProperty] ObservableCollection<ProjectVm> projects = new();
-    [ObservableProperty] ObservableCollection<TaskVm> standaloneTasks = new();
-
+    [ObservableProperty] List<Project> projects = new();
+    
     // Priority options for pickers
     public ObservableCollection<int?> PriorityOptions { get; } = new() { null, 1, 2, 3, 4, 5 };
 
@@ -62,9 +62,6 @@ public partial class VoiceModalPageModel : ObservableObject
         _logger = logger;
 
         ToggleRecordingCommand = new AsyncRelayCommand(ToggleRecordingAsync);
-        DeleteProjectCommand = new RelayCommand<ProjectVm>(DeleteProject);
-        DeleteTaskCommand = new RelayCommand<TaskVm>(DeleteTask);
-        DeleteStandaloneTaskCommand = new RelayCommand<TaskVm>(DeleteStandaloneTask);
         ReRecordCommand = new AsyncRelayCommand(ReRecordAsync);
         SaveCommand = new AsyncRelayCommand(SaveAsync);
 
@@ -72,9 +69,6 @@ public partial class VoiceModalPageModel : ObservableObject
     }
 
     public IAsyncRelayCommand ToggleRecordingCommand { get; }
-    public IRelayCommand<ProjectVm> DeleteProjectCommand { get; }
-    public IRelayCommand<TaskVm> DeleteTaskCommand { get; }
-    public IRelayCommand<TaskVm> DeleteStandaloneTaskCommand { get; }
     public IAsyncRelayCommand ReRecordCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
 
@@ -229,7 +223,6 @@ public partial class VoiceModalPageModel : ObservableObject
 
             // Clear previous extraction results
             Projects.Clear();
-            StandaloneTasks.Clear();
 
             _logger.LogInformation("Starting task extraction from transcript");
             _stopwatch.Restart();
@@ -249,29 +242,52 @@ Analyze the text to identify actionable tasks I need to keep track of. Use the f
 Here's the transcript: {Transcript}";
 
             // Get response from the AI service
-            var response = await _chat.GetResponseAsync<ExtractionResponse>(prompt);
+            var response = await _chat.GetResponseAsync<ProjectsJson>(prompt);
 
             _stopwatch.Stop();
             _logger.LogInformation("Task extraction completed in {ExtractionDuration}ms", _stopwatch.ElapsedMilliseconds);
+            
 
             if (response?.Result != null)
             {
+
+                Projects = response.Result.Projects;
+
+                _logger.LogInformation("Found {NumberOfProjects} projects", Projects.Count);
+                _logger.LogInformation("Found {NumberOfTasks} tasks", Projects.Sum(p => p.Tasks.Count));
+
                 // Add all projects and tasks to observable collections
-                foreach (var project in response.Result.Projects)
-                {
-                    Projects.Add(project);
-                }
+                // foreach (var aiProject in response.Result.Projects)
+                // {
+                //     // Convert AIProject to ProjectVm
+                //     var project = new ProjectVm
+                //     {
+                //         Name = aiProject.Name,
+                //         Tasks = aiProject.Tasks.Select(t => new TaskVm
+                //         {
+                //             Title = t.Title,
+                //             DueDate = t.DueDate,
+                //             Priority = t.Priority
+                //         }).ToList()
+                //     };
+                //     Projects.Add(project);
+                // }
 
-                foreach (var task in response.Result.StandaloneTasks)
-                {
-                    StandaloneTasks.Add(task);
-                }
+                // foreach (var aiTask in response.Result.StandaloneTasks)
+                // {
+                //     // Convert AITask to TaskVm
+                //     var task = new TaskVm
+                //     {
+                //         Title = aiTask.Title,
+                //         DueDate = aiTask.DueDate,
+                //         Priority = aiTask.Priority
+                //     };
+                //     StandaloneTasks.Add(task);
+                // }
 
-                _logger.LogInformation("Extracted {ProjectCount} projects and {TaskCount} standalone tasks",
-                    Projects.Count, StandaloneTasks.Count);
 
                 // Check if no projects or tasks were detected
-                if (Projects.Count == 0 && StandaloneTasks.Count == 0)
+                if (Projects.Count == 0)
                 {
                     _logger.LogWarning("No projects or tasks detected in transcript");
                     await Shell.Current.DisplayAlert(
@@ -295,7 +311,8 @@ Here's the transcript: {Transcript}";
     /// <summary>
     /// Delete a project and its tasks from the list
     /// </summary>
-    private void DeleteProject(ProjectVm? project)
+    [RelayCommand]
+    private void DeleteProject(Project? project)
     {
         if (project != null)
         {
@@ -307,7 +324,8 @@ Here's the transcript: {Transcript}";
     /// <summary>
     /// Delete a task from its project
     /// </summary>
-    private void DeleteTask(TaskVm? task)
+    [RelayCommand]
+    private void DeleteTask(ProjectTask? task)
     {
         if (task == null) return;
 
@@ -324,18 +342,6 @@ Here's the transcript: {Transcript}";
     }
 
     /// <summary>
-    /// Delete a standalone task
-    /// </summary>
-    private void DeleteStandaloneTask(TaskVm? task)
-    {
-        if (task != null)
-        {
-            StandaloneTasks.Remove(task);
-            _logger.LogInformation("Deleted standalone task: {TaskTitle}", task.Title);
-        }
-    }
-
-    /// <summary>
     /// Start the recording process over
     /// </summary>
     private async Task ReRecordAsync()
@@ -346,7 +352,6 @@ Here's the transcript: {Transcript}";
         Phase = VoicePhase.Recording;
         Transcript = string.Empty;
         Projects.Clear();
-        StandaloneTasks.Clear();
 
         // Wait a moment to ensure UI updates
         await Task.Delay(100);
@@ -369,45 +374,18 @@ Here's the transcript: {Transcript}";
             // Save each project and its tasks
             foreach (var projectVm in Projects)
             {
-                // Create a new project
-                var project = new Models.Project
-                {
-                    Name = projectVm.Name,
-                    Description = $"Created from voice memo: {DateTime.Now:g}"
-                };
-
+                
                 // Save the project to get its ID
-                await _projectRepository.SaveItemAsync(project);
+                await _projectRepository.SaveItemAsync(projectVm);
                 projectCount++;
 
                 // Save each task associated with this project
                 foreach (var taskVm in projectVm.Tasks)
                 {
-                    var task = new Models.ProjectTask
-                    {
-                        Title = taskVm.Title,
-                        ProjectID = project.ID,
-                        DueDate = taskVm.DueDate,
-                        Priority = taskVm.Priority ?? 0
-                    };
-
-                    await _taskRepository.SaveItemAsync(task);
+                    taskVm.ProjectID = projectVm.ID; // Set the project ID for the task
+                    await _taskRepository.SaveItemAsync(taskVm);
                     taskCount++;
                 }
-            }
-
-            // Save standalone tasks
-            foreach (var taskVm in StandaloneTasks)
-            {
-                var task = new Models.ProjectTask
-                {
-                    Title = taskVm.Title,
-                    DueDate = taskVm.DueDate,
-                    Priority = taskVm.Priority ?? 0
-                };
-
-                await _taskRepository.SaveItemAsync(task);
-                taskCount++;
             }
 
             _stopwatch.Stop();
