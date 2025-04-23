@@ -191,7 +191,7 @@
         </pullToRefresh:SfPullToRefresh>
 
         <VerticalStackLayout
-                IsVisible="true"
+                IsVisible="False"
                 Background="Black"
                 VerticalOptions="Center"
                 HorizontalOptions="Center"
@@ -216,6 +216,8 @@
                 <Label Text="{Binding ScrollY, Source={x:Reference ScrollBehavior}, StringFormat='ScrollY: {0}', Mode=OneWay}" />
             </VerticalStackLayout>
 
+        
+        
         <VerticalStackLayout
             Spacing="{StaticResource LayoutSpacing}"
             VerticalOptions="End" 
@@ -245,32 +247,43 @@
                                 x:DataType="aloha:AnimateProgressDouble" />
                         </aloha:AnimateProgressDouble.Minimum>
                     </aloha:AnimateProgressDouble>
-                </VerticalStackLayout.Behaviors>
-
-              <Button 
-                ImageSource="{StaticResource IconCamera}" 
-                BackgroundColor="{toolkit:AppThemeResource Primary}" 
-                CornerRadius="30" 
-                HeightRequest="60" 
-                WidthRequest="60"  />
+                </VerticalStackLayout.Behaviors>              
+                  <Button x:Name="CameraButton"
+                    ImageSource="{StaticResource IconCamera}" 
+                    BackgroundColor="{toolkit:AppThemeResource Primary}" 
+                    CornerRadius="30" 
+                    HeightRequest="60" 
+                    WidthRequest="60"
+                    Opacity="0"
+                    IsVisible="{OnIdiom Desktop=False, Default=True}"
+                    InputTransparent="{Binding Opacity, Source={x:Reference CameraButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}" />
              
-             <Button 
+             <Button x:Name="MicrophoneButton"
                 ImageSource="{StaticResource IconMicrophone}" 
                 BackgroundColor="{toolkit:AppThemeResource Primary}" 
                 CornerRadius="30" 
                 HeightRequest="60" 
                 WidthRequest="60"  
-                Command="{Binding VoiceRecordCommand}"/>
-             <Button 
+                Command="{Binding VoiceRecordCommand}"
+                Opacity="0"
+                InputTransparent="{Binding Opacity, Source={x:Reference MicrophoneButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}" />
+             
+             <Button x:Name="KeyboardButton"
                 ImageSource="{StaticResource IconKeyboard}" 
                 BackgroundColor="{toolkit:AppThemeResource Primary}" 
                 CornerRadius="30" 
                 HeightRequest="60" 
-                WidthRequest="60"  />
+                WidthRequest="60"
+                Opacity="0"
+                Command="{Binding AddTaskCommand}"
+                InputTransparent="{Binding Opacity, Source={x:Reference KeyboardButton}, Converter={StaticResource BoolToObjectConverter}, ConverterParameter='0'}" />
 
-            <controls:AddButton 
+            <controls:AddButton x:Name="ActionToggleButton"
+                Margin="0,0,0,30"
                 IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
-                Command="{Binding AddTaskCommand}"/>
+                Clicked="ToggleActionButtons_Clicked">
+                
+            </controls:AddButton>
 
         </VerticalStackLayout>
 
