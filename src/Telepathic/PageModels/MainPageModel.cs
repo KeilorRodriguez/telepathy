@@ -69,6 +69,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	private bool _isTelepathyEnabled = Preferences.Default.Get("telepathy_enabled", false);
 
+	public bool ShouldShowPriorityTasks => HasPriorityTasks && IsTelepathyEnabled;
+
 	[ObservableProperty]
 	private string _calendarButtonText = Preferences.Default.Get("calendar_connected", false) ? "Disconnect" : "Connect";
 
@@ -233,6 +235,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			IsRefreshing = true;
 			await LoadData();
+			await AnalyzeAndPrioritizeTasks();
 		}
 		catch (Exception e)
 		{
@@ -324,6 +327,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	partial void OnIsTelepathyEnabledChanged(bool value)
 	{
 		Preferences.Default.Set("telepathy_enabled", value);
+		OnPropertyChanged(nameof(ShouldShowPriorityTasks));
 	}
 
 	partial void OnOpenAIApiKeyChanged(string value)
