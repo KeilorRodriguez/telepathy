@@ -18,7 +18,7 @@
                 <Border StrokeShape="RoundRectangle 22" 
                         HeightRequest="44" 
                         StrokeThickness="0"
-                        Background="{toolkit:AppThemeResource SecondaryBackground}" 
+                        BackgroundColor="{toolkit:AppThemeResource SecondaryBackground}" 
                         Padding="{OnPlatform '18,0,18,8',Android='18,0,18,0'}">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding ToggleTagCommand, Source={RelativeSource AncestorType={x:Type pageModels:ProjectDetailPageModel}}, x:DataType=pageModels:ProjectDetailPageModel}" CommandParameter="{Binding .}"/>
@@ -57,7 +57,7 @@
                                           
         <converters:BothBooleanConverter x:Key="BothTrueConverter"
                                          TrueObject="{StaticResource AIBrush}"
-                                         FalseObject="{StaticResource White}" />
+                                         FalseObject="" />
                                         
         <toolkit:MathExpressionConverter x:Key="MathExpressionConverter" />
         <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter" />
@@ -80,8 +80,6 @@
             <VerticalStackLayout x:Name="ScrollContent" Padding="{StaticResource LayoutPadding}" Spacing="{StaticResource LayoutSpacing}">
                 <controls:GradientTextInputLayout 
                     ContainerType="Outlined"
-                    UnfocusedStrokeThickness="4"
-                    FocusedStrokeThickness="4"
                     Hint="Name" >                    
                     <controls:GradientTextInputLayout.StrokeBrush>
                         <MultiBinding Converter="{StaticResource BothTrueConverter}">

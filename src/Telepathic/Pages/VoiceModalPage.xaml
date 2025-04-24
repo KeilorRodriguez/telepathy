@@ -74,7 +74,7 @@
                 
                 <!-- Main recording button -->
                 <Border x:Name="RecordButton"
-                        Background="{toolkit:AppThemeResource Primary}"
+                        BackgroundColor="{toolkit:AppThemeResource Primary}"
                         StrokeShape="RoundRectangle 80"
                         HeightRequest="120"
                         WidthRequest="120"

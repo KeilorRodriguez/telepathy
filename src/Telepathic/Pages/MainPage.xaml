@@ -56,9 +56,9 @@
             RefreshCommand="{Binding RefreshCommand}">
             <pullToRefresh:SfPullToRefresh.PullableContent>
                 <ScrollView x:Name="ScrollView">
-                    <VisualElement.Behaviors>
+                    <!-- <VisualElement.Behaviors>
                         <aloha:ScrollViewScrollBehavior x:Name="ScrollBehavior"/>
-                    </VisualElement.Behaviors>
+                    </VisualElement.Behaviors> -->
                     <VerticalStackLayout
                         x:Name="ScrollContent"
                         Spacing="{StaticResource LayoutSpacing}"
@@ -194,7 +194,7 @@
             VerticalOptions="End"
             HorizontalOptions="End"
             Margin="30">
-            <VerticalStackLayout.Behaviors>
+            <!-- <VerticalStackLayout.Behaviors>
                 <aloha:AnimateProgressDouble
                     x:Name="AddButtonAnimation"
                     TargetProperty="VisualElement.Opacity"
@@ -222,7 +222,7 @@
                             x:DataType="aloha:AnimateProgressDouble"/>
                     </aloha:AnimateProgressDouble.Minimum>
                 </aloha:AnimateProgressDouble>
-            </VerticalStackLayout.Behaviors>
+            </VerticalStackLayout.Behaviors> -->
             <Button x:Name="CameraButton"
                     ImageSource="{StaticResource IconCamera}"
                     BackgroundColor="{toolkit:AppThemeResource Primary}"
@@ -264,7 +264,10 @@
                                    IsOpen="{Binding IsSettingsSheetOpen, Mode=TwoWay}"
                                    VerticalOptions="Fill"
                                    MinimumHeightRequest="400"
+                                   GrabberBackground="{toolkit:AppThemeResource TextOnBackground}"
+                                   GrabberHeight="5"
                                    Background="{toolkit:AppThemeResource SecondaryBackground}"
+                                   BackgroundColor="Transparent"
                                    CornerRadius="24">
             <bottomSheet:SfBottomSheet.BottomSheetContent>
                 <ScrollView>
@@ -282,7 +285,7 @@
                                     OnColor="{toolkit:AppThemeResource Primary}"/>
                         </sf:SfTextInputLayout>
 
-                        <!-- Location Services -->
+                        
                         <sf:SfTextInputLayout IsHintAlwaysFloated="True"
                                 Hint="Enable Location Services"
                                 Padding="8">
@@ -346,10 +349,7 @@
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
 
-                                <!-- <Button Text="Disconnect All" 
-                                        Command="{Binding DisconnectAllCalendarsCommand}"
-                                        HorizontalOptions="Start"
-                                        IsVisible="{Binding HasLoadedCalendars}" /> -->
+                                
                                 <Button
                                     Text="{Binding CalendarButtonText}"
                                     Command="{Binding ToggleCalendarCommand}"

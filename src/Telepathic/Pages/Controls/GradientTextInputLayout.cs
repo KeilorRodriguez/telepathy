@@ -53,9 +53,10 @@ namespace Telepathic.Pages.Controls
                 this.SetValue(StrokeProperty, Colors.Transparent);
                 
                 // Call the base draw method which will set up various rectangles and state
+                // but won't draw a border since Stroke is transparent
                 base.OnDraw(canvas, dirtyRect);
                 
-                // Restore the stroke color
+                // Restore the stroke color for future operations
                 this.SetValue(StrokeProperty, originalStroke);
 
                 // Draw our custom gradient border AFTER the base drawing
@@ -65,6 +66,7 @@ namespace Telepathic.Pages.Controls
             else
             {
                 // Use default drawing if no StrokeBrush is specified
+                // This lets SfTextInputLayout draw its regular solid-color border
                 base.OnDraw(canvas, dirtyRect);
             }
         }
