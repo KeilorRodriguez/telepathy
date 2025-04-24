@@ -47,11 +47,11 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
-    <CreatePackage>false</CreatePackage>
-    <EnableCodeSigning>true</EnableCodeSigning>
-    <CodesignRequireProvisioningProfile>true</CodesignRequireProvisioningProfile>
-    <DisableCodesignVerification>true</DisableCodesignVerification>
-  </PropertyGroup>
+		<CreatePackage>false</CreatePackage>
+		<EnableCodeSigning>true</EnableCodeSigning>
+		<CodesignRequireProvisioningProfile>true</CodesignRequireProvisioningProfile>
+		<DisableCodesignVerification>true</DisableCodesignVerification>
+	</PropertyGroup>
 
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
@@ -67,6 +67,14 @@
 	<!-- <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 	  <CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
 	  <CodesignProvision>Telepathic Development</CodesignProvision>
+	</PropertyGroup> -->
+
+	<!-- enable trimming and AOT analyzers on all platforms -->
+	<!-- <PropertyGroup>
+		<IsAotCompatible>true</IsAotCompatible>
+
+		<PublishAot Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">true</PublishAot>
+		<PublishAot Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</PublishAot>
 	</PropertyGroup> -->
 
 	<ItemGroup>

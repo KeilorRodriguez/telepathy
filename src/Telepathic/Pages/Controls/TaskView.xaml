@@ -20,7 +20,7 @@
         <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         <converters:BoolToFontAttributesConverter x:Key="BoolToFontAttributesConverter" />
         
-        <toolkit:BoolToObjectConverter x:Key="BoolToThicknessConverter" TrueObject="2" FalseObject="0" />
+        
         <toolkit:BoolToObjectConverter x:Key="BoolToBorderBrushConverter" 
                                      TrueObject="{StaticResource AIBrush}" 
                                      FalseObject="Transparent" />

@@ -96,10 +96,20 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
 
-    public IAsyncRelayCommand<ProjectTask> AcceptRecommendationCommand => throw new NotImplementedException();
+    [RelayCommand]
+	Task AcceptRecommendation(ProjectTask task)
+	{
+		Debug.WriteLine($"Accepting recommendation for task: {task.Title}");
+		return Task.CompletedTask;
+	}
 
-    public IAsyncRelayCommand<ProjectTask> RejectRecommendationCommand => throw new NotImplementedException();
-
+	[RelayCommand]
+	Task RejectRecommendation(ProjectTask task)
+	{
+		Debug.WriteLine($"Rejecting recommendation for task: {task.Title}");
+		return Task.CompletedTask;
+	}
+	
     public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
 		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService)
