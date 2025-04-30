@@ -63,6 +63,8 @@ We follow best practices:
 
 ---
 
+![screenshots](images/telepathy-screens.png)
+
 ## 🌌 Join the Mission
 
 Telepathy is a living galaxy—your feedback and contributions propel it forward.  
