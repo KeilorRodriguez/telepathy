@@ -47,6 +47,7 @@
                          Aspect="AspectFit"
                          HeightRequest="44"
                          WidthRequest="44"
+                         Background="Transparent"
                          Command="{Binding ShowSettingsCommand}"/>
         </Grid>
     </Shell.TitleView>
@@ -276,13 +277,10 @@
 
         <!-- Settings Bottom Sheet -->
         <bottomSheet:SfBottomSheet x:Name="SettingsSheet"
-                                   IsOpen="{Binding IsSettingsSheetOpen, Mode=TwoWay}"
-                                   VerticalOptions="Fill"
-                                   MinimumHeightRequest="400"
+                                   IsOpen="{Binding IsSettingsSheetOpen, Mode=TwoWay}"                                    
                                    GrabberBackground="{toolkit:AppThemeResource OnBackground}"
                                    GrabberHeight="5"
                                    Background="{toolkit:AppThemeResource Surface1}"
-                                   BackgroundColor="Transparent"
                                    CornerRadius="24">
             <bottomSheet:SfBottomSheet.BottomSheetContent>
                 <ScrollView>
