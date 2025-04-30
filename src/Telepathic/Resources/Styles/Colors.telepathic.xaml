@@ -35,11 +35,11 @@
         Light="#F2E8C4"
         Dark="#1F1F1F" />
 
-    <toolkit:AppThemeColor x:Key="TextOnBackground"
+    <toolkit:AppThemeColor x:Key="OnBackground"
         Light="#1F1F1F"
         Dark="#F2E8C4" />
 
-    <toolkit:AppThemeColor x:Key="SecondaryBackground"
+    <toolkit:AppThemeColor x:Key="Surface1"
         Light="#FFF7E6"
         Dark="#292929" />
 
@@ -53,8 +53,8 @@
 
     <Color x:Key="LightBackground">#F2F2F2</Color>
     <Color x:Key="DarkBackground">#17171a</Color>
-    <Color x:Key="LightSecondaryBackground">#E0E0E0</Color>
-    <Color x:Key="DarkSecondaryBackground">#222228</Color>
+    <Color x:Key="LightSurface1">#E0E0E0</Color>
+    <Color x:Key="DarkSurface1">#222228</Color>
 
     <LinearGradientBrush x:Key="AIBrush" StartPoint="0,1" EndPoint="1,0">
         <GradientStop Color="#D4A017" Offset="1.0" />

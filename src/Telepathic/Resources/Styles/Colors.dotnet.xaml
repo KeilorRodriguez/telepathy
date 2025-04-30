@@ -35,11 +35,11 @@
         Light="#F2F2F2"
         Dark="#17171a" />
 
-    <toolkit:AppThemeColor x:Key="TextOnBackground"
+    <toolkit:AppThemeColor x:Key="OnBackground"
         Light="#0D0D0D"
         Dark="#C3C3C3" />
 
-    <toolkit:AppThemeColor x:Key="SecondaryBackground"
+    <toolkit:AppThemeColor x:Key="Surface1"
         Light="#E0E0E0"
         Dark="#222228" />
 
@@ -53,27 +53,12 @@
 
     <Color x:Key="LightBackground">#F2F2F2</Color>
     <Color x:Key="DarkBackground">#17171a</Color>
-    <Color x:Key="LightSecondaryBackground">#E0E0E0</Color>
-    <Color x:Key="DarkSecondaryBackground">#222228</Color>
+    <Color x:Key="LightSurface1">#E0E0E0</Color>
+    <Color x:Key="DarkSurface1">#222228</Color>
 
     <LinearGradientBrush x:Key="AIBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#8855FF" Offset="0.0" />
         <GradientStop Color="#FF559E" Offset="0.5" />
         <GradientStop Color="#55DDFF" Offset="1.0" />
     </LinearGradientBrush>
-
-    <!-- <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
-    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
-    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
-    <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>
-    <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}"/>
-
-    <SolidColorBrush x:Key="Gray100Brush" Color="{StaticResource Gray100}"/>
-    <SolidColorBrush x:Key="Gray200Brush" Color="{StaticResource Gray200}"/>
-    <SolidColorBrush x:Key="Gray300Brush" Color="{StaticResource Gray300}"/>
-    <SolidColorBrush x:Key="Gray400Brush" Color="{StaticResource Gray400}"/>
-    <SolidColorBrush x:Key="Gray500Brush" Color="{StaticResource Gray500}"/>
-    <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
-    <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
-    <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/> -->
 </ResourceDictionary>

@@ -34,11 +34,16 @@
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>This app needs your permission to fully manage events on your calendars. This includes reading, writing, modifying and deleting events.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs your location to associate with your tasks and projects</string>
-	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs your location to associate with your tasks and projects</string>	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app needs your location to associate with your tasks and projects</string>
 
 	<key>NSMicrophoneUsageDescription</key>
 	<string>The Telepathic app wants to use your microphone to record audio.</string>
+	
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to capture photos for creating tasks.</string>
+	
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select photos for creating tasks.</string>
 </dict>
 </plist>

@@ -18,13 +18,13 @@
                 <Border StrokeShape="RoundRectangle 22" 
                         HeightRequest="44" 
                         StrokeThickness="0"
-                        BackgroundColor="{toolkit:AppThemeResource SecondaryBackground}" 
+                        BackgroundColor="{toolkit:AppThemeResource Surface1}" 
                         Padding="{OnPlatform '18,0,18,8',Android='18,0,18,0'}">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding ToggleTagCommand, Source={RelativeSource AncestorType={x:Type pageModels:ProjectDetailPageModel}}, x:DataType=pageModels:ProjectDetailPageModel}" CommandParameter="{Binding .}"/>
                         </Border.GestureRecognizers>
                         <Label Text="{Binding Title}"
-                            TextColor="{toolkit:AppThemeResource TextOnBackground}"
+                            TextColor="{toolkit:AppThemeResource OnBackground}"
                             FontSize="{OnIdiom 16,Desktop=18}" 
                             VerticalOptions="Center"
                             VerticalTextAlignment="Center"/>
@@ -165,7 +165,7 @@
                                     FontSize="24" 
                                     VerticalOptions="Center"
                                     HorizontalOptions="Center"
-                                    TextColor="{toolkit:AppThemeResource TextOnBackground}"/>
+                                    TextColor="{toolkit:AppThemeResource OnBackground}"/>
                                 <BoxView x:Name="SelectedIndicator" Color="{StaticResource Primary}" HeightRequest="4" HorizontalOptions="Fill" Grid.Row="1"/>
                             </Grid>                            
                         </DataTemplate>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <toolkit:AppThemeColor x:Key="Secondary"
+        Light="#AC3420"
+        Dark="#D74128" />
+
+    <toolkit:AppThemeColor x:Key="Primary"
+        Light="#F04B25"
+        Dark="#F04B25" />
+
+    <toolkit:AppThemeColor x:Key="Background"
+        Light="#FBF8D4"
+        Dark="#121212" />
+
+    <toolkit:AppThemeColor x:Key="OnBackground"
+        Light="#000000"
+        Dark="#F5F5F5" />
+
+    <toolkit:AppThemeColor x:Key="OnPrimary"
+        Light="#FBF8D4"
+        Dark="#FBF8D4" />
+
+    <toolkit:AppThemeColor x:Key="Surface0"
+        Light="#F8F4BC"
+        Dark="#1E1E1E" />
+
+    <!-- E1DFBF -->
+    <toolkit:AppThemeColor x:Key="Surface1"
+        Light="#F7E8A6"
+        Dark="#2B2B2B" />
+
+    <toolkit:AppThemeColor x:Key="Surface2"
+        Light="#F4EC8E"
+        Dark="#383838" />
+
+    <toolkit:AppThemeColor x:Key="Surface3"
+        Light="#F2E876"
+        Dark="#242424" />
+
+
+    
+
+    <!-- Standard black and white -->
+    <Color x:Key="White">#FFFFFF</Color>
+    <Color x:Key="Black">#000000</Color>    
+
+    <!-- Grayscale -->
+    <Color x:Key="Gray100">#E1E1E1</Color>
+    <Color x:Key="Gray200">#C8C8C8</Color>
+    <Color x:Key="Gray300">#ACACAC</Color>
+    <Color x:Key="Gray400">#919191</Color>
+    <Color x:Key="Gray500">#6E6E6E</Color>
+    <Color x:Key="Gray600">#404040</Color>
+    <Color x:Key="Gray900">#212121</Color>
+    <Color x:Key="Gray950">#141414</Color>
+
+    <toolkit:AppThemeColor x:Key="PlaceholderColor"
+        Light="{StaticResource Gray200}"
+        Dark="{StaticResource Gray500}" />
+
+    <toolkit:AppThemeColor x:Key="DisabledColor"
+        Light="{StaticResource Gray300}"
+        Dark="{StaticResource Gray600}" />
+
+    <LinearGradientBrush x:Key="AIBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#6EAA06" Offset="0.0" />
+        <GradientStop Color="#F27405" Offset="0.5" />
+        <GradientStop Color="#F2B705" Offset="1.0" />
+    </LinearGradientBrush>
+
+</ResourceDictionary>

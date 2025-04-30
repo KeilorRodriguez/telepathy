@@ -13,7 +13,7 @@
     x:Class="Telepathic.Pages.Controls.TaskView"
     x:Name="rootBorder"
     StrokeShape="RoundRectangle 20"
-    BackgroundColor="{toolkit:AppThemeResource SecondaryBackground}"
+    BackgroundColor="{toolkit:AppThemeResource Surface1}"
     StrokeThickness="{Binding IsRecommendation, Converter={StaticResource BoolToThicknessConverter}, ConverterParameter=2}"
     x:DataType="models:ProjectTask">
       <Border.Resources>
@@ -32,7 +32,7 @@
     
     <effectsView:SfEffectsView
         TouchDownEffects="Highlight"
-        HighlightBackground="{toolkit:AppThemeResource TextOnBackground}">
+        HighlightBackground="{toolkit:AppThemeResource OnBackground}">
         <shimmer:SfShimmer
             BackgroundColor="Transparent"
             VerticalOptions="Fill"               
@@ -90,7 +90,7 @@
                         Text="{x:Static fonts:FluentUI.delete_32_regular}"
                         FontFamily="{x:Static fonts:FluentUI.FontFamily}"
                         FontSize="24"
-                        TextColor="{toolkit:AppThemeResource TextOnBackground}"/>
+                        TextColor="{toolkit:AppThemeResource OnBackground}"/>
                 </Grid>
             </shimmer:SfShimmer.Content>
         </shimmer:SfShimmer>

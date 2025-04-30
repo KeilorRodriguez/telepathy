@@ -29,7 +29,7 @@
                     <controls:LegendExt Placement="Right">
                         <chart:ChartLegend.LabelStyle>
                             <chart:ChartLegendLabelStyle 
-                                TextColor="{toolkit:AppThemeResource TextOnBackground}" 
+                                TextColor="{toolkit:AppThemeResource OnBackground}" 
                                 Margin="5" 
                                 FontSize="18" />
                         </chart:ChartLegend.LabelStyle>

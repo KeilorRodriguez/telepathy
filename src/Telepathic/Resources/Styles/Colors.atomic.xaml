@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Atomic Era Modern Vibrant Palette -->
+
+    <toolkit:AppThemeColor x:Key="Primary"
+        Light="#FF6B6B"
+        Dark="#FF6B6B" /> <!-- Used for Buttons and Highlights -->
+
+    <toolkit:AppThemeColor x:Key="Background"
+        Light="#FFF8E7"
+        Dark="#1A1F71" /> <!-- Main background -->
+
+    <toolkit:AppThemeColor x:Key="OnBackground"
+        Light="#1F1F1F"
+        Dark="#F2EFBD" /> <!-- Text and UI elements on Background -->
+
+    <toolkit:AppThemeColor x:Key="Surface1"
+        Light="#A8E6CF"
+        Dark="#4B3F72" /> <!-- Cards, Panels -->
+
+    <toolkit:AppThemeColor x:Key="PlaceholderColor"
+        Light="#C8C8C8"
+        Dark="#6E6E6E" />
+
+    <toolkit:AppThemeColor x:Key="DisabledColor"
+        Light="#ACACAC"
+        Dark="#404040" />
+
+    <!-- Additional accent colors -->
+    <Color x:Key="AccentMustard">#FFB100</Color>
+    <Color x:Key="AccentAqua">#00CFC1</Color>
+    <Color x:Key="AccentCoral">#FF6B6B</Color>
+    <Color x:Key="AccentIndigo">#4B3F72</Color>
+    <Color x:Key="AccentMint">#A8E6CF</Color>
+
+    <!-- Standard black and white -->
+    <Color x:Key="White">#FFFFFF</Color>
+    <Color x:Key="Black">#000000</Color>
+    <Color x:Key="OffBlack">#1f1f1f</Color>
+
+    <!-- Gray scale -->
+    <Color x:Key="Gray100">#E1E1E1</Color>
+    <Color x:Key="Gray200">#C8C8C8</Color>
+    <Color x:Key="Gray300">#ACACAC</Color>
+    <Color x:Key="Gray400">#919191</Color>
+    <Color x:Key="Gray500">#6E6E6E</Color>
+    <Color x:Key="Gray600">#404040</Color>
+    <Color x:Key="Gray900">#212121</Color>
+    <Color x:Key="Gray950">#141414</Color>
+
+    <LinearGradientBrush x:Key="AIBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFB100" Offset="0.0" />
+        <GradientStop Color="#00CFC1" Offset="0.5" />
+        <GradientStop Color="#FF6B6B" Offset="1.0" />
+    </LinearGradientBrush>
+
+</ResourceDictionary>

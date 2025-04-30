@@ -66,10 +66,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ManageMetaPageModel>();
 		builder.Services.AddSingleton<IAudioService, AudioService>();
 		builder.Services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
-		builder.Services.AddSingleton<IChatClientService, ChatClientService>();
-		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
+		builder.Services.AddSingleton<IChatClientService, ChatClientService>();		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
 		builder.Services.AddTransientWithShellRoute<Pages.VoiceModalPage, PageModels.VoiceModalPageModel>("voice");
+		builder.Services.AddTransientWithShellRoute<Pages.PhotoPage, PageModels.PhotoPageModel>("photo");
 
 		return builder.Build();
 	}

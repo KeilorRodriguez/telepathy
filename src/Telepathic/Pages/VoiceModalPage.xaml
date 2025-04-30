@@ -21,14 +21,14 @@
             <Label 
                 HorizontalOptions="Start"
                 VerticalOptions="Start"
-                TextColor="{toolkit:AppThemeResource TextOnBackground}">
+                TextColor="{toolkit:AppThemeResource OnBackground}">
                 <Label.FormattedText>
                     <FormattedString>
                         <Span Text="Let's talk" Style="{StaticResource Title1}" 
                             TextColor="{toolkit:AppThemeResource Primary}"/>
                         <Span Text="&#x0a;" />
                         <Span Text="Hit record and tell me what needs doing." 
-                            TextColor="{toolkit:AppThemeResource TextOnBackground}"/>
+                            TextColor="{toolkit:AppThemeResource OnBackground}"/>
                     </FormattedString>
                 </Label.FormattedText>
             </Label>
@@ -74,7 +74,7 @@
                 
                 <!-- Main recording button -->
                 <Border x:Name="RecordButton"
-                        BackgroundColor="{toolkit:AppThemeResource Primary}"
+                        Background="{toolkit:AppThemeResource Primary}"
                         StrokeShape="RoundRectangle 80"
                         HeightRequest="120"
                         WidthRequest="120"
@@ -134,7 +134,7 @@
         
         <!-- Review Phase -->
         <ScrollView IsVisible="{Binding Phase, Converter={StaticResource PhaseToReviewBool}}"> 
-            <StackLayout Padding="20" Spacing="20">
+            <StackLayout Spacing="20">
 
                 
 

@@ -42,11 +42,11 @@
                         <FontImageSource 
                     Glyph="{Binding Icon}" 
                     FontFamily="{x:Static fonts:FluentUI.FontFamily}" 
-                    Color="{toolkit:AppThemeResource TextOnBackground}"
+                    Color="{toolkit:AppThemeResource OnBackground}"
                     Size="{StaticResource IconSize}"/>
                     </Image.Source>
                 </Image>
-                <Label Text="{Binding Name}" TextColor="{StaticResource Gray400}" FontSize="14" TextTransform="Uppercase"/>
+                <Label Text="{Binding Name}" TextColor="{toolkit:AppThemeResource Secondary}" FontSize="14" TextTransform="Uppercase" FontAttributes="Bold"/>
                 <Label Text="{Binding Description}" LineBreakMode="WordWrap"/>
                 <HorizontalStackLayout Spacing="15" BindableLayout.ItemsSource="{Binding Tags}">
                     <BindableLayout.ItemTemplate>

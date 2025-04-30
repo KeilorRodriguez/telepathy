@@ -18,10 +18,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly SeedDataService _seedDataService;
-	private readonly ICalendarStore _calendarStore;	private readonly IChatClientService _chatClientService;
-    private readonly ILogger _logger;
-    private CancellationTokenSource? _cancelTokenSource;
-    private DateTime _lastPriorityCheck = DateTime.MinValue;
+	private readonly ICalendarStore _calendarStore; private readonly IChatClientService _chatClientService;
+	private readonly ILogger _logger;
+	private CancellationTokenSource? _cancelTokenSource;
+	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
 
 	[ObservableProperty]
@@ -33,6 +33,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	private List<ProjectTask> _tasks = [];
 
+	[NotifyPropertyChangedFor(nameof(ShouldShowPriorityTasks))]
 	[ObservableProperty]
 	private List<ProjectTask> _priorityTasks = [];
 
@@ -54,6 +55,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	string _analysisStatusDetail = "Gathering your location, time, and calendar events to determine which tasks require your immediate attention...";
 
+	[NotifyPropertyChangedFor(nameof(ShouldShowPriorityTasks))]
 	[ObservableProperty]
 	bool _hasPriorityTasks;
 
@@ -66,6 +68,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	private string _openAIApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
 
+	[NotifyPropertyChangedFor(nameof(ShouldShowPriorityTasks))]
 	[ObservableProperty]
 	private bool _isTelepathyEnabled = Preferences.Default.Get("telepathy_enabled", false);
 
@@ -98,7 +101,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
 
-    [RelayCommand]
+	[RelayCommand]
 	Task AcceptRecommendation(ProjectTask task)
 	{
 		Debug.WriteLine($"Accepting recommendation for task: {task.Title}");
@@ -111,8 +114,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		Debug.WriteLine($"Rejecting recommendation for task: {task.Title}");
 		return Task.CompletedTask;
 	}
-	
-    public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
+
+	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
 		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService)
 	{
@@ -345,12 +348,13 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private void ShowSettings()
 	{
 		IsSettingsSheetOpen = true;
-	}	[RelayCommand]
+	}
+	[RelayCommand]
 	private async Task SaveApiKey()
 	{
 		_logger.LogInformation($"OpenAI API Key saved");
 		Preferences.Default.Set("openai_api_key", OpenAIApiKey);
-		
+
 		// Update the chat client with the new API key
 		try
 		{
@@ -528,10 +532,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			IsGettingLocation = false;
 		}
-	}	/// <summary>
-	/// Analyzes tasks based on calendar events, location, time of day, and personal preferences
-	/// to identify priority tasks that should be highlighted to the user.
-	/// </summary>
+	}   /// <summary>
+		/// Analyzes tasks based on calendar events, location, time of day, and personal preferences
+		/// to identify priority tasks that should be highlighted to the user.
+		/// </summary>
 	private async Task AnalyzeAndPrioritizeTasks()
 	{
 		// Early exit if telepathy is disabled or we're missing the API client
@@ -722,4 +726,78 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		await AppShell.Current.GoToAsync("voice");
 	}
+
+	[RelayCommand]
+	async Task PickPhotoAsync()
+	{
+		if (IsBusy)
+			return;
+
+		try
+		{
+			IsBusy = true;
+
+			var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
+			{
+				Title = "Select a photo"
+			});			if (result != null)
+			{
+				// Navigate to the PhotoPage with the image
+				var parameters = new Dictionary<string, object>
+				{
+					{ "ImageSource", result.FullPath }
+				};
+				await Shell.Current.GoToAsync("photo", parameters);
+			}
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+		finally
+		{
+			IsBusy = false;
+		}
+	}
+
+	[RelayCommand]
+	async Task TakePhotoAsync()
+	{
+		if (IsBusy)
+			return;
+
+		try
+		{
+			IsBusy = true;
+
+			if (!MediaPicker.IsCaptureSupported)
+			{
+				_errorHandler.HandleError(new Exception("Camera is not available on this device"));
+				return;
+			}
+
+			var result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
+			{
+				Title = "Take a photo"
+			});			if (result != null)
+			{
+				// Navigate to the PhotoPage with the image
+				var parameters = new Dictionary<string, object>
+				{
+					{ "ImageSource", result.FullPath }
+				};
+				await Shell.Current.GoToAsync("photo", parameters);
+			}
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+		finally
+		{
+			IsBusy = false;
+		}
+	}
+
+
 }
