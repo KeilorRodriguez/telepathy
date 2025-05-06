@@ -130,6 +130,12 @@
                          Color="{toolkit:AppThemeResource OnPrimary}"
                          Size="{StaticResource IconSize}"/>
 
+        <FontImageSource x:Key="IconInsights"
+                         Glyph="{x:Static f:FluentUI.lightbulb_24_regular}"
+                         FontFamily="{x:Static f:FluentUI.FontFamily}"
+                         Color="{toolkit:AppThemeResource OnBackground}"
+                         Size="{StaticResource IconSize}"/>
+
         <Style TargetType="Page"
                         ApplyToDerivedTypes="True">
                 <Setter Property="Padding"

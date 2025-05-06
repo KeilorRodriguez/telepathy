@@ -6,12 +6,14 @@
              xmlns:converters="clr-namespace:Telepathic.Converters"
              xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
              xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.TextInputLayout;assembly=Syncfusion.Maui.Toolkit"
+             xmlns:cards="clr-namespace:Syncfusion.Maui.Toolkit.Cards;assembly=Syncfusion.Maui.Toolkit"
              xmlns:b="clr-namespace:Syncfusion.Maui.Toolkit.Buttons;assembly=Syncfusion.Maui.Toolkit"
              xmlns:pullToRefresh="clr-namespace:Syncfusion.Maui.Toolkit.PullToRefresh;assembly=Syncfusion.Maui.Toolkit"
              xmlns:bottomSheet="clr-namespace:Syncfusion.Maui.Toolkit.BottomSheet;assembly=Syncfusion.Maui.Toolkit"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:aloha="clr-namespace:AlohaKit.Animations;assembly=AlohaKit.Animations"
-             x:Class="Telepathic.Pages.MainPage"
+		xmlns:viewModels="clr-namespace:Telepathic.ViewModels"
+			 x:Class="Telepathic.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
              Title="{Binding Today}">
 
@@ -29,11 +31,9 @@
     </ContentPage.Behaviors>
 
     <ContentPage.Resources>
-        <ResourceDictionary>
+        <ResourceDictionary>            
+            <toolkit:AppThemeObject x:Key="TelepathyIcon" Light="icon_telepathy_light_off.png" Dark="icon_telepathy_dark_off.png"/>
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
-            <toolkit:BoolToObjectConverter x:Key="TelepathyIconConverter"
-                                           TrueObject="icon_telepathy_on.png"
-                                           FalseObject="{AppThemeBinding Dark=icon_telepathy_dark_off.png, Light=icon_telepathy_dark_on.png}"/>
             <toolkit:MathExpressionConverter x:Key="MathExpressionConverter"/>
             <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter"/>
         </ResourceDictionary>
@@ -41,7 +41,17 @@
 
     <Shell.TitleView>
         <Grid>
-            <ImageButton Source="{Binding IsTelepathyEnabled, Converter={StaticResource TelepathyIconConverter}}"
+            <ImageButton Source="{toolkit:AppThemeResource TelepathyIcon}"
+                        IsVisible="{Binding IsTelepathyEnabled,Converter={StaticResource InvertedBoolConverter}}"
+                         HorizontalOptions="End"
+                         VerticalOptions="Center"
+                         Aspect="AspectFit"
+                         HeightRequest="44"
+                         WidthRequest="44"
+                         Background="Transparent"
+                         Command="{Binding ShowSettingsCommand}"/>
+            <ImageButton Source="icon_telepathy_on.png"
+                         IsVisible="{Binding IsTelepathyEnabled}"
                          HorizontalOptions="End"
                          VerticalOptions="Center"
                          Aspect="AspectFit"
@@ -89,35 +99,62 @@
                                TextColor="{toolkit:AppThemeResource Primary}"/>
                             <Label Text="{Binding IsTelepathyEnabled,StringFormat='IsTelepathyEnabled: {0}'}"
                                Style="{StaticResource Caption1}"
-                               TextColor="{toolkit:AppThemeResource Primary}"/> -->
-
-                        <!-- Priority Tasks Section -->
+                               TextColor="{toolkit:AppThemeResource Primary}"/> -->                        <!-- Priority Tasks Section -->
                         <VerticalStackLayout 
                             IsVisible="{Binding ShouldShowPriorityTasks}"
                             Spacing="{StaticResource LayoutSpacing}"
                             Margin="0,0,0,12">                            
-                            <Label Text="Priority Tasks"
+                            <Label Text="{Binding PersonalizedGreeting}"
                                    Style="{StaticResource Title2}"
-                                   TextColor="{toolkit:AppThemeResource Tertiary}"/>
-                            <Label Text="How about tackling these tasks first?"
-                                   Margin="0,0,0,12"/>
-                            <VerticalStackLayout
-                                Spacing="{StaticResource LayoutSpacing}"
-                                BindableLayout.ItemsSource="{Binding PriorityTasks}">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate>
-                                        <controls:TaskView
-                                            TaskCompletedCommand="{Binding CompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}">
-                                            <!-- <controls:TaskView.Background>
-                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                    <GradientStop Color="#4a90e2" Offset="0.0" />
-                                                    <GradientStop Color="#9b59b6" Offset="1.0" />
-                                                </LinearGradientBrush>
-                                            </controls:TaskView.Background> -->
-                                        </controls:TaskView>
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
-                            </VerticalStackLayout>
+                                   TextColor="{toolkit:AppThemeResource Tertiary}"/>    
+                            <cards:SfCardLayout 
+                                BindableLayout.ItemsSource="{Binding PriorityTasks}"
+                                VerticalOptions="Center"
+                                SwipeDirection="Left"      
+                                HeightRequest="200"  
+                                BackgroundColor="Transparent">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate>
+                                            <cards:SfCardView 
+                                                x:DataType="viewModels:ProjectTaskViewModel"
+                                                BackgroundColor="Transparent" 
+                                                BorderWidth="0" 
+                                                FadeOutOnSwiping="True">                                                
+                                                <Border 
+                                                        StrokeThickness="1"
+                                                        Stroke="{toolkit:AppThemeResource Surface1}"
+                                                        StrokeShape="RoundRectangle 20"
+                                                        BackgroundColor="{toolkit:AppThemeResource Surface0}"
+                                                        Margin="0,0,0,12">
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer 
+                                                            Command="{Binding NavigateToPriorityTaskCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}},x:DataType=pageModels:MainPageModel}"
+                                                                CommandParameter="{Binding .}"/>
+                                                    </Border.GestureRecognizers>
+                                                    <Grid>
+                                                        <Label Text="{Binding Title}"
+                                                               Style="{StaticResource Title2}"
+                                                               IsVisible="{Binding IsShowingReasoning,Converter={StaticResource InvertedBoolConverter}}"
+                                                               TextColor="{toolkit:AppThemeResource OnBackground}"/>
+                                                        <Label Text="{Binding PriorityReasoning}"
+                                                                Style="{StaticResource Body1}"
+                                                                FontAttributes="Italic"
+                                                                IsVisible="{Binding IsShowingReasoning}"
+                                                                TextColor="{toolkit:AppThemeResource OnBackground}"/>
+                                                        <ImageButton Source="{StaticResource IconInsights}"
+                                                                HorizontalOptions="End"
+                                                                VerticalOptions="End"
+                                                                Aspect="Center"
+                                                                HeightRequest="44"
+                                                                WidthRequest="44"
+                                                                BackgroundColor="Transparent"
+                                                                Command="{Binding ToggleShowReasoningCommand}"/>
+                                                    </Grid>
+                                                </Border>
+                                            </cards:SfCardView>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                            </cards:SfCardLayout>
                         </VerticalStackLayout>
 
                         <controls:CategoryChart />

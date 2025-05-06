@@ -6,6 +6,7 @@ using Telepathic.Models;
 using Microsoft.Extensions.AI;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Telepathic.ViewModels;
 
 namespace Telepathic.PageModels;
 
@@ -17,12 +18,16 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly TaskRepository _taskRepository;
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
-	private readonly SeedDataService _seedDataService;
-	private readonly ICalendarStore _calendarStore; private readonly IChatClientService _chatClientService;
+	private readonly SeedDataService _seedDataService;	private readonly ICalendarStore _calendarStore; 
+	private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
+
+	
+	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AcceptRecommendationCommand => AcceptRecommendationCommand;
+	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.RejectRecommendationCommand => RejectRecommendationCommand;
 
 	[ObservableProperty]
 	private List<CategoryChartData> _todoCategoryData = [];
@@ -32,10 +37,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	private List<ProjectTask> _tasks = [];
-
 	[NotifyPropertyChangedFor(nameof(ShouldShowPriorityTasks))]
 	[ObservableProperty]
-	private List<ProjectTask> _priorityTasks = [];
+	private ObservableCollection<ProjectTaskViewModel> _priorityTasks = new();
 
 	[ObservableProperty]
 	private List<Project> _projects = [];
@@ -61,6 +65,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	private string _today = DateTime.Now.ToString("dddd, MMM d");
+
+	[ObservableProperty]
+	private string _personalizedGreeting = "Greetings, Space Adventurer!";
 
 	[ObservableProperty]
 	private bool _isSettingsSheetOpen;
@@ -94,24 +101,27 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	private string _currentLocation = "Location not available";
-
 	[ObservableProperty]
 	private bool _isGettingLocation;
 
+	[ObservableProperty]
+	private int _cardVisibleIndex = 0;
+
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
-
 	[RelayCommand]
-	Task AcceptRecommendation(ProjectTask task)
+	Task AcceptRecommendation(ProjectTask? task)
 	{
-		Debug.WriteLine($"Accepting recommendation for task: {task.Title}");
+		if (task != null)
+			Debug.WriteLine($"Accepting recommendation for task: {task.Title}");
 		return Task.CompletedTask;
 	}
 
 	[RelayCommand]
-	Task RejectRecommendation(ProjectTask task)
+	Task RejectRecommendation(ProjectTask? task)
 	{
-		Debug.WriteLine($"Rejecting recommendation for task: {task.Title}");
+		if (task != null)
+			Debug.WriteLine($"Rejecting recommendation for task: {task.Title}");
 		return Task.CompletedTask;
 	}
 
@@ -232,11 +242,13 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	}
 
 	[RelayCommand]
-	private async Task Refresh()
+	private async Task Refresh(bool hideIndicator = false)
 	{
 		try
 		{
-			IsRefreshing = true;
+			if (hideIndicator)
+				IsRefreshing = true;
+
 			await LoadData();
 			await AnalyzeAndPrioritizeTasks();
 		}
@@ -264,12 +276,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			await InitData(_seedDataService);
 			_dataLoaded = true;
-			await Refresh();
+			await Refresh(true);
 		}
 		// This means we are being navigated to
 		else if (!_isNavigatedTo)
 		{
-			await Refresh();
+			await Refresh(true);
 		}
 
 		// Analyze tasks based on context (location, time, calendar)
@@ -294,7 +306,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 		// Update priority tasks list if needed
 		var priorityTask = PriorityTasks.FirstOrDefault(t => t.ID == task.ID);
-		if (priorityTask != null && priorityTask != task)
+		if (priorityTask != null)
 		{
 			priorityTask.IsCompleted = task.IsCompleted;
 		}
@@ -309,8 +321,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		=> Shell.Current.GoToAsync($"project?id={project.ID}");
 
 	[RelayCommand]
-	private Task NavigateToTask(ProjectTask task)
-		=> Shell.Current.GoToAsync($"task?id={task.ID}");
+	private Task NavigateToTask(ProjectTask? task)
+		=> task != null ? Shell.Current.GoToAsync($"task?id={task.ID}") : Task.CompletedTask;
+
+	[RelayCommand]
+	private Task NavigateToPriorityTask(ProjectTaskViewModel? task)
+		=> task != null ? Shell.Current.GoToAsync($"task?id={task.ID}") : Task.CompletedTask;
+
+
 
 	[RelayCommand]
 	private async Task CleanTasks()
@@ -546,7 +564,6 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			IsAnalyzingContext = false;
 			return;
 		}
-
 		// Check if we already have priority tasks that aren't completed yet
 		var incompletePriorityTasks = PriorityTasks.Where(t => !t.IsCompleted).ToList();
 		var timeToRecheck = (DateTime.Now - _lastPriorityCheck).TotalHours >= PRIORITY_CHECK_HOURS;
@@ -556,12 +573,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			// Keep existing prioritized tasks
 			HasPriorityTasks = incompletePriorityTasks.Any();
-			PriorityTasks = incompletePriorityTasks;
 			return;
 		}
 
 		// Continue with analysis - we need to generate new priority tasks
-		PriorityTasks = [];
+		PriorityTasks.Clear();
 		HasPriorityTasks = false;
 
 		try
@@ -629,18 +645,20 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("\nINSTRUCTIONS:");
 			sb.AppendLine($"Based on all the context above, identify which tasks should be prioritized for the NEXT {PRIORITY_CHECK_HOURS} HOURS ONLY, starting from the current time ({now:t}). Consider:");
 			// sb.AppendLine("1. Tasks that are due soon or today");
-			sb.AppendLine("- Tasks that relate to upcoming calendar events in the next few hours");
+			sb.AppendLine("- Tasks that relate to upcoming calendar events in the next 24 hours");
 			sb.AppendLine("- Tasks that might be relevant to my current location should come first and exclude all other tasks unrelated to the location");
 			sb.AppendLine("- Tasks that align with my personal preferences in the 'About Me' section, unless they don't meet the location or timeframe criteria");
-			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");
-			sb.AppendLine("- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
+			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");			sb.AppendLine("- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
 			sb.AppendLine("- Don't include more than 3 tasks in the response");
+			sb.AppendLine("- Provide a personalized greeting using my name if available in the 'About Me' section, or a fun, space/cosmic themed greeting");
+			// sb.AppendLine("- Include at least 3 tasks in the response");
 
-			// sb.AppendLine("\nRETURN FORMAT:");
-			// sb.AppendLine("Return a JSON object with the following properties:");
-			// sb.AppendLine("1. 'priorityTaskIds': An array of task IDs (as integers) that should be prioritized");
-			// sb.AppendLine("2. 'taskReasons': A dictionary mapping task IDs (as strings) to reasons (as strings) explaining why each task is prioritized");
-			// sb.AppendLine("Example: { \"priorityTaskIds\": [1, 2, 3], \"taskReasons\": {\"1\": \"Due today and matches your morning routine\", \"2\": \"Related to your upcoming meeting at 11am\", \"3\": \"You're near the location where this task needs to be done\"} }");
+			sb.AppendLine("\nRETURN FORMAT:");
+			sb.AppendLine("Return a JSON object with the following properties:");
+			sb.AppendLine("1. 'priorityTaskIds': An array of task IDs (as integers) that should be prioritized");
+			sb.AppendLine("2. 'taskReasons': A dictionary mapping task IDs (as strings) to reasons (as strings) explaining why each task is prioritized");
+			sb.AppendLine("3. 'personalizedGreeting': A short greeting (less than 50 characters) that's personalized based on time of day, user's name, or interests");
+			sb.AppendLine("Example: { \"priorityTaskIds\": [1, 2], \"taskReasons\": {\"1\": \"Due today and matches your morning routine\", \"2\": \"Related to your upcoming meeting at 11am\"}, \"personalizedGreeting\": \"Good morning, Captain David!\" }");
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
@@ -649,36 +667,55 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				try
 				{
-					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
-					if (apiResponse?.Result?.PriorityTaskIds != null)
-					{                       // Mark tasks as prioritized rather than creating copies
-						var priorityIds = new HashSet<int>(apiResponse.Result.PriorityTaskIds);
-
-						// Reset priority status on all tasks first
-						foreach (var task in Tasks)
+					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());					if (apiResponse?.Result != null)
+					{
+						// Update personalized greeting if it exists
+						if (!string.IsNullOrEmpty(apiResponse.Result.PersonalizedGreeting))
 						{
-							task.PriorityReasoning = string.Empty;
+							PersonalizedGreeting = apiResponse.Result.PersonalizedGreeting;
+						}
+						else
+						{
+							// Generate a default time-based greeting
+							var timeOfDay = GetTimeOfDayDescription(DateTime.Now);
+							PersonalizedGreeting = $"Good {timeOfDay}, Space Adventurer!";
 						}
 
-						// Update priority reasoning for prioritized tasks
-						if (apiResponse.Result.TaskReasons != null)
-						{
-							foreach (var taskId in priorityIds)
+						if (apiResponse.Result.PriorityTaskIds != null)
+						{   // Mark tasks as prioritized rather than creating copies
+							var priorityIds = new HashSet<int>(apiResponse.Result.PriorityTaskIds);
+
+							// Reset priority status on all tasks first
+							foreach (var task in Tasks)
 							{
-								var task = Tasks.FirstOrDefault(t => t.ID == taskId && !t.IsCompleted);
-								if (task != null && apiResponse.Result.TaskReasons.TryGetValue(taskId.ToString(), out var reason))
+								task.PriorityReasoning = string.Empty;
+							}
+
+							// Update priority reasoning for prioritized tasks
+							if (apiResponse.Result.TaskReasons != null)
+							{
+								foreach (var taskId in priorityIds)
 								{
-									task.PriorityReasoning = reason;
-									Debug.WriteLine($"Task '{task.Title}' prioritized because: {reason}");
+									var task = Tasks.FirstOrDefault(t => t.ID == taskId && !t.IsCompleted);
+									if (task != null && apiResponse.Result.TaskReasons.TryGetValue(taskId.ToString(), out var reason))
+									{
+										task.PriorityReasoning = reason;
+										Debug.WriteLine($"Task '{task.Title}' prioritized because: {reason}");
+									}
 								}
 							}
-						}
 
-						// Create a VIEW of prioritized tasks (not copies)
-						PriorityTasks = Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted).ToList();
+
+							// Create a VIEW of prioritized tasks using the ObservableCollection
+							PriorityTasks.Clear();
+							foreach (var task in Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted))
+							{
+								PriorityTasks.Add(new ProjectTaskViewModel(task));
+							}
+						}
 					}
 
-					HasPriorityTasks = PriorityTasks.Any();
+					HasPriorityTasks = PriorityTasks.Count > 0;
 
 					// Record when we last checked priorities
 					_lastPriorityCheck = DateTime.Now;
@@ -711,14 +748,16 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			return "Evening";
 		else
 			return "Night";
-	}
-	private class PriorityTaskResult
+	}	private class PriorityTaskResult
 	{
 		[System.Text.Json.Serialization.JsonPropertyName("priorityTaskIds")]
 		public List<int>? PriorityTaskIds { get; set; }
 
 		[System.Text.Json.Serialization.JsonPropertyName("taskReasons")]
 		public Dictionary<string, string>? TaskReasons { get; set; }
+		
+		[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
+		public string? PersonalizedGreeting { get; set; }
 	}
 
 	[RelayCommand]
@@ -740,7 +779,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
 			{
 				Title = "Select a photo"
-			});			if (result != null)
+			}); if (result != null)
 			{
 				// Navigate to the PhotoPage with the image
 				var parameters = new Dictionary<string, object>
@@ -779,7 +818,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			var result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
 			{
 				Title = "Take a photo"
-			});			if (result != null)
+			}); if (result != null)
 			{
 				// Navigate to the PhotoPage with the image
 				var parameters = new Dictionary<string, object>
