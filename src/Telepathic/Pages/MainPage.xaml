@@ -13,6 +13,7 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:aloha="clr-namespace:AlohaKit.Animations;assembly=AlohaKit.Animations"
 		xmlns:viewModels="clr-namespace:Telepathic.ViewModels"
+		xmlns:effectsView="http://schemas.syncfusion.com/maui/toolkit"
 			 x:Class="Telepathic.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
              Title="{Binding Today}">
@@ -119,71 +120,69 @@
                                                 x:DataType="viewModels:ProjectTaskViewModel"
                                                 BackgroundColor="Transparent" 
                                                 BorderWidth="0" 
-                                                FadeOutOnSwiping="True">                                                
-                                                <Border 
+                                                FadeOutOnSwiping="True">                                                      
+                                                <Border
                                                         StrokeThickness="1"
                                                         Stroke="{toolkit:AppThemeResource Surface1}"
                                                         StrokeShape="RoundRectangle 20"
                                                         BackgroundColor="{toolkit:AppThemeResource Surface0}"
-                                                        Margin="0,0,0,12">
+                                                        >
                                                     <Border.GestureRecognizers>
                                                         <TapGestureRecognizer 
                                                             Command="{Binding NavigateToPriorityTaskCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}},x:DataType=pageModels:MainPageModel}"
                                                                 CommandParameter="{Binding .}"/>
                                                     </Border.GestureRecognizers>
-                                                    <Grid RowDefinitions="Auto,*"
-                                                          ColumnDefinitions="Auto,*,Auto"
-                                                          Padding="15">
-                                                        <!-- Checkbox in the upper left -->
-                                                        <CheckBox 
-                                                            Grid.Row="0"
-                                                            Grid.Column="0"
-                                                            IsChecked="{Binding IsCompleted}" 
-                                                            Color="{toolkit:AppThemeResource Primary}"
-                                                            CheckedChanged="PriorityTask_CheckedChanged"/>
+                                                    <!-- <effectsView:SfEffectsView
+                                                        TouchDownEffects="Highlight"
+                                                        HighlightBackground="{toolkit:AppThemeResource OnBackground}"> -->
+                                                        <Grid RowDefinitions="*"
+                                                            ColumnDefinitions="*">
+                                                            <!-- Checkbox in the upper left -->
+                                                            <HorizontalStackLayout Spacing="15"
+                                                                VerticalOptions="Start" HorizontalOptions="Start"
+                                                                IsVisible="{Binding IsShowingReasoning,Converter={StaticResource InvertedBoolConverter}}">
+                                                                <CheckBox 
+                                                                    Grid.Row="0"
+                                                                    Grid.Column="0"
+                                                                    VerticalOptions="Center"
+                                                                    IsChecked="{Binding IsCompleted}" 
+                                                                    Color="{toolkit:AppThemeResource Primary}"
+                                                                    CheckedChanged="PriorityTask_CheckedChanged"/>
+                                                                <Label Text="{Binding Title}"
+                                                                    VerticalOptions="Center"
+                                                                    LineBreakMode="WordWrap"
+                                                                    
+                                                                    TextColor="{toolkit:AppThemeResource OnBackground}"/>
+                                                            </HorizontalStackLayout>
                                                             
-                                                        <!-- Task Title in the center -->
-                                                        <Label Text="{Binding Title}"
-                                                               Grid.Row="0"
-                                                               Grid.Column="1"
-                                                               Style="{StaticResource Title2}"
-                                                               VerticalOptions="Center"
-                                                               IsVisible="{Binding IsShowingReasoning,Converter={StaticResource InvertedBoolConverter}}"
-                                                               TextColor="{toolkit:AppThemeResource OnBackground}"/>
-                                                        
-                                                        <!-- Priority Reasoning (replaces title when visible) -->
-                                                        <Label Text="{Binding PriorityReasoning}"
-                                                                Grid.Row="0"
-                                                                Grid.Column="1"
-                                                                Style="{StaticResource Body1}"
-                                                                FontAttributes="Italic"
-                                                                IsVisible="{Binding IsShowingReasoning}"
-                                                                TextColor="{toolkit:AppThemeResource OnBackground}"/>
-                                                        
-                                                        <!-- Toggle Insights Button in the upper right -->
-                                                        <ImageButton Source="{StaticResource IconInsights}"
-                                                                Grid.Row="0"
-                                                                Grid.Column="2"
-                                                                HorizontalOptions="End"
-                                                                VerticalOptions="Center"
-                                                                Aspect="Center"
-                                                                HeightRequest="44"
-                                                                WidthRequest="44"
-                                                                BackgroundColor="Transparent"
-                                                                Command="{Binding ToggleShowReasoningCommand}"/>
-                                                        
-                                                        <!-- Project Name in the lower left -->
-                                                        <Label 
-                                                            Grid.Row="1"
-                                                            Grid.Column="0"
-                                                            Grid.ColumnSpan="3"
-                                                            Text="{Binding ProjectName}"
-                                                            Style="{StaticResource Body2}"
-                                                            VerticalOptions="End"
-                                                            Margin="0,10,0,0"
-                                                            TextColor="{toolkit:AppThemeResource Tertiary}"/>
-                                                    </Grid>
-                                                </Border>
+                                                            <!-- Priority Reasoning (replaces title when visible) -->
+                                                            <Label Text="{Binding PriorityReasoning}"
+                                                                    Style="{StaticResource Body1}"
+                                                                    FontAttributes="Italic"
+                                                                    LineBreakMode="WordWrap"
+                                                                    VerticalOptions="Start"
+                                                                    IsVisible="{Binding IsShowingReasoning}"
+                                                                    TextColor="{toolkit:AppThemeResource OnBackground}"/>
+                                                            
+                                                            <!-- Toggle Insights Button in the upper right -->
+                                                            <ImageButton Source="{StaticResource IconInsights}"
+                                                                    HorizontalOptions="End"
+                                                                    VerticalOptions="End"
+                                                                    Aspect="Center"
+                                                                    HeightRequest="44"
+                                                                    WidthRequest="44"
+                                                                    BackgroundColor="Transparent"
+                                                                    Command="{Binding ToggleShowReasoningCommand}"/>
+                                                            
+                                                            <!-- Project Name in the lower left -->
+                                                            <Label 
+                                                                Text="{Binding ProjectName, FallbackValue='Project'}"
+                                                                Style="{StaticResource Body2}"
+                                                                VerticalOptions="End"                                                                
+                                                                TextColor="{toolkit:AppThemeResource Tertiary}"/>
+                                                        </Grid>
+                                                    <!-- </effectsView:SfEffectsView> -->
+                                                </Border>                                                
                                             </cards:SfCardView>
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>

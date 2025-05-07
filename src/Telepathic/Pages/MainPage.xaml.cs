@@ -2,6 +2,7 @@
 using Telepathic.PageModels;
 using System.Windows.Input;
 using CommunityToolkit.Maui;
+using Telepathic.ViewModels;
 
 namespace Telepathic.Pages;
 
