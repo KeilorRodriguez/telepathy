@@ -18,14 +18,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly TaskRepository _taskRepository;
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
-	private readonly SeedDataService _seedDataService;	private readonly ICalendarStore _calendarStore; 
+	private readonly SeedDataService _seedDataService; private readonly ICalendarStore _calendarStore;
 	private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
 
-	
+
 	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AcceptRecommendationCommand => AcceptRecommendationCommand;
 	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.RejectRecommendationCommand => RejectRecommendationCommand;
 
@@ -648,7 +648,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("- Tasks that relate to upcoming calendar events in the next 24 hours");
 			sb.AppendLine("- Tasks that might be relevant to my current location should come first and exclude all other tasks unrelated to the location");
 			sb.AppendLine("- Tasks that align with my personal preferences in the 'About Me' section, unless they don't meet the location or timeframe criteria");
-			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");			sb.AppendLine("- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
+			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning"); sb.AppendLine("- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
 			sb.AppendLine("- Don't include more than 3 tasks in the response");
 			sb.AppendLine("- Provide a personalized greeting using my name if available in the 'About Me' section, or a fun, space/cosmic themed greeting");
 			// sb.AppendLine("- Include at least 3 tasks in the response");
@@ -667,7 +667,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				try
 				{
-					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());					if (apiResponse?.Result != null)
+					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString()); if (apiResponse?.Result != null)
 					{
 						// Update personalized greeting if it exists
 						if (!string.IsNullOrEmpty(apiResponse.Result.PersonalizedGreeting))
@@ -748,14 +748,15 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			return "Evening";
 		else
 			return "Night";
-	}	private class PriorityTaskResult
+	}
+	private class PriorityTaskResult
 	{
 		[System.Text.Json.Serialization.JsonPropertyName("priorityTaskIds")]
 		public List<int>? PriorityTaskIds { get; set; }
 
 		[System.Text.Json.Serialization.JsonPropertyName("taskReasons")]
 		public Dictionary<string, string>? TaskReasons { get; set; }
-		
+
 		[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
 		public string? PersonalizedGreeting { get; set; }
 	}
@@ -779,7 +780,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
 			{
 				Title = "Select a photo"
-			}); if (result != null)
+			});
+
+			if (result != null)
 			{
 				// Navigate to the PhotoPage with the image
 				var parameters = new Dictionary<string, object>
@@ -818,12 +821,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			var result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
 			{
 				Title = "Take a photo"
-			}); if (result != null)
+			});
+
+			if (result != null)
 			{
 				// Navigate to the PhotoPage with the image
 				var parameters = new Dictionary<string, object>
 				{
-					{ "ImageSource", result.FullPath }
+					{ "FileResult", result }
 				};
 				await Shell.Current.GoToAsync("photo", parameters);
 			}

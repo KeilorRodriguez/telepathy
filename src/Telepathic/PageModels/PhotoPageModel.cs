@@ -12,7 +12,7 @@ namespace Telepathic.PageModels;
 
 public enum PhotoPhase { Analyzing, Reviewing }
 
-public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel
+public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, IQueryAttributable
 {
     private readonly ProjectRepository _projectRepository;
     private readonly TaskRepository _taskRepository;
@@ -20,6 +20,8 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel
     private readonly ModalErrorHandler _errorHandler;
     private readonly ILogger<PhotoPageModel> _logger;
     private readonly Stopwatch _stopwatch = new();
+
+    private FileResult? _fileResult;
     
     [ObservableProperty] private string _imageSource;
     [ObservableProperty] private bool _isBusy;
@@ -52,8 +54,22 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel
     [RelayCommand]
     private async Task PageAppearing()
     {
-        if (!string.IsNullOrEmpty(ImageSource))
+        if (_fileResult != null)
         {
+            // Load the image from the file result
+            // ImageSource = _fileResult.FullPath;
+            if (_fileResult != null)
+            {
+                // save the file into local storage
+                ImageSource = Path.Combine(FileSystem.CacheDirectory, _fileResult.FileName);
+
+                using Stream sourceStream = await _fileResult.OpenReadAsync();
+                using FileStream localFileStream = File.OpenWrite(ImageSource);
+
+                await sourceStream.CopyToAsync(localFileStream);
+            }
+            _fileResult = null; // Clear the file result to avoid reloading
+        
             await AnalyzeImageAsync();
         }
         else
@@ -284,5 +300,10 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel
     private async Task GoBackAsync()
     {
         await Shell.Current.GoToAsync("..");
+    }
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        _fileResult = query["FileResult"] as FileResult;
     }
 }

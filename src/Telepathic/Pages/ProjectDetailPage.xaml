@@ -229,8 +229,8 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <controls:AddButton Command="{Binding AddTaskCommand}">
-            <VisualElement.Behaviors>
+        <controls:AddButton Command="{Binding AddTaskCommand}" Opacity="1">
+            <!-- <VisualElement.Behaviors>
                 <aloha:AnimateProgressDouble
                     x:Name="AddButtonAnimation"
                     TargetProperty="VisualElement.Opacity"
@@ -246,7 +246,7 @@
                         </MultiBinding>
                     </aloha:AnimateProgressDouble.Maximum>
                 </aloha:AnimateProgressDouble>
-            </VisualElement.Behaviors>
+            </VisualElement.Behaviors> -->
         </controls:AddButton>
     </Grid>
     
