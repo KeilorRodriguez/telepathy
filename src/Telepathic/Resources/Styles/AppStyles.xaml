@@ -133,7 +133,7 @@
         <FontImageSource x:Key="IconInsights"
                          Glyph="{x:Static f:FluentUI.lightbulb_24_regular}"
                          FontFamily="{x:Static f:FluentUI.FontFamily}"
-                         Color="{toolkit:AppThemeResource OnBackground}"
+                         Color="{toolkit:AppThemeResource Surface3}"
                          Size="{StaticResource IconSize}"/>
 
         <FontImageSource x:Key="IconPhotos"
