@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
-using Microsoft.Maui.Controls.Toolkit;
 
 namespace Telepathic.Pages.Controls;
 
@@ -201,12 +200,29 @@ public partial class ActivityIndicatorView : ContentView
     
     private static Color GetAppThemeColor(string resourceKey, Color defaultColor)
     {
-        if (Application.Current?.Resources.TryGetValue(resourceKey, out var resourceValue) == true && 
-            resourceValue is Microsoft.Maui.Controls.Toolkit.AppThemeColor appThemeColor)
+        if (Application.Current?.Resources.TryGetValue(resourceKey, out var resourceValue) == true)
         {
-            return Application.Current.RequestedTheme == AppTheme.Dark 
-                ? appThemeColor.Dark 
-                : appThemeColor.Light;
+            // Check if it's an AppThemeColor (namespace may vary)
+            if (resourceValue.GetType().Name == "AppThemeColor")
+            {
+                // Use reflection to get the Light/Dark properties based on current theme
+                var propertyName = Application.Current.RequestedTheme == AppTheme.Dark ? "Dark" : "Light";
+                var property = resourceValue.GetType().GetProperty(propertyName);
+                
+                if (property != null)
+                {
+                    var themeColorValue = property.GetValue(resourceValue);
+                    if (themeColorValue is Color color)
+                    {
+                        return color;
+                    }
+                }
+            }
+            // If it's a direct Color resource
+            else if (resourceValue is Color directColor)
+            {
+                return directColor;
+            }
         }
         
         return defaultColor;
