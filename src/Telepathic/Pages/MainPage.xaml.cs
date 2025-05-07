@@ -18,6 +18,18 @@ public partial class MainPage : ContentPage
 		SetupInitialButtonStates();
 	}
 	
+	protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+	{
+		base.OnNavigatedFrom(args);
+		
+		// Ensure the action buttons are collapsed when navigating away
+		if (_isActionButtonsExpanded)
+		{
+			HideActionButtons();
+			_isActionButtonsExpanded = false;
+		}
+	}
+	
 	private void SetupInitialButtonStates()
 	{
 		// Initially hide the buttons
