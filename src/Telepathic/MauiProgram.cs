@@ -47,6 +47,15 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 				fonts.AddFont("SegoeUI-Semibold.ttf", "SegoeSemibold");
 				fonts.AddFont("FluentSystemIcons-Regular.ttf", FluentUI.FontFamily);
+			})
+			.ConfigureMauiHandlers(handlers =>
+			{
+				// #if MACCATALYST
+				// handlers.AddHandler(typeof(Shell), typeof(Telepathic.Platforms.MacCatalyst.CustomAppShell));
+				// #endif
+				// #if IOS
+				// handlers.AddHandler(typeof(Shell), typeof(Telepathic.Platforms.iOS.CustomAppShell));
+				// #endif
 			});
 
 #if DEBUG
