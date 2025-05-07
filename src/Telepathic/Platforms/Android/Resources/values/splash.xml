@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Splash screen theme -->
-    <style name="MauiSplash" parent="Theme.SplashScreen">
-        <item name="android:windowBackground">@drawable/splash</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splashlogo</item>
-        <item name="postSplashScreenTheme">@style/Maui.MainTheme</item>
-    </style>
-</resources>
