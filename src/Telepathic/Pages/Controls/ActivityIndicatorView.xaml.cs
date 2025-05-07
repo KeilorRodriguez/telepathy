@@ -17,7 +17,7 @@ public partial class ActivityIndicatorView : ContentView
     public static readonly BindableProperty DetailStyleProperty = BindableProperty.Create(
         nameof(DetailStyle), typeof(Style), typeof(ActivityIndicatorView), null);
     public static readonly BindableProperty TitleTextColorProperty = BindableProperty.Create(
-        nameof(TitleTextColor), typeof(Color), typeof(ActivityIndicatorView), Colors.White);
+        nameof(TitleTextColor), typeof(Color), typeof(ActivityIndicatorView), GetAppThemeColor("OnBackground", Colors.White));
     public static readonly BindableProperty DetailTextColorProperty = BindableProperty.Create(
         nameof(DetailTextColor), typeof(Color), typeof(ActivityIndicatorView), Colors.Gray);
     
@@ -36,6 +36,15 @@ public partial class ActivityIndicatorView : ContentView
         
         // Set initial visibility of detail
         UpdateDetailVisibility();
+        
+        // Subscribe to app theme changes
+        Application.Current.RequestedThemeChanged += OnAppThemeChanged;
+    }
+    
+    private void OnAppThemeChanged(object? sender, AppThemeChangedEventArgs e)
+    {
+        // Update colors when theme changes
+        UpdateShimmerColors();
     }
 
     public string Title
@@ -147,6 +156,12 @@ public partial class ActivityIndicatorView : ContentView
         if (TitleText == null)
             return;
             
+        // If we're using the default value, update it when theme changes
+        if (TitleTextColor == null || TitleTextColor == Colors.White)
+        {
+            SetValue(TitleTextColorProperty, GetAppThemeColor("OnBackground", Colors.White));
+        }
+            
         // Make sure BaseFontColor is always visible by ensuring it has sufficient opacity
         var color = TitleTextColor;
         // Ensure alpha is at least 0.7 (roughly 178 in byte value) for visibility
@@ -167,5 +182,49 @@ public partial class ActivityIndicatorView : ContentView
             
         DetailLabel.IsVisible = !string.IsNullOrEmpty(Detail);
         DetailLabel.Text = Detail;
+    }
+    
+    protected override void OnHandlerChanged()
+    {
+        base.OnHandlerChanged();
+        
+        if (Handler == null)
+        {
+            // Unsubscribe from theme change events when control is detached
+            if (Application.Current != null)
+            {
+                Application.Current.RequestedThemeChanged -= OnAppThemeChanged;
+            }
+        }
+    }
+    
+    private static Color GetAppThemeColor(string resourceKey, Color defaultColor)
+    {
+        if (Application.Current?.Resources.TryGetValue(resourceKey, out var resourceValue) == true)
+        {
+            // Check if it's an AppThemeColor (namespace may vary)
+            if (resourceValue.GetType().Name == "AppThemeColor")
+            {
+                // Use reflection to get the Light/Dark properties based on current theme
+                var propertyName = Application.Current.RequestedTheme == AppTheme.Dark ? "Dark" : "Light";
+                var property = resourceValue.GetType().GetProperty(propertyName);
+                
+                if (property != null)
+                {
+                    var themeColorValue = property.GetValue(resourceValue);
+                    if (themeColorValue is Color color)
+                    {
+                        return color;
+                    }
+                }
+            }
+            // If it's a direct Color resource
+            else if (resourceValue is Color directColor)
+            {
+                return directColor;
+            }
+        }
+        
+        return defaultColor;
     }
 }
