@@ -338,6 +338,13 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			await _taskRepository.DeleteItemAsync(task);
 			Tasks.Remove(task);
+			
+			// Also remove from PriorityTasks if present
+			var priorityTask = PriorityTasks.FirstOrDefault(pt => pt.ID == task.ID);
+			if (priorityTask != null)
+			{
+				PriorityTasks.Remove(priorityTask);
+			}
 		}
 
 		OnPropertyChanged(nameof(HasCompletedTasks));
