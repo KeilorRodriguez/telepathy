@@ -131,24 +131,57 @@
                                                             Command="{Binding NavigateToPriorityTaskCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}},x:DataType=pageModels:MainPageModel}"
                                                                 CommandParameter="{Binding .}"/>
                                                     </Border.GestureRecognizers>
-                                                    <Grid>
+                                                    <Grid RowDefinitions="Auto,*"
+                                                          ColumnDefinitions="Auto,*,Auto"
+                                                          Padding="15">
+                                                        <!-- Checkbox in the upper left -->
+                                                        <CheckBox 
+                                                            Grid.Row="0"
+                                                            Grid.Column="0"
+                                                            IsChecked="{Binding IsCompleted}" 
+                                                            Color="{toolkit:AppThemeResource Primary}"
+                                                            CheckedChanged="PriorityTask_CheckedChanged"/>
+                                                            
+                                                        <!-- Task Title in the center -->
                                                         <Label Text="{Binding Title}"
+                                                               Grid.Row="0"
+                                                               Grid.Column="1"
                                                                Style="{StaticResource Title2}"
+                                                               VerticalOptions="Center"
                                                                IsVisible="{Binding IsShowingReasoning,Converter={StaticResource InvertedBoolConverter}}"
                                                                TextColor="{toolkit:AppThemeResource OnBackground}"/>
+                                                        
+                                                        <!-- Priority Reasoning (replaces title when visible) -->
                                                         <Label Text="{Binding PriorityReasoning}"
+                                                                Grid.Row="0"
+                                                                Grid.Column="1"
                                                                 Style="{StaticResource Body1}"
                                                                 FontAttributes="Italic"
                                                                 IsVisible="{Binding IsShowingReasoning}"
                                                                 TextColor="{toolkit:AppThemeResource OnBackground}"/>
+                                                        
+                                                        <!-- Toggle Insights Button in the upper right -->
                                                         <ImageButton Source="{StaticResource IconInsights}"
+                                                                Grid.Row="0"
+                                                                Grid.Column="2"
                                                                 HorizontalOptions="End"
-                                                                VerticalOptions="End"
+                                                                VerticalOptions="Center"
                                                                 Aspect="Center"
                                                                 HeightRequest="44"
                                                                 WidthRequest="44"
                                                                 BackgroundColor="Transparent"
                                                                 Command="{Binding ToggleShowReasoningCommand}"/>
+                                                        
+                                                        <!-- Project Name in the lower left -->
+                                                        <Label 
+                                                            Grid.Row="1"
+                                                            Grid.Column="0"
+                                                            Grid.ColumnSpan="3"
+                                                            Text="{Binding ProjectName}"
+                                                            Style="{StaticResource Body2}"
+                                                            VerticalOptions="End"
+                                                            Margin="0,10,0,0"
+                                                            TextColor="{toolkit:AppThemeResource Tertiary}"/>
                                                     </Grid>
                                                 </Border>
                                             </cards:SfCardView>

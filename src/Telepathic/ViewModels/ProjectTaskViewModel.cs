@@ -7,6 +7,7 @@ namespace Telepathic.ViewModels
     public partial class ProjectTaskViewModel : ObservableObject, IEquatable<ProjectTask>
     {
         private readonly ProjectTask _task;
+        private string _projectName = string.Empty;
 
         public ProjectTaskViewModel(ProjectTask task)
         {
@@ -34,6 +35,9 @@ namespace Telepathic.ViewModels
         public bool IsPriority => _task.IsPriority;
         public int ProjectID => _task.ProjectID;
         public bool IsRecommendation => _task.IsRecommendation;
+        
+        [ObservableProperty]
+        private string projectName = string.Empty;
 
         // View-specific properties
         [ObservableProperty]
