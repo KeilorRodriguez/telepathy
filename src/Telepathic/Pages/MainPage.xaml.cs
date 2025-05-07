@@ -16,6 +16,19 @@ public partial class MainPage : ContentPage
 		
 		// Initialize the action buttons to be hidden
 		SetupInitialButtonStates();
+		
+		// Subscribe to navigation events
+		this.NavigatedFrom += OnNavigatedFrom;
+	}
+	
+	private void OnNavigatedFrom(object? sender, NavigatedFromEventArgs e)
+	{
+		// Ensure the action buttons are collapsed when navigating away
+		if (_isActionButtonsExpanded)
+		{
+			HideActionButtons();
+			_isActionButtonsExpanded = false;
+		}
 	}
 	
 	private void SetupInitialButtonStates()
