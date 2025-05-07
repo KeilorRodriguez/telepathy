@@ -710,7 +710,16 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 							PriorityTasks.Clear();
 							foreach (var task in Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted))
 							{
-								PriorityTasks.Add(new ProjectTaskViewModel(task));
+								var taskViewModel = new ProjectTaskViewModel(task);
+								
+								// Find the project name for this task
+								var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
+								if (project != null)
+								{
+									taskViewModel.ProjectName = project.Name;
+								}
+								
+								PriorityTasks.Add(taskViewModel);
 							}
 						}
 					}
