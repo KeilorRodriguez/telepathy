@@ -407,11 +407,11 @@
                         </sf:SfTextInputLayout>
 
                         <sf:SfTextInputLayout
-                            Hint="About Me">
+                            Hint="Personalization">
                             <Editor Text="{Binding AboutMeText, Mode=TwoWay}"
                                     HorizontalOptions="Fill"
                                     HeightRequest="100"
-                                    Placeholder="Tell me about yourself..."/>
+                                    Placeholder="Give me details to personalize your app experience."/>
                         </sf:SfTextInputLayout>
 
                     </VerticalStackLayout>
