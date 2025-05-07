@@ -8,7 +8,9 @@
     x:Name="Root">
     <Grid 
         RowSpacing="6" ColumnSpacing="6"
-        RowDefinitions="Auto, Auto" ColumnDefinitions="10,*">
+        RowDefinitions="Auto, Auto" ColumnDefinitions="10,*"
+        HorizontalOptions="Fill"
+        WidthRequest="-1">
         <controls:SkiaAnimatedGradientTextSK 
             x:Name="TitleText"
             Text="{Binding Title}"
@@ -30,8 +32,9 @@
             x:Name="DetailLabel"
             Text="{Binding Detail}"
             LineBreakMode="WordWrap"
-            MaxLines="3"
             FontSize="18"
-            HorizontalOptions="Fill"/>
+            HorizontalOptions="Fill"
+            VerticalOptions="Start"
+            TextType="Text"/>
     </Grid>
 </ContentView>
