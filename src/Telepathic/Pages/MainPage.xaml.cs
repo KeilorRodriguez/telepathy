@@ -183,9 +183,7 @@ public partial class MainPage : ContentPage
 		if (checkbox.BindingContext is not ProjectTaskViewModel task || BindingContext is not MainPageModel viewModel)
 			return;
 		
-		if (task.IsCompleted == e.Value)
-			return;
-		
+		// We removed the problematic condition that was causing the handler to always return
 		task.IsCompleted = e.Value;
 		// Use the same CompletedCommand as the regular tasks
 		viewModel.CompletedCommand.Execute(task.GetModel());

@@ -178,7 +178,7 @@
                                                             Grid.Column="0"
                                                             Grid.ColumnSpan="3"
                                                             Text="{Binding ProjectName}"
-                                                            Style="{StaticResource Caption1}"
+                                                            Style="{StaticResource Body2}"
                                                             VerticalOptions="End"
                                                             Margin="0,10,0,0"
                                                             TextColor="{toolkit:AppThemeResource Tertiary}"/>
