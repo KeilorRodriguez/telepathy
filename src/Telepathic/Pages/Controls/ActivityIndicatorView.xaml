@@ -32,7 +32,6 @@
             x:Name="DetailLabel"
             Text="{Binding Detail}"
             LineBreakMode="WordWrap"
-            MaxLines="3"
             FontSize="18"
             HorizontalOptions="Fill"
             VerticalOptions="Start"
