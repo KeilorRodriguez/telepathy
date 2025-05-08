@@ -312,6 +312,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		if (priorityTask != null)
 		{
 			priorityTask.IsCompleted = task.IsCompleted;
+			
+			// Create a new ObservableCollection to refresh the UI for PriorityTasks
+			PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(PriorityTasks);
 		}
 	}
 
