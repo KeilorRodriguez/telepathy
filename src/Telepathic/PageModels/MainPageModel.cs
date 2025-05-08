@@ -303,6 +303,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 		// Update UI
 		OnPropertyChanged(nameof(HasCompletedTasks));
+		
+		// Refresh the Tasks collection to update UI
+		Tasks = new(Tasks);
 
 		// Update priority tasks list if needed
 		var priorityTask = PriorityTasks.FirstOrDefault(t => t.ID == task.ID);
@@ -349,6 +352,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 		OnPropertyChanged(nameof(HasCompletedTasks));
 		Tasks = new(Tasks);
+		
+		// Create a new ObservableCollection to refresh the UI for PriorityTasks
+		PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(PriorityTasks);
+		
 		await AppShell.DisplayToastAsync("All cleaned up!");
 	}
 
