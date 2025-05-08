@@ -304,37 +304,26 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			await _taskRepository.SaveItemAsync(task);
 		}
 
-		// Track if we need to update the collections
-		bool updatedMainCollection = false;
-		bool updatedPriorityCollection = false;
-
+		// Always update both collections to keep them in sync, regardless of where the change originated
+		
 		// Update the task in the main Tasks collection
 		var mainTask = Tasks.FirstOrDefault(t => t.ID == task.ID);
-		if (mainTask != null && mainTask.IsCompleted != task.IsCompleted)
+		if (mainTask != null)
 		{
 			mainTask.IsCompleted = task.IsCompleted;
-			updatedMainCollection = true;
 		}
 
 		// Update the task in the PriorityTasks collection if present
 		var priorityTask = PriorityTasks.FirstOrDefault(t => t.ID == task.ID);
-		if (priorityTask != null && priorityTask.IsCompleted != task.IsCompleted)
+		if (priorityTask != null)
 		{
 			// Updating through the property ensures OnPropertyChanged is called
 			priorityTask.IsCompleted = task.IsCompleted;
-			updatedPriorityCollection = true;
 		}
 
-		// Only refresh collections that were updated
-		if (updatedMainCollection)
-		{
-			Tasks = new(Tasks);
-		}
-		
-		if (updatedPriorityCollection)
-		{
-			PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(PriorityTasks);
-		}
+		// Always refresh both collections to ensure UI is consistent
+		Tasks = new(Tasks);
+		PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(PriorityTasks);
 		
 		// Update the HasCompletedTasks property
 		OnPropertyChanged(nameof(HasCompletedTasks));
