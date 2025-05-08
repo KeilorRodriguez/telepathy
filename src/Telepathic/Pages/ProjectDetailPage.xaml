@@ -57,7 +57,7 @@
                                           
         <converters:BothBooleanConverter x:Key="BothTrueConverter"
                                          TrueObject="{StaticResource AIBrush}"
-                                         FalseObject="" />
+                                         FalseObject="{toolkit:AppThemeResource OnBackground}" />
                                         
         <toolkit:MathExpressionConverter x:Key="MathExpressionConverter" />
         <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter" />
