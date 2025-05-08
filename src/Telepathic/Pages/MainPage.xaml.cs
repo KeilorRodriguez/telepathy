@@ -193,14 +193,16 @@ public partial class MainPage : ContentPage
 	{
 		var checkbox = (CheckBox)sender;
 		
-		if (checkbox.BindingContext is not ProjectTaskViewModel task || BindingContext is not MainPageModel viewModel)
+		if (checkbox.BindingContext is not ProjectTaskViewModel viewModel || BindingContext is not MainPageModel pageModel)
 			return;
 		
-		// Update the task model with the new completion status
+		// Get the underlying model
+		var task = viewModel.GetModel();
+		
+		// Update the model's completion status
 		task.IsCompleted = e.Value;
 		
-		// Use the same CompletedCommand as the regular tasks
-		// This will update the task in the Tasks collection and refresh the UI
-		viewModel.CompletedCommand.Execute(task.GetModel());
+		// Execute the command which will update both collections and the UI
+		pageModel.CompletedCommand.Execute(task);
 	}
 }

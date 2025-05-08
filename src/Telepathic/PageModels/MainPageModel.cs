@@ -290,32 +290,54 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[RelayCommand]
 	private async Task Completed(ProjectTask task)
 	{
-		// Find and update the original task in the main Tasks collection
-		var originalTask = Tasks.FirstOrDefault(t => t.ID == task.ID);
-		if (originalTask != null)
+		// Get the task from the database first to ensure we're working with the most up-to-date version
+		var dbTask = await _taskRepository.GetAsync(task.ID);
+		if (dbTask != null)
 		{
-			// Synchronize the completion status
-			originalTask.IsCompleted = task.IsCompleted;
+			// Update the database task with the completion status
+			dbTask.IsCompleted = task.IsCompleted;
+			await _taskRepository.SaveItemAsync(dbTask);
+		}
+		else
+		{
+			// If not found in DB, save the passed task
+			await _taskRepository.SaveItemAsync(task);
 		}
 
-		// Save the updated task to the database
-		await _taskRepository.SaveItemAsync(originalTask ?? task);
+		// Track if we need to update the collections
+		bool updatedMainCollection = false;
+		bool updatedPriorityCollection = false;
 
-		// Update UI
-		OnPropertyChanged(nameof(HasCompletedTasks));
-		
-		// Refresh the Tasks collection to update UI
-		Tasks = new(Tasks);
-
-		// Update priority tasks list if needed
-		var priorityTask = PriorityTasks.FirstOrDefault(t => t.ID == task.ID);
-		if (priorityTask != null)
+		// Update the task in the main Tasks collection
+		var mainTask = Tasks.FirstOrDefault(t => t.ID == task.ID);
+		if (mainTask != null && mainTask.IsCompleted != task.IsCompleted)
 		{
+			mainTask.IsCompleted = task.IsCompleted;
+			updatedMainCollection = true;
+		}
+
+		// Update the task in the PriorityTasks collection if present
+		var priorityTask = PriorityTasks.FirstOrDefault(t => t.ID == task.ID);
+		if (priorityTask != null && priorityTask.IsCompleted != task.IsCompleted)
+		{
+			// Updating through the property ensures OnPropertyChanged is called
 			priorityTask.IsCompleted = task.IsCompleted;
-			
-			// Create a new ObservableCollection to refresh the UI for PriorityTasks
+			updatedPriorityCollection = true;
+		}
+
+		// Only refresh collections that were updated
+		if (updatedMainCollection)
+		{
+			Tasks = new(Tasks);
+		}
+		
+		if (updatedPriorityCollection)
+		{
 			PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(PriorityTasks);
 		}
+		
+		// Update the HasCompletedTasks property
+		OnPropertyChanged(nameof(HasCompletedTasks));
 	}
 
 	[RelayCommand]
@@ -354,9 +376,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		}
 
 		OnPropertyChanged(nameof(HasCompletedTasks));
-		Tasks = new(Tasks);
 		
-		// Create a new ObservableCollection to refresh the UI for PriorityTasks
+		// Always refresh both collections to ensure UI is updated properly
+		Tasks = new(Tasks);
 		PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(PriorityTasks);
 		
 		await AppShell.DisplayToastAsync("All cleaned up!");
