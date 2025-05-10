@@ -12,9 +12,9 @@
              xmlns:bottomSheet="clr-namespace:Syncfusion.Maui.Toolkit.BottomSheet;assembly=Syncfusion.Maui.Toolkit"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:aloha="clr-namespace:AlohaKit.Animations;assembly=AlohaKit.Animations"
-		xmlns:viewModels="clr-namespace:Telepathic.ViewModels"
-		xmlns:effectsView="http://schemas.syncfusion.com/maui/toolkit"
-			 x:Class="Telepathic.Pages.MainPage"
+             xmlns:viewModels="clr-namespace:Telepathic.ViewModels"
+             xmlns:effectsView="http://schemas.syncfusion.com/maui/toolkit"
+             x:Class="Telepathic.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
              Title="{Binding Today}">
 
@@ -87,20 +87,7 @@
                             MinimumWidthRequest="200"
                             MinimumHeightRequest="100"
                             ShimmerStartColor="#4a90e2"
-                            ShimmerEndColor="#9b59b6"/>
-
-                        <!-- <Label Text="{Binding ShouldShowPriorityTasks, StringFormat='ShouldShowPriorityTasks: {0}'}"
-                               Style="{StaticResource Caption1}"
-                               TextColor="{toolkit:AppThemeResource Primary}"/>
-                            <Label Text="{Binding HasPriorityTasks,StringFormat='HasPriorityTasks: {0}'}"
-                               Style="{StaticResource Caption1}"
-                               TextColor="{toolkit:AppThemeResource Primary}"/>
-                            <Label Text="{Binding PriorityTasks.Count,StringFormat='HasPriorityTasks: {0}'}"
-                               Style="{StaticResource Caption1}"
-                               TextColor="{toolkit:AppThemeResource Primary}"/>
-                            <Label Text="{Binding IsTelepathyEnabled,StringFormat='IsTelepathyEnabled: {0}'}"
-                               Style="{StaticResource Caption1}"
-                               TextColor="{toolkit:AppThemeResource Primary}"/> -->                        <!-- Priority Tasks Section -->
+                            ShimmerEndColor="#9b59b6"/>                     <!-- Priority Tasks Section -->
                         <VerticalStackLayout 
                             IsVisible="{Binding ShouldShowPriorityTasks}"
                             Spacing="{StaticResource LayoutSpacing}"
@@ -151,7 +138,8 @@
                                                                 <Label Text="{Binding Title}"
                                                                     VerticalOptions="Center"
                                                                     LineBreakMode="WordWrap"
-                                                                    
+                                                                    HorizontalOptions="Start"
+                                                                    WidthRequest="-1"
                                                                     TextColor="{toolkit:AppThemeResource OnBackground}"/>
                                                             </HorizontalStackLayout>
                                                             
@@ -164,15 +152,26 @@
                                                                     IsVisible="{Binding IsShowingReasoning}"
                                                                     TextColor="{toolkit:AppThemeResource OnBackground}"/>
                                                             
-                                                            <!-- Toggle Insights Button in the upper right -->
-                                                            <ImageButton Source="{StaticResource IconInsights}"
-                                                                    HorizontalOptions="End"
-                                                                    VerticalOptions="End"
-                                                                    Aspect="Center"
-                                                                    HeightRequest="44"
-                                                                    WidthRequest="44"
-                                                                    BackgroundColor="Transparent"
-                                                                    Command="{Binding ToggleShowReasoningCommand}"/>
+                                                            <HorizontalStackLayout Spacing="{StaticResource size160}"
+                                                                HorizontalOptions="End"
+                                                                VerticalOptions="End">
+                                                                <ImageButton Source="{StaticResource IconInsights}"                                                                        
+                                                                        Aspect="Center"
+                                                                        HeightRequest="44"
+                                                                        WidthRequest="44"
+                                                                        BackgroundColor="Transparent"
+                                                                        Command="{Binding ToggleShowReasoningCommand}"/>
+
+                                                                <ImageButton Source="{StaticResource IconAssist}"
+                                                                        IsVisible="{Binding AssistType, Converter={StaticResource AssistTypeToBoolConverter}}"
+                                                                        Aspect="Center"
+                                                                        HeightRequest="44"
+                                                                        WidthRequest="44"
+                                                                        BackgroundColor="Transparent"
+                                                                        Command="{Binding AssistCommand}"
+                                                                        CommandParameter="{Binding .}"/>
+                                                            </HorizontalStackLayout>
+                                                            
                                                             
                                                             <!-- Project Name in the lower left -->
                                                             <Label 

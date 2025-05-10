@@ -14,6 +14,12 @@ public enum VoicePhase { Recording, Transcribing, Reviewing }
 
 public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageModel
 {
+    // Interface implementations
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.NavigateToTaskCommand => NavigateToTaskCommand;
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AcceptRecommendationCommand => AcceptRecommendationCommand;
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.RejectRecommendationCommand => RejectRecommendationCommand;
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AssistCommand => throw new NotImplementedException();
+    bool IProjectTaskPageModel.IsBusy => IsBusy;
     readonly IAudioManager _audioManager;
 
     IAudioSource? _audioSource = null;
@@ -381,10 +387,10 @@ Here's the transcript: {Transcript}";
     }
 
     [RelayCommand]
-	private Task TaskCompleted(ProjectTask task)
-	{
-		return _taskRepository.SaveItemAsync(task);
-	}
+    private Task TaskCompleted(ProjectTask task)
+    {
+        return _taskRepository.SaveItemAsync(task);
+    }
 
     /// <summary>
     /// Accept a recommended task and add it to its project

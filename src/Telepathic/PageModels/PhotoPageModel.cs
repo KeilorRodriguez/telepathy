@@ -23,7 +23,7 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
 
     private FileResult? _fileResult;
     
-    [ObservableProperty] private string _imageSource;
+    [ObservableProperty] private string _imageSource = string.Empty;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private PhotoPhase _phase = PhotoPhase.Analyzing;
     
@@ -36,6 +36,8 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     [ObservableProperty] private List<Project> _projects = new();
 
     public IAsyncRelayCommand<ProjectTask> NavigateToTaskCommand => throw new NotImplementedException();
+    // No assist actions in photo context
+    public IAsyncRelayCommand<ProjectTask> AssistCommand => throw new NotImplementedException();
 
     public PhotoPageModel(
         ProjectRepository projectRepository,

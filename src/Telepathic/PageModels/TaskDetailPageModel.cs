@@ -14,6 +14,7 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 	private readonly ProjectRepository _projectRepository;
 	private readonly TaskRepository _taskRepository;
 	private readonly ModalErrorHandler _errorHandler;
+	private readonly TaskAssistAnalyzer? _taskAssistAnalyzer;
 
 	[ObservableProperty]
 	private string _title = string.Empty;
@@ -30,15 +31,28 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 	[ObservableProperty]
 	private int _selectedProjectIndex = -1;
 
-
 	[ObservableProperty]
 	private bool _isExistingProject;
 
-	public TaskDetailPageModel(ProjectRepository projectRepository, TaskRepository taskRepository, ModalErrorHandler errorHandler)
+	[ObservableProperty]
+	private AssistType _assistType = AssistType.None;
+
+	[ObservableProperty]
+	private string _assistData = string.Empty;
+
+	[ObservableProperty]
+	private bool _analyzeForAssist = true;
+
+	public TaskDetailPageModel(
+		ProjectRepository projectRepository,
+		TaskRepository taskRepository,
+		ModalErrorHandler errorHandler,
+		TaskAssistAnalyzer? taskAssistAnalyzer = null)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
 		_errorHandler = errorHandler;
+		_taskAssistAnalyzer = taskAssistAnalyzer;
 	}
 
 	public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -97,6 +111,8 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 
 			Title = _task.Title;
 			IsCompleted = _task.IsCompleted;
+			AssistType = _task.AssistType;
+			AssistData = _task.AssistData;
 			CanDelete = true;
 		}
 		else
@@ -118,6 +134,38 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 		}
 	}
 
+	partial void OnTitleChanged(string value)
+    {
+        // Analyze for assist opportunities when title changes
+        if (!string.IsNullOrWhiteSpace(value) && AnalyzeForAssist && _taskAssistAnalyzer != null)
+        {
+            AnalyzeTaskTextAsync(value).FireAndForgetSafeAsync(_errorHandler);
+        }
+    }
+
+    private async Task AnalyzeTaskTextAsync(string text)
+    {
+        if (_taskAssistAnalyzer == null || string.IsNullOrWhiteSpace(text))
+            return;
+
+        try
+        {
+            // Create a temporary task object for analysis
+            var tempTask = new ProjectTask { Title = text };
+            
+            // Analyze and set assist properties
+            await _taskAssistAnalyzer.AnalyzeTaskAsync(tempTask);
+            
+            // Update the UI properties
+            AssistType = tempTask.AssistType;
+            AssistData = tempTask.AssistData;
+        }
+        catch (Exception ex)
+        {
+            _errorHandler.HandleError(ex);
+        }
+    }
+
 	[RelayCommand]
 	private async Task Save()
 	{
@@ -137,6 +185,10 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 			_task.ProjectID = projectId = Projects[SelectedProjectIndex].ID;
 
 		_task.IsCompleted = IsCompleted;
+		
+		// Save assist properties
+		_task.AssistType = AssistType;
+		_task.AssistData = AssistData;
 
 		if (Project?.ID == projectId && !Project.Tasks.Contains(_task))
 			Project.Tasks.Add(_task);
