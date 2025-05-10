@@ -800,7 +800,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			// sb.AppendLine("2. 'personalizedGreeting': A short greeting (less than 50 characters) that's personalized based on time of day, user's name, or interests");
 			// sb.AppendLine("Example: { \"priorityTasks\": [ { \"id\": 1, \"title\": \"Meet Bob\", \"priorityReasoning\": \"Due today and matches your morning routine\", \"assistType\": \"Calendar\", \"assistData\": \"Meet Bob at 10am\" } ], \"personalizedGreeting\": \"Good morning, Captain David!\" }");
 
-			Debug.WriteLine($"AI Context: {sb.ToString()}");
+      Debug.WriteLine($"AI Context: {sb.ToString()}");
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
@@ -826,6 +826,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 						if (apiResponse.Result.PriorityTasks != null)
 						{
+
 							// Update fields for prioritized tasks
 							// Consolidated: update and add to PriorityTasks in one pass
 							PriorityTasks.Clear();
@@ -885,14 +886,15 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		else
 			return "Night";
 	}
+
 	private class PriorityTaskResult
 	{
 		[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
 		public List<ProjectTask>? PriorityTasks { get; set; }
 
-		[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
-		public string? PersonalizedGreeting { get; set; }
-	}
+	[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
+	public string? PersonalizedGreeting { get; set; }
+}
 
 	[RelayCommand]
 	private async Task VoiceRecord()
