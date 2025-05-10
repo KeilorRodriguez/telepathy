@@ -36,9 +36,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	private List<ProjectTask> _tasks = [];
+
 	[NotifyPropertyChangedFor(nameof(ShouldShowPriorityTasks))]
+	[NotifyPropertyChangedFor(nameof(HasPriorityTasks))]
 	[ObservableProperty]
-	private ObservableCollection<ProjectTaskViewModel> _priorityTasks = new();
+	private ObservableCollection<ProjectTaskViewModel> _priorityTasks = [];
 
 	[ObservableProperty]
 	private List<Project> _projects = [];
@@ -323,10 +325,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		if (!isSeeded)
 		{
 			await seedDataService.LoadSeedDataAsync();
+			Preferences.Default.Set("is_seeded", true);
+			await Refresh();
 		}
-
-		Preferences.Default.Set("is_seeded", true);
-		await Refresh();
+		// If already seeded, do not call Refresh here; Appearing/Refresh will handle it.
 	}
 
 	[RelayCommand]
@@ -359,45 +361,59 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_isNavigatedTo = false;
 	[RelayCommand]
 	private async Task Appearing()
+{
+	if (!_dataLoaded)
 	{
-		if (!_dataLoaded)
-		{
-			await InitData(_seedDataService);
-			_dataLoaded = true;
-			await Refresh(true);
-		}
-		// This means we are being navigated to
-		else if (!_isNavigatedTo)
-		{
-			await Refresh(true);
-		}
-
-		// Analyze tasks based on context (location, time, calendar)
-		await AnalyzeAndPrioritizeTasks();
+		await InitData(_seedDataService);
+		_dataLoaded = true;
+		await Refresh(true); // Always refresh after InitData to load data and trigger AI
 	}
+	else if (!_isNavigatedTo)
+	{
+		await Refresh(true);
+	}
+	// No direct call to AnalyzeAndPrioritizeTasks here; Refresh handles it.
+}
 	[RelayCommand]
 	private async Task Completed(ProjectTask task)
 	{
-		// Find and update the original task in the main Tasks collection
-		var originalTask = Tasks.FirstOrDefault(t => t.ID == task.ID);
-		if (originalTask != null)
+		// Get the task from the database first to ensure we're working with the most up-to-date version
+		var dbTask = await _taskRepository.GetAsync(task.ID);
+		if (dbTask != null)
 		{
-			// Synchronize the completion status
-			originalTask.IsCompleted = task.IsCompleted;
+			// Update the database task with the completion status
+			dbTask.IsCompleted = task.IsCompleted;
+			await _taskRepository.SaveItemAsync(dbTask);
+		}
+		else
+		{
+			// If not found in DB, save the passed task
+			await _taskRepository.SaveItemAsync(task);
 		}
 
-		// Save the updated task to the database
-		await _taskRepository.SaveItemAsync(originalTask ?? task);
+		// Always update both collections to keep them in sync, regardless of where the change originated
 
-		// Update UI
-		OnPropertyChanged(nameof(HasCompletedTasks));
+		// Update the task in the main Tasks collection
+		var mainTask = Tasks.FirstOrDefault(t => t.ID == task.ID);
+		if (mainTask != null)
+		{
+			mainTask.IsCompleted = task.IsCompleted;
+		}
 
-		// Update priority tasks list if needed
+		// Update the task in the PriorityTasks collection if present
 		var priorityTask = PriorityTasks.FirstOrDefault(t => t.ID == task.ID);
 		if (priorityTask != null)
 		{
+			// Updating through the property ensures OnPropertyChanged is called
 			priorityTask.IsCompleted = task.IsCompleted;
 		}
+
+		// Always refresh both collections to ensure UI is consistent
+		Tasks = new(Tasks);
+		PriorityTasks = new(PriorityTasks);
+
+		// Update the HasCompletedTasks property
+		OnPropertyChanged(nameof(HasCompletedTasks));
 	}
 
 	[RelayCommand]
@@ -426,20 +442,36 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private Task NavigateToPriorityTask(ProjectTaskViewModel? task)
 		=> task != null ? Shell.Current.GoToAsync($"task?id={task.ID}") : Task.CompletedTask;
 
-
-
 	[RelayCommand]
 	private async Task CleanTasks()
 	{
+		// Get all completed tasks
 		var completedTasks = Tasks.Where(t => t.IsCompleted).ToList();
+		
+		// Delete completed tasks from database
 		foreach (var task in completedTasks)
 		{
 			await _taskRepository.DeleteItemAsync(task);
-			Tasks.Remove(task);
 		}
-
+		
+		// Create fresh filtered collections instead of modifying existing ones
+		var incompleteTasks = Tasks.Where(t => !t.IsCompleted).ToList();
+		Tasks = new(incompleteTasks);
+		
+		// Get IDs of all completed tasks for efficient lookup
+		var completedTaskIds = completedTasks.Select(t => t.ID).ToHashSet();
+		
+		// Filter out completed tasks from priority tasks
+		var remainingPriorityTasks = PriorityTasks
+			.Where(pt => !completedTaskIds.Contains(pt.ID))
+			.ToList();
+		
+		// Replace entire collection
+		PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(remainingPriorityTasks);
+		
+		// Now the HasCompletedTasks property should return false since we've removed all completed tasks
 		OnPropertyChanged(nameof(HasCompletedTasks));
-		Tasks = new(Tasks);
+		
 		await AppShell.DisplayToastAsync("All cleaned up!");
 	}
 
@@ -612,6 +644,15 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			await GetCurrentLocationAsync();
 		}
 	}
+	
+	[RelayCommand]
+	private async Task ForcePriorityTaskRefresh()
+	{
+		// This method will force a refresh of priority tasks, ignoring the time constraint
+		// by resetting _lastPriorityCheck to a distant past value and calling AnalyzeAndPrioritizeTasks
+		_lastPriorityCheck = DateTime.MinValue;
+		await AnalyzeAndPrioritizeTasks();
+	}
 
 	public async Task GetCurrentLocationAsync()
 	{
@@ -648,10 +689,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			IsGettingLocation = false;
 		}
-	}   /// <summary>
-		/// Analyzes tasks based on calendar events, location, time of day, and personal preferences
-		/// to identify priority tasks that should be highlighted to the user.
-		/// </summary>
+	}
+
+	/// <summary>
+	/// Analyzes tasks based on calendar events, location, time of day, and personal preferences
+	/// to identify priority tasks that should be highlighted to the user.
+	/// </summary>
 	private async Task AnalyzeAndPrioritizeTasks()
 	{
 		// Early exit if telepathy is disabled or we're missing the API client
@@ -741,7 +784,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			}
 			// Instructions for the AI
 			sb.AppendLine("\nINSTRUCTIONS:");
-			sb.AppendLine($"Based on all the context above, identify which tasks should be prioritized for the NEXT {PRIORITY_CHECK_HOURS} HOURS ONLY, starting from the current time ({now:t}). Consider:");
+			sb.AppendLine($"Based on all the context above, identify which tasks should be prioritized. Consider:");
 			// sb.AppendLine("1. Tasks that are due soon or today");
 			sb.AppendLine("- Tasks that relate to upcoming calendar events in the next 24 hours");
 			sb.AppendLine("- Tasks that might be relevant to my current location should come first and exclude all other tasks unrelated to the location");
@@ -756,6 +799,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			// sb.AppendLine("1. 'priorityTasks': An array of task objects, each with at least the following properties: id (int), title (string), priorityReasoning (string), assistType (string), assistData (string)");
 			// sb.AppendLine("2. 'personalizedGreeting': A short greeting (less than 50 characters) that's personalized based on time of day, user's name, or interests");
 			// sb.AppendLine("Example: { \"priorityTasks\": [ { \"id\": 1, \"title\": \"Meet Bob\", \"priorityReasoning\": \"Due today and matches your morning routine\", \"assistType\": \"Calendar\", \"assistData\": \"Meet Bob at 10am\" } ], \"personalizedGreeting\": \"Good morning, Captain David!\" }");
+
+      Debug.WriteLine($"AI Context: {sb.ToString()}");
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
@@ -781,41 +826,28 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 						if (apiResponse.Result.PriorityTasks != null)
 						{
-							// Reset priority status and assist info on all tasks first
-							foreach (var task in Tasks)
-							{
-								task.PriorityReasoning = string.Empty;
-								// task.AssistType = AssistType.None;
-								// task.AssistData = string.Empty;
-							}
 
 							// Update fields for prioritized tasks
+							// Consolidated: update and add to PriorityTasks in one pass
+							PriorityTasks.Clear();
 							foreach (var aiTask in apiResponse.Result.PriorityTasks)
 							{
-								var task = Tasks.FirstOrDefault(t => t.ID == aiTask.ID && !t.IsCompleted);
+								var task = Tasks.FirstOrDefault(t => t.Title == aiTask.Title && !t.IsCompleted);
 								if (task != null)
 								{
 									task.PriorityReasoning = aiTask.PriorityReasoning;
 									task.AssistType = aiTask.AssistType;
 									task.AssistData = aiTask.AssistData;
 									Debug.WriteLine($"Task '{task.Title}' prioritized because: {aiTask.PriorityReasoning}, AssistType: {aiTask.AssistType}, AssistData: {aiTask.AssistData}");
+
+									var taskViewModel = new ProjectTaskViewModel(task);
+									var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
+									if (project != null)
+									{
+										taskViewModel.ProjectName = project.Name;
+									}
+									PriorityTasks.Add(taskViewModel);
 								}
-							}
-
-							// Create a VIEW of prioritized tasks using the ObservableCollection
-							PriorityTasks.Clear();
-							foreach (var priorityTask in Tasks.Where(t => apiResponse.Result.PriorityTasks.Any(pt => pt.ID == t.ID) && !t.IsCompleted))
-							{
-								var taskViewModel = new ProjectTaskViewModel(priorityTask);
-
-								// Find the project name for this task
-								var project = Projects.FirstOrDefault(p => p.ID == priorityTask.ProjectID);
-								if (project != null)
-								{
-									taskViewModel.ProjectName = project.Name;
-								}
-
-								PriorityTasks.Add(taskViewModel);
 							}
 						}
 					}
@@ -854,10 +886,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		else
 			return "Night";
 	}
-private class PriorityTaskResult
-{
-	[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
-	public List<ProjectTask>? PriorityTasks { get; set; }
+
+	private class PriorityTaskResult
+	{
+		[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
+		public List<ProjectTask>? PriorityTasks { get; set; }
 
 	[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
 	public string? PersonalizedGreeting { get; set; }

@@ -76,6 +76,8 @@
                         x:Name="ScrollContent"
                         Spacing="{StaticResource LayoutSpacing}"
                         Padding="{StaticResource LayoutPadding}">
+                        <!-- <Button Text="Force Priority Refresh"
+                                Command="{Binding ForcePriorityTaskRefreshCommand}"/> -->
 
                         <!-- Activity Indicator for telepathic analysis -->
                         <controls:ActivityIndicatorView
@@ -91,11 +93,13 @@
                         <VerticalStackLayout 
                             IsVisible="{Binding ShouldShowPriorityTasks}"
                             Spacing="{StaticResource LayoutSpacing}"
-                            Margin="0,0,0,12">                            
+                            Margin="0,0,0,12">    
+                                                    
                             <Label Text="{Binding PersonalizedGreeting}"
                                    Style="{StaticResource Title2}"
-                                   TextColor="{toolkit:AppThemeResource Tertiary}"/>    
-                            <cards:SfCardLayout 
+                                   TextColor="{toolkit:AppThemeResource Tertiary}"/>                                
+
+                            <cards:SfCardLayout  
                                 BindableLayout.ItemsSource="{Binding PriorityTasks}"
                                 VerticalOptions="Center"
                                 SwipeDirection="Left"      
@@ -106,22 +110,18 @@
                                             <cards:SfCardView 
                                                 x:DataType="viewModels:ProjectTaskViewModel"
                                                 BackgroundColor="Transparent" 
-                                                BorderWidth="0" 
-                                                FadeOutOnSwiping="True">                                                      
+                                                BorderWidth="0">                                                      
                                                 <Border
-                                                        StrokeThickness="1"
-                                                        Stroke="{toolkit:AppThemeResource Surface1}"
-                                                        StrokeShape="RoundRectangle 20"
-                                                        BackgroundColor="{toolkit:AppThemeResource Surface0}"
-                                                        >
+                                                    StrokeThickness="1"
+                                                    Stroke="{toolkit:AppThemeResource Surface1}"
+                                                    StrokeShape="RoundRectangle 20"
+                                                    BackgroundColor="{toolkit:AppThemeResource Surface0}">
                                                     <Border.GestureRecognizers>
                                                         <TapGestureRecognizer 
                                                             Command="{Binding NavigateToPriorityTaskCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}},x:DataType=pageModels:MainPageModel}"
                                                                 CommandParameter="{Binding .}"/>
                                                     </Border.GestureRecognizers>
-                                                    <!-- <effectsView:SfEffectsView
-                                                        TouchDownEffects="Highlight"
-                                                        HighlightBackground="{toolkit:AppThemeResource OnBackground}"> -->
+                                                    
                                                         <Grid RowDefinitions="*"
                                                             ColumnDefinitions="*">
                                                             <!-- Checkbox in the upper left -->
@@ -132,7 +132,7 @@
                                                                     Grid.Row="0"
                                                                     Grid.Column="0"
                                                                     VerticalOptions="Center"
-                                                                    IsChecked="{Binding IsCompleted}" 
+                                                                    IsChecked="{Binding IsCompleted, Mode=OneWay}" 
                                                                     Color="{toolkit:AppThemeResource Primary}"
                                                                     CheckedChanged="PriorityTask_CheckedChanged"/>
                                                                 <Label Text="{Binding Title}"
@@ -172,7 +172,6 @@
                                                                         CommandParameter="{Binding .}"/>
                                                             </HorizontalStackLayout>
                                                             
-                                                            
                                                             <!-- Project Name in the lower left -->
                                                             <Label 
                                                                 Text="{Binding ProjectName, FallbackValue='Project'}"
@@ -180,7 +179,7 @@
                                                                 VerticalOptions="End"                                                                
                                                                 TextColor="{toolkit:AppThemeResource Tertiary}"/>
                                                         </Grid>
-                                                    <!-- </effectsView:SfEffectsView> -->
+                                                    
                                                 </Border>                                                
                                             </cards:SfCardView>
                                         </DataTemplate>
