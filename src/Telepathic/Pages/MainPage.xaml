@@ -76,8 +76,8 @@
                         x:Name="ScrollContent"
                         Spacing="{StaticResource LayoutSpacing}"
                         Padding="{StaticResource LayoutPadding}">
-                        <Button Text="Force Priority Refresh"
-                                Command="{Binding ForcePriorityTaskRefreshCommand}"/>
+                        <!-- <Button Text="Force Priority Refresh"
+                                Command="{Binding ForcePriorityTaskRefreshCommand}"/> -->
 
                         <!-- Activity Indicator for telepathic analysis -->
                         <controls:ActivityIndicatorView
