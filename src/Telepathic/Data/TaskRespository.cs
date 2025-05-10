@@ -40,13 +40,48 @@ public class TaskRepository
                 ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 Title TEXT NOT NULL,
                 IsCompleted INTEGER NOT NULL,
-                ProjectID INTEGER NOT NULL
+                ProjectID INTEGER NOT NULL,
+                AssistType INTEGER NOT NULL DEFAULT 0,
+                AssistData TEXT
             );";
 			await createTableCmd.ExecuteNonQueryAsync();
+			
+			// Check if the AssistType column exists - for database upgrades
+			var checkAssistTypeCmd = connection.CreateCommand();
+			checkAssistTypeCmd.CommandText = "PRAGMA table_info(Task)";
+			var hasAssistType = false;
+			var hasAssistData = false;
+			
+			await using var reader = await checkAssistTypeCmd.ExecuteReaderAsync();
+			while (await reader.ReadAsync())
+			{
+				var columnName = reader.GetString(1);
+				if (columnName == "AssistType")
+					hasAssistType = true;
+				else if (columnName == "AssistData")
+					hasAssistData = true;
+			}
+			
+			// Add columns if they don't exist (for upgrade scenario)
+			if (!hasAssistType)
+			{
+				var addAssistTypeCmd = connection.CreateCommand();
+				addAssistTypeCmd.CommandText = "ALTER TABLE Task ADD COLUMN AssistType INTEGER NOT NULL DEFAULT 0";
+				await addAssistTypeCmd.ExecuteNonQueryAsync();
+				_logger.LogInformation("Added AssistType column to Task table");
+			}
+			
+			if (!hasAssistData)
+			{
+				var addAssistDataCmd = connection.CreateCommand();
+				addAssistDataCmd.CommandText = "ALTER TABLE Task ADD COLUMN AssistData TEXT";
+				await addAssistDataCmd.ExecuteNonQueryAsync();
+				_logger.LogInformation("Added AssistData column to Task table");
+			}
 		}
 		catch (Exception e)
 		{
-			_logger.LogError(e, "Error creating Task table");
+			_logger.LogError(e, "Error creating or upgrading Task table");
 			throw;
 		}
 
@@ -70,13 +105,28 @@ public class TaskRepository
 		await using var reader = await selectCmd.ExecuteReaderAsync();
 		while (await reader.ReadAsync())
 		{
-			tasks.Add(new ProjectTask
+			var task = new ProjectTask
 			{
 				ID = reader.GetInt32(0),
 				Title = reader.GetString(1),
 				IsCompleted = reader.GetBoolean(2),
 				ProjectID = reader.GetInt32(3)
-			});
+			};
+			
+			// Handle AssistType and AssistData if columns exist
+			try
+			{
+				task.AssistType = (AssistType)reader.GetInt32(4);
+				task.AssistData = !reader.IsDBNull(5) ? reader.GetString(5) : string.Empty;
+			}
+			catch (IndexOutOfRangeException)
+			{
+				// Older database version without these columns
+				task.AssistType = AssistType.None;
+				task.AssistData = string.Empty;
+			}
+			
+			tasks.Add(task);
 		}
 
 		return tasks;
@@ -101,13 +151,28 @@ public class TaskRepository
 		await using var reader = await selectCmd.ExecuteReaderAsync();
 		while (await reader.ReadAsync())
 		{
-			tasks.Add(new ProjectTask
+			var task = new ProjectTask
 			{
 				ID = reader.GetInt32(0),
 				Title = reader.GetString(1),
 				IsCompleted = reader.GetBoolean(2),
 				ProjectID = reader.GetInt32(3)
-			});
+			};
+			
+			// Handle AssistType and AssistData if columns exist
+			try
+			{
+				task.AssistType = (AssistType)reader.GetInt32(4);
+				task.AssistData = !reader.IsDBNull(5) ? reader.GetString(5) : string.Empty;
+			}
+			catch (IndexOutOfRangeException)
+			{
+				// Older database version without these columns
+				task.AssistType = AssistType.None;
+				task.AssistData = string.Empty;
+			}
+			
+			tasks.Add(task);
 		}
 
 		return tasks;
@@ -131,13 +196,28 @@ public class TaskRepository
 		await using var reader = await selectCmd.ExecuteReaderAsync();
 		if (await reader.ReadAsync())
 		{
-			return new ProjectTask
+			var task = new ProjectTask
 			{
 				ID = reader.GetInt32(0),
 				Title = reader.GetString(1),
 				IsCompleted = reader.GetBoolean(2),
 				ProjectID = reader.GetInt32(3)
 			};
+			
+			// Handle AssistType and AssistData if columns exist
+			try
+			{
+				task.AssistType = (AssistType)reader.GetInt32(4);
+				task.AssistData = !reader.IsDBNull(5) ? reader.GetString(5) : string.Empty;
+			}
+			catch (IndexOutOfRangeException)
+			{
+				// Older database version without these columns
+				task.AssistType = AssistType.None;
+				task.AssistData = string.Empty;
+			}
+			
+			return task;
 		}
 
 		return null;
@@ -158,19 +238,23 @@ public class TaskRepository
 		if (item.ID == 0)
 		{
 			saveCmd.CommandText = @"
-            INSERT INTO Task (Title, IsCompleted, ProjectID) VALUES (@title, @isCompleted, @projectId);
+            INSERT INTO Task (Title, IsCompleted, ProjectID, AssistType, AssistData) 
+            VALUES (@title, @isCompleted, @projectId, @assistType, @assistData);
             SELECT last_insert_rowid();";
 		}
 		else
 		{
 			saveCmd.CommandText = @"
-            UPDATE Task SET Title = @title, IsCompleted = @isCompleted, ProjectID = @projectId WHERE ID = @id";
+            UPDATE Task SET Title = @title, IsCompleted = @isCompleted, ProjectID = @projectId, 
+            AssistType = @assistType, AssistData = @assistData WHERE ID = @id";
 			saveCmd.Parameters.AddWithValue("@id", item.ID);
 		}
 
 		saveCmd.Parameters.AddWithValue("@title", item.Title);
 		saveCmd.Parameters.AddWithValue("@isCompleted", item.IsCompleted);
 		saveCmd.Parameters.AddWithValue("@projectId", item.ProjectID);
+		saveCmd.Parameters.AddWithValue("@assistType", (int)item.AssistType);
+		saveCmd.Parameters.AddWithValue("@assistData", item.AssistData ?? (object)DBNull.Value);
 
 		var result = await saveCmd.ExecuteScalarAsync();
 		if (item.ID == 0)

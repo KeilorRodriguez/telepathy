@@ -24,6 +24,8 @@
         <toolkit:BoolToObjectConverter x:Key="BoolToBorderBrushConverter" 
                                      TrueObject="{StaticResource AIBrush}" 
                                      FalseObject="Transparent" />
+        <!-- Converter to show assist button when AssistType is not None -->
+        <converters:AssistTypeToBoolConverter x:Key="AssistTypeToBoolConverter" />
     </Border.Resources>
     
     <Border.Stroke>
@@ -54,7 +56,7 @@
                 </Grid>
             </shimmer:SfShimmer.CustomView>
             <shimmer:SfShimmer.Content>
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="15" Padding="{OnIdiom 15, Desktop=20}">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="15" Padding="{OnIdiom 15, Desktop=20}">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer 
                             Command="{Binding NavigateToTaskCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}" 
@@ -83,11 +85,26 @@
                         HeightRequest="40"
                         CornerRadius="20"
                         Padding="0"
-                        BackgroundColor="Transparent" 
+                        BackgroundColor="Transparent"
                         IsVisible="{Binding IsRecommendation}"
                         Command="{Binding RejectRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}"
                         CommandParameter="{Binding .}"
                         Text="{x:Static fonts:FluentUI.delete_32_regular}"
+                        FontFamily="{x:Static fonts:FluentUI.FontFamily}"
+                        FontSize="24"
+                        TextColor="{toolkit:AppThemeResource OnBackground}"/>
+                    <!-- Assist Button (visible when AssistType != None) -->
+                    <Button
+                        Grid.Column="3"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        CornerRadius="20"
+                        Padding="0"
+                        BackgroundColor="Transparent"
+                        IsVisible="{Binding AssistType, Converter={StaticResource AssistTypeToBoolConverter}}"
+                        Command="{Binding AssistCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}"
+                        CommandParameter="{Binding .}"
+                        Text="{x:Static fonts:FluentUI.wand_48_regular}"
                         FontFamily="{x:Static fonts:FluentUI.FontFamily}"
                         FontSize="24"
                         TextColor="{toolkit:AppThemeResource OnBackground}"/>

@@ -4,9 +4,17 @@
              xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.TextInputLayout;assembly=Syncfusion.Maui.Toolkit"
              xmlns:pageModel="clr-namespace:Telepathic.PageModels"
              xmlns:models="clr-namespace:Telepathic.Models"
-             x:DataType="pageModel:TaskDetailPageModel"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+		xmlns:expander="http://schemas.syncfusion.com/maui/toolkit"
+		xmlns:converters="clr-namespace:Telepathic.Converters"
+			 x:DataType="pageModel:TaskDetailPageModel"
              x:Class="Telepathic.Pages.TaskDetailPage"
              Title="Task">
+
+    <ContentPage.Resources>
+        <toolkit:EnumToBoolConverter x:Key="EnumToBoolConverter" />
+        <converters:AssistTypeToBoolConverter x:Key="AssistTypeToBoolConverter" />
+    </ContentPage.Resources>
 
     <ContentPage.ToolbarItems>
         <ToolbarItem
@@ -42,6 +50,73 @@
                         SelectedItem="{Binding Project}"
                         SelectedIndex="{Binding SelectedProjectIndex}" />
                 </sf:SfTextInputLayout>
+                
+                <!-- Assist Type Section (collapsed in SfExpander) -->
+                <!-- <sf:SfTextInputLayout Hint="Assist Type"> -->
+                    <expander:SfExpander IsExpanded="False">
+                        <expander:SfExpander.Header>
+                            <Label Text="Show Assist Options" />
+                        </expander:SfExpander.Header>
+                        <expander:SfExpander.Content>
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                                <!-- Row 1 -->
+                                <RadioButton Grid.Row="0" Grid.Column="0" 
+                                           Content="None"
+                                           IsChecked="{Binding AssistType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static models:AssistType.None},Mode=OneWay}"
+                                           GroupName="AssistType" />
+                                <RadioButton Grid.Row="0" Grid.Column="1" 
+                                           Content="Calendar"
+                                           IsChecked="{Binding AssistType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static models:AssistType.Calendar},Mode=OneWay}"
+                                           GroupName="AssistType" />
+                                <!-- Row 2 -->
+                                <RadioButton Grid.Row="1" Grid.Column="0" 
+                                           Content="Maps/Location"
+                                           IsChecked="{Binding AssistType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static models:AssistType.Maps},Mode=OneWay}"
+                                           GroupName="AssistType" />
+                                <RadioButton Grid.Row="1" Grid.Column="1" 
+                                           Content="Phone"
+                                           IsChecked="{Binding AssistType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static models:AssistType.Phone},Mode=OneWay}"
+                                           GroupName="AssistType" />
+                                <!-- Row 3 -->
+                                <RadioButton Grid.Row="2" Grid.Column="0" 
+                                           Content="Email"
+                                           IsChecked="{Binding AssistType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static models:AssistType.Email},Mode=OneWay}"
+                                           GroupName="AssistType" />
+                                <RadioButton Grid.Row="2" Grid.Column="1" 
+                                           Content="AI"
+                                           IsChecked="{Binding AssistType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static models:AssistType.AI},Mode=OneWay}"
+                                           GroupName="AssistType" />
+
+                                <sf:SfTextInputLayout 
+                                    Hint="Auto-analyze">
+                                    <CheckBox
+                                        HorizontalOptions="End"
+                                        IsChecked="{Binding AnalyzeForAssist}" />
+                                </sf:SfTextInputLayout>
+                            </Grid>
+                        </expander:SfExpander.Content>
+                    </expander:SfExpander>
+                <!-- </sf:SfTextInputLayout> -->
+
+                <!-- Assist Data -->
+                <!-- <sf:SfTextInputLayout 
+                    Hint="Assist Data"
+                    IsVisible="{Binding AssistType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=!{x:Static models:AssistType.None}}">
+                    <Entry
+                        Text="{Binding AssistData}"
+                        Placeholder="Enter phone number, email, address, etc." />
+                </sf:SfTextInputLayout> -->
+
+                <!-- Auto Analyze Toggle -->
+                
+
+                <!-- Assist Button: Only visible if AssistType is not None -->
+                <Button
+                    Text="Assist Me"
+                    Command="{Binding AssistCommand}"
+                    IsVisible="{Binding AssistType, Converter={StaticResource AssistTypeToBoolConverter}}"
+                    Margin="0,12,0,0"
+                    StyleClass="PrimaryButton" />
 
                 <Button 
                     HeightRequest="{OnIdiom 44, Desktop=60}"

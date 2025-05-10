@@ -2,6 +2,8 @@ using System.Text.Json.Serialization;
 
 namespace Telepathic.Models;
 
+public enum AssistType { None, Calendar, Maps, Phone, Email, AI }
+
 public class ProjectTask
 {
 	public int ID { get; set; }
@@ -10,7 +12,6 @@ public class ProjectTask
 	public DateTime? DueDate { get; set; }
 	public int Priority { get; set; }
 	
-	[JsonIgnore]
 	public string PriorityReasoning { get; set; } = string.Empty;
 	
 	[JsonIgnore]
@@ -19,6 +20,12 @@ public class ProjectTask
 	[JsonIgnore]
 	public int ProjectID { get; set; }
 	
-	[JsonIgnore]
-	public bool IsRecommendation { get; set; }
+   [JsonIgnore]
+   public bool IsRecommendation { get; set; }
+
+
+   public AssistType AssistType { get; set; } = AssistType.None;
+
+
+   public string AssistData { get; set; } = string.Empty;
 }

@@ -7,6 +7,9 @@ using Microsoft.Extensions.AI;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Telepathic.ViewModels;
+using Microsoft.Maui.ApplicationModel.Communication;
+using Microsoft.Maui.ApplicationModel;
+using System.Web;
 
 namespace Telepathic.PageModels;
 
@@ -24,10 +27,6 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
-
-
-	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AcceptRecommendationCommand => AcceptRecommendationCommand;
-	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.RejectRecommendationCommand => RejectRecommendationCommand;
 
 	[ObservableProperty]
 	private List<CategoryChartData> _todoCategoryData = [];
@@ -109,6 +108,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
+
 	[RelayCommand]
 	Task AcceptRecommendation(ProjectTask? task)
 	{
@@ -123,6 +123,94 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		if (task != null)
 			Debug.WriteLine($"Rejecting recommendation for task: {task.Title}");
 		return Task.CompletedTask;
+	}
+
+	[RelayCommand]
+	async Task Assist(ProjectTask task)
+	{
+		if (task == null || task.AssistType == AssistType.None)
+			return;
+		try
+		{
+			IsBusy = true;
+			switch (task.AssistType)
+			{
+				case AssistType.Calendar:
+					// Try to create a calendar event using the assist data
+					try
+					{
+						// Get all connected calendars
+						var calendars = await _calendarStore.GetCalendars();
+
+						// Check if any calendar is connected and available
+						if (calendars == null || !calendars.Any())
+						{
+							await AppShell.DisplayToastAsync("No calendars available. Please connect a calendar in settings.");
+							break;
+						}
+
+						// Default to using the first available calendar
+						var calendarId = calendars.First().Id;
+
+						// Create a simple event with the task title
+						string eventId = await _calendarStore.CreateEvent(
+							calendarId,
+							task.Title,
+							task.AssistData, // Use AssistData as description
+							string.Empty, // No location
+							DateTimeOffset.Now.AddHours(1), // Start time (1 hour from now)
+							DateTimeOffset.Now.AddHours(2), // End time (2 hours from now)
+							false // Not an all-day event
+						);
+
+						if (!string.IsNullOrEmpty(eventId))
+						{
+							await AppShell.DisplayToastAsync("Calendar event created successfully!");
+						}
+						else
+						{
+							await AppShell.DisplayToastAsync("Failed to create calendar event.");
+						}
+					}
+					catch (Exception ex)
+					{
+						_errorHandler.HandleError(new Exception("Error creating calendar event", ex));
+						await AppShell.DisplayToastAsync("Error creating calendar event. See logs for details.");
+					}
+					break;
+				case AssistType.Maps:
+					// Open address or location in external maps via web
+					var mapsUri = new Uri($"https://maps.apple.com/?q={Uri.EscapeDataString(task.AssistData)}");
+					await Launcher.OpenAsync(mapsUri);
+					break;
+				case AssistType.Phone:
+					PhoneDialer.Open(task.AssistData);
+					break;
+				case AssistType.Email:
+					var message = new EmailMessage
+					{
+						Subject = task.Title,
+						To = new List<string> { task.AssistData }
+					};
+					await Email.ComposeAsync(message);
+					break;
+				case AssistType.AI:
+					var promptText = $"Assist me with: {task.Title}";
+					var client = _chatClientService.GetClient();
+					var chatResponse = await client.GetResponseAsync<string>(promptText);
+					var aiText = chatResponse.Result ?? string.Empty;
+					await Shell.Current.DisplayAlert("AI Assist", aiText, "OK");
+					break;
+			}
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+		finally
+		{
+			IsBusy = false;
+		}
 	}
 
 	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
@@ -313,8 +401,18 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	}
 
 	[RelayCommand]
-	private Task AddTask()
-		=> Shell.Current.GoToAsync($"task");
+	private async Task AddTask()
+	{
+		try
+		{
+			await Shell.Current.GoToAsync($"task");
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+	}
+
 
 	[RelayCommand]
 	private Task NavigateToProject(Project project)
@@ -653,12 +751,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("- Provide a personalized greeting using my name if available in the 'About Me' section, or a fun, space/cosmic themed greeting");
 			// sb.AppendLine("- Include at least 3 tasks in the response");
 
-			sb.AppendLine("\nRETURN FORMAT:");
-			sb.AppendLine("Return a JSON object with the following properties:");
-			sb.AppendLine("1. 'priorityTaskIds': An array of task IDs (as integers) that should be prioritized");
-			sb.AppendLine("2. 'taskReasons': A dictionary mapping task IDs (as strings) to reasons (as strings) explaining why each task is prioritized");
-			sb.AppendLine("3. 'personalizedGreeting': A short greeting (less than 50 characters) that's personalized based on time of day, user's name, or interests");
-			sb.AppendLine("Example: { \"priorityTaskIds\": [1, 2], \"taskReasons\": {\"1\": \"Due today and matches your morning routine\", \"2\": \"Related to your upcoming meeting at 11am\"}, \"personalizedGreeting\": \"Good morning, Captain David!\" }");
+			// sb.AppendLine("\nRETURN FORMAT:");
+			// sb.AppendLine("Return a JSON object with the following properties:");
+			// sb.AppendLine("1. 'priorityTasks': An array of task objects, each with at least the following properties: id (int), title (string), priorityReasoning (string), assistType (string), assistData (string)");
+			// sb.AppendLine("2. 'personalizedGreeting': A short greeting (less than 50 characters) that's personalized based on time of day, user's name, or interests");
+			// sb.AppendLine("Example: { \"priorityTasks\": [ { \"id\": 1, \"title\": \"Meet Bob\", \"priorityReasoning\": \"Due today and matches your morning routine\", \"assistType\": \"Calendar\", \"assistData\": \"Meet Bob at 10am\" } ], \"personalizedGreeting\": \"Good morning, Captain David!\" }");
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
@@ -667,7 +764,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				try
 				{
-					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString()); if (apiResponse?.Result != null)
+					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
+					if (apiResponse?.Result != null)
 					{
 						// Update personalized greeting if it exists
 						if (!string.IsNullOrEmpty(apiResponse.Result.PersonalizedGreeting))
@@ -681,44 +779,42 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 							PersonalizedGreeting = $"Good {timeOfDay}, Space Adventurer!";
 						}
 
-						if (apiResponse.Result.PriorityTaskIds != null)
-						{   // Mark tasks as prioritized rather than creating copies
-							var priorityIds = new HashSet<int>(apiResponse.Result.PriorityTaskIds);
-
-							// Reset priority status on all tasks first
+						if (apiResponse.Result.PriorityTasks != null)
+						{
+							// Reset priority status and assist info on all tasks first
 							foreach (var task in Tasks)
 							{
 								task.PriorityReasoning = string.Empty;
+								// task.AssistType = AssistType.None;
+								// task.AssistData = string.Empty;
 							}
 
-							// Update priority reasoning for prioritized tasks
-							if (apiResponse.Result.TaskReasons != null)
+							// Update fields for prioritized tasks
+							foreach (var aiTask in apiResponse.Result.PriorityTasks)
 							{
-								foreach (var taskId in priorityIds)
+								var task = Tasks.FirstOrDefault(t => t.ID == aiTask.ID && !t.IsCompleted);
+								if (task != null)
 								{
-									var task = Tasks.FirstOrDefault(t => t.ID == taskId && !t.IsCompleted);
-									if (task != null && apiResponse.Result.TaskReasons.TryGetValue(taskId.ToString(), out var reason))
-									{
-										task.PriorityReasoning = reason;
-										Debug.WriteLine($"Task '{task.Title}' prioritized because: {reason}");
-									}
+									task.PriorityReasoning = aiTask.PriorityReasoning;
+									task.AssistType = aiTask.AssistType;
+									task.AssistData = aiTask.AssistData;
+									Debug.WriteLine($"Task '{task.Title}' prioritized because: {aiTask.PriorityReasoning}, AssistType: {aiTask.AssistType}, AssistData: {aiTask.AssistData}");
 								}
 							}
 
-
 							// Create a VIEW of prioritized tasks using the ObservableCollection
 							PriorityTasks.Clear();
-							foreach (var task in Tasks.Where(t => priorityIds.Contains(t.ID) && !t.IsCompleted))
+							foreach (var priorityTask in Tasks.Where(t => apiResponse.Result.PriorityTasks.Any(pt => pt.ID == t.ID) && !t.IsCompleted))
 							{
-								var taskViewModel = new ProjectTaskViewModel(task);
-								
+								var taskViewModel = new ProjectTaskViewModel(priorityTask);
+
 								// Find the project name for this task
-								var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
+								var project = Projects.FirstOrDefault(p => p.ID == priorityTask.ProjectID);
 								if (project != null)
 								{
 									taskViewModel.ProjectName = project.Name;
 								}
-								
+
 								PriorityTasks.Add(taskViewModel);
 							}
 						}
@@ -758,17 +854,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		else
 			return "Night";
 	}
-	private class PriorityTaskResult
-	{
-		[System.Text.Json.Serialization.JsonPropertyName("priorityTaskIds")]
-		public List<int>? PriorityTaskIds { get; set; }
+private class PriorityTaskResult
+{
+	[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
+	public List<ProjectTask>? PriorityTasks { get; set; }
 
-		[System.Text.Json.Serialization.JsonPropertyName("taskReasons")]
-		public Dictionary<string, string>? TaskReasons { get; set; }
-
-		[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
-		public string? PersonalizedGreeting { get; set; }
-	}
+	[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
+	public string? PersonalizedGreeting { get; set; }
+}
 
 	[RelayCommand]
 	private async Task VoiceRecord()
