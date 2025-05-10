@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Telepathic.Models;
@@ -29,6 +30,8 @@ namespace Telepathic.ViewModels
                 }
             }
         }
+
+        [JsonIgnore]
         public DateTime? DueDate => _task.DueDate;
         public int Priority => _task.Priority;
         public string PriorityReasoning => _task.PriorityReasoning;
