@@ -94,20 +94,17 @@
                         FontSize="24"
                         TextColor="{toolkit:AppThemeResource OnBackground}"/>
                     <!-- Assist Button (visible when AssistType != None) -->
-                    <Button
+                    <ImageButton 
                         Grid.Column="3"
-                        WidthRequest="40"
-                        HeightRequest="40"
-                        CornerRadius="20"
-                        Padding="0"
-                        BackgroundColor="Transparent"
+                        Source="{StaticResource IconAssist}"
                         IsVisible="{Binding AssistType, Converter={StaticResource AssistTypeToBoolConverter}}"
+                        Aspect="Center"
+                        HeightRequest="44"
+                        WidthRequest="44"
+                        BackgroundColor="Transparent"
                         Command="{Binding AssistCommand, Source={RelativeSource AncestorType={x:Type pageModels:IProjectTaskPageModel}}, x:DataType=pageModels:IProjectTaskPageModel}"
-                        CommandParameter="{Binding .}"
-                        Text="{x:Static fonts:FluentUI.wand_48_regular}"
-                        FontFamily="{x:Static fonts:FluentUI.FontFamily}"
-                        FontSize="24"
-                        TextColor="{toolkit:AppThemeResource OnBackground}"/>
+                        CommandParameter="{Binding .}"/>
+                    
                 </Grid>
             </shimmer:SfShimmer.Content>
         </shimmer:SfShimmer>

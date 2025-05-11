@@ -10,11 +10,11 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 {
 	public const string ProjectQueryKey = "project";
 	private ProjectTask? _task;
-	private bool _canDelete;
-	private readonly ProjectRepository _projectRepository;
+	private bool _canDelete;	private readonly ProjectRepository _projectRepository;
 	private readonly TaskRepository _taskRepository;
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly TaskAssistAnalyzer? _taskAssistAnalyzer;
+	private readonly TaskAssistHandler _taskAssistHandler;
 
 	[ObservableProperty]
 	private string _title = string.Empty;
@@ -42,17 +42,18 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 
 	[ObservableProperty]
 	private bool _analyzeForAssist = true;
-
 	public TaskDetailPageModel(
 		ProjectRepository projectRepository,
 		TaskRepository taskRepository,
 		ModalErrorHandler errorHandler,
+		TaskAssistHandler taskAssistHandler,
 		TaskAssistAnalyzer? taskAssistAnalyzer = null)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
 		_errorHandler = errorHandler;
 		_taskAssistAnalyzer = taskAssistAnalyzer;
+		_taskAssistHandler = taskAssistHandler;
 	}
 
 	public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -87,13 +88,13 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 
 		// If the project is new, we don't need to load the project dropdown
 		if (Project?.ID == 0)
-        {
-            IsExistingProject = false;
+		{
+			IsExistingProject = false;
 		}
 		else
-        {
-            Projects = await _projectRepository.ListAsync();
-            IsExistingProject = true;
+		{
+			Projects = await _projectRepository.ListAsync();
+			IsExistingProject = true;
 		}
 
 		if (Project is not null)
@@ -135,36 +136,36 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 	}
 
 	partial void OnTitleChanged(string value)
-    {
-        // Analyze for assist opportunities when title changes
-        if (!string.IsNullOrWhiteSpace(value) && AnalyzeForAssist && _taskAssistAnalyzer != null)
-        {
-            AnalyzeTaskTextAsync(value).FireAndForgetSafeAsync(_errorHandler);
-        }
-    }
+	{
+		// Analyze for assist opportunities when title changes
+		if (!string.IsNullOrWhiteSpace(value) && AnalyzeForAssist && _taskAssistAnalyzer != null)
+		{
+			AnalyzeTaskTextAsync(value).FireAndForgetSafeAsync(_errorHandler);
+		}
+	}
 
-    private async Task AnalyzeTaskTextAsync(string text)
-    {
-        if (_taskAssistAnalyzer == null || string.IsNullOrWhiteSpace(text))
-            return;
+	private async Task AnalyzeTaskTextAsync(string text)
+	{
+		if (_taskAssistAnalyzer == null || string.IsNullOrWhiteSpace(text))
+			return;
 
-        try
-        {
-            // Create a temporary task object for analysis
-            var tempTask = new ProjectTask { Title = text };
-            
-            // Analyze and set assist properties
-            await _taskAssistAnalyzer.AnalyzeTaskAsync(tempTask);
-            
-            // Update the UI properties
-            AssistType = tempTask.AssistType;
-            AssistData = tempTask.AssistData;
-        }
-        catch (Exception ex)
-        {
-            _errorHandler.HandleError(ex);
-        }
-    }
+		try
+		{
+			// Create a temporary task object for analysis
+			var tempTask = new ProjectTask { Title = text };
+
+			// Analyze and set assist properties
+			await _taskAssistAnalyzer.AnalyzeTaskAsync(tempTask);
+
+			// Update the UI properties
+			AssistType = tempTask.AssistType;
+			AssistData = tempTask.AssistData;
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
+	}
 
 	[RelayCommand]
 	private async Task Save()
@@ -185,7 +186,7 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 			_task.ProjectID = projectId = Projects[SelectedProjectIndex].ID;
 
 		_task.IsCompleted = IsCompleted;
-		
+
 		// Save assist properties
 		_task.AssistType = AssistType;
 		_task.AssistData = AssistData;
@@ -221,5 +222,30 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 
 		await Shell.Current.GoToAsync("..?refresh=true");
 		await AppShell.DisplayToastAsync("Task deleted");
+	}
+	[RelayCommand]
+	async Task Assist()
+	{
+		if (_task == null || AssistType == AssistType.None)
+			return;
+
+		try
+		{
+			// Create a task object with current values to pass to the handler
+			var taskToAssist = new ProjectTask
+			{
+				ID = _task.ID,
+				Title = Title,
+				AssistType = AssistType,
+				AssistData = AssistData
+			};
+
+			// Use the shared TaskAssistHandler to process the assist action
+			await _taskAssistHandler.HandleAssistAsync(taskToAssist, false);
+		}
+		catch (Exception ex)
+		{
+			_errorHandler.HandleError(ex);
+		}
 	}
 }

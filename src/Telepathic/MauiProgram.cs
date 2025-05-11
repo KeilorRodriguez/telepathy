@@ -72,11 +72,11 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ModalErrorHandler>();
 		builder.Services.AddSingleton<MainPageModel>();
 		builder.Services.AddSingleton<ProjectListPageModel>();
-		builder.Services.AddSingleton<ManageMetaPageModel>();
-		builder.Services.AddSingleton<IAudioService, AudioService>();
+		builder.Services.AddSingleton<ManageMetaPageModel>();		builder.Services.AddSingleton<IAudioService, AudioService>();
 		builder.Services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
 		builder.Services.AddSingleton<IChatClientService, ChatClientService>();
 		builder.Services.AddSingleton<TaskAssistAnalyzer>();
+		builder.Services.AddSingleton<TaskAssistHandler>();
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
 		builder.Services.AddTransientWithShellRoute<Pages.VoiceModalPage, PageModels.VoiceModalPageModel>("voice");

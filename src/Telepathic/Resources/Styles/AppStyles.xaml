@@ -141,6 +141,11 @@
                          FontFamily="{x:Static f:FluentUI.FontFamily}"
                          Color="{toolkit:AppThemeResource Surface3}"
                          Size="{StaticResource IconSize}"/>
+        <FontImageSource x:Key="IconAssistBright"
+                         Glyph="{x:Static f:FluentUI.wand_24_regular}"
+                         FontFamily="{x:Static f:FluentUI.FontFamily}"
+                         Color="{toolkit:AppThemeResource OnBackground}"
+                         Size="{StaticResource IconSize}"/>
 
         <FontImageSource x:Key="IconPhotos"
                          Glyph="{x:Static f:FluentUI.image_stack_20_regular}"

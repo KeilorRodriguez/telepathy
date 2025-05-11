@@ -10,6 +10,7 @@ using Telepathic.ViewModels;
 using Microsoft.Maui.ApplicationModel.Communication;
 using Microsoft.Maui.ApplicationModel;
 using System.Web;
+using Microsoft.Maui.Devices.Sensors;
 
 namespace Telepathic.PageModels;
 
@@ -21,9 +22,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly TaskRepository _taskRepository;
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
-	private readonly SeedDataService _seedDataService; private readonly ICalendarStore _calendarStore;
+	private readonly SeedDataService _seedDataService;	private readonly ICalendarStore _calendarStore;
 	private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
+	private readonly TaskAssistHandler _taskAssistHandler;
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
@@ -135,75 +137,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		try
 		{
 			IsBusy = true;
-			switch (task.AssistType)
-			{
-				case AssistType.Calendar:
-					// Try to create a calendar event using the assist data
-					try
-					{
-						// Get all connected calendars
-						var calendars = await _calendarStore.GetCalendars();
-
-						// Check if any calendar is connected and available
-						if (calendars == null || !calendars.Any())
-						{
-							await AppShell.DisplayToastAsync("No calendars available. Please connect a calendar in settings.");
-							break;
-						}
-
-						// Default to using the first available calendar
-						var calendarId = calendars.First().Id;
-
-						// Create a simple event with the task title
-						string eventId = await _calendarStore.CreateEvent(
-							calendarId,
-							task.Title,
-							task.AssistData, // Use AssistData as description
-							string.Empty, // No location
-							DateTimeOffset.Now.AddHours(1), // Start time (1 hour from now)
-							DateTimeOffset.Now.AddHours(2), // End time (2 hours from now)
-							false // Not an all-day event
-						);
-
-						if (!string.IsNullOrEmpty(eventId))
-						{
-							await AppShell.DisplayToastAsync("Calendar event created successfully!");
-						}
-						else
-						{
-							await AppShell.DisplayToastAsync("Failed to create calendar event.");
-						}
-					}
-					catch (Exception ex)
-					{
-						_errorHandler.HandleError(new Exception("Error creating calendar event", ex));
-						await AppShell.DisplayToastAsync("Error creating calendar event. See logs for details.");
-					}
-					break;
-				case AssistType.Maps:
-					// Open address or location in external maps via web
-					var mapsUri = new Uri($"https://maps.apple.com/?q={Uri.EscapeDataString(task.AssistData)}");
-					await Launcher.OpenAsync(mapsUri);
-					break;
-				case AssistType.Phone:
-					PhoneDialer.Open(task.AssistData);
-					break;
-				case AssistType.Email:
-					var message = new EmailMessage
-					{
-						Subject = task.Title,
-						To = new List<string> { task.AssistData }
-					};
-					await Email.ComposeAsync(message);
-					break;
-				case AssistType.AI:
-					var promptText = $"Assist me with: {task.Title}";
-					var client = _chatClientService.GetClient();
-					var chatResponse = await client.GetResponseAsync<string>(promptText);
-					var aiText = chatResponse.Result ?? string.Empty;
-					await Shell.Current.DisplayAlert("AI Assist", aiText, "OK");
-					break;
-			}
+			await _taskAssistHandler.HandleAssistAsync(task, IsLocationEnabled);
 		}
 		catch (Exception ex)
 		{
@@ -215,9 +149,78 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		}
 	}
 
-	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
+    private async Task OpenMaps(string assistData, string taskTitle)
+    {
+        try 
+		{
+			// Check if AssistData contains lat/long coordinates
+			if (!string.IsNullOrWhiteSpace(assistData) && assistData.Contains(","))
+			{
+				// Try to parse coordinates format "lat, long"
+				var parts = assistData.Split(',');
+				if (parts.Length == 2 && 
+					double.TryParse(parts[0].Trim(), out double lat) && 
+					double.TryParse(parts[1].Trim(), out double lng))
+				{
+					// We have valid coordinates - set course for this sector!
+					var location = new Location(lat, lng);
+					var options = new MapLaunchOptions { Name = taskTitle };
+					await Map.Default.OpenAsync(location, options);
+				}
+				else
+				{
+					var placemark = new Placemark
+					{
+						CountryName = "United States",
+						AdminArea = "",
+						Thoroughfare = assistData,
+						Locality = ""
+					};
+					// Not valid coordinates - treat as address/place name
+					await Map.Default.OpenAsync(placemark);
+				}
+			}
+			else if (!string.IsNullOrWhiteSpace(assistData))
+			{
+				// Use as place name or address
+				var placemark = new Placemark
+					{
+						CountryName = "United States",
+						AdminArea = "",
+						Thoroughfare = assistData,
+						Locality = ""
+					};
+					// Not valid coordinates - treat as address/place name
+					await Map.Default.OpenAsync(placemark);
+			}
+			else if (IsLocationEnabled)
+			{
+				// No location specified - use current cosmic coordinates
+				var currentLocation = await Geolocation.GetLastKnownLocationAsync();
+				if (currentLocation != null)
+				{
+					var location = new Location(currentLocation.Latitude, currentLocation.Longitude);
+					var options = new MapLaunchOptions { Name = "Current Location" };
+					await Map.Default.OpenAsync(location, options);
+				}
+				else
+				{
+					await AppShell.DisplayToastAsync("Could not determine your location coordinates. Enable location services or specify a location.");
+				}
+			}
+			else
+			{
+				await AppShell.DisplayToastAsync("No location specified and location services are disabled.");
+			}
+		}
+		catch (Exception ex)
+		{
+			await AppShell.DisplayToastAsync($"Failed to navigate to location: {ex.Message}");
+		}
+    }    public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
-		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService)
+		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService, 
+		TaskAssistHandler taskAssistHandler)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -227,6 +230,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_calendarStore = calendarStore;
 		_chatClientService = chatClientService;
 		_logger = logger;
+		_taskAssistHandler = taskAssistHandler;
 
 		// Load saved calendar choices
 		LoadSavedCalendars();
