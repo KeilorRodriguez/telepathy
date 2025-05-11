@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Telepathic.Models;
 
-public enum AssistType { None, Calendar, Maps, Phone, Email, AI }
+public enum AssistType { None, Calendar, Maps, Phone, Email, AI, Browser }
 
 public class ProjectTask
 {

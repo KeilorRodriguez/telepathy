@@ -45,14 +45,17 @@ Analyze the following task text to identify if it's related to one of these cate
 2. Location/Address - Contains a location, address, or place that could be opened in maps
 3. Phone - Contains a phone number or mention of calling someone
 4. Email - Contains an email address or mention of emailing someone
+5. Browser - Contains a reference to a website, web search, or online information that should be opened in a browser
 
 Task text: ""{task.Title}""
 
 Return a JSON object with the following structure:
 {{
-    ""assistType"": ""None|Calendar|Maps|Phone|Email"",
-    ""assistData"": ""The extracted data that would be needed (phone number, email, address, etc.)""
+    ""assistType"": ""None|Calendar|Maps|Phone|Email|Browser"",
+    ""assistData"": ""The extracted data that would be needed (phone number, email, address, search query, etc.)""
 }}
+
+For Browser type tasks, the assistData should be what the user is trying to find or access online, not a full URL.
 
 Only specify assistType different from None if you are confident about the detection.
 ";
