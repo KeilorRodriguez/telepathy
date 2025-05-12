@@ -26,6 +26,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
 	private readonly TaskAssistHandler _taskAssistHandler;
+	private readonly ILocationMcpService _locationMcpService;
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
@@ -220,7 +221,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
     }    public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
 		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService, 
-		TaskAssistHandler taskAssistHandler)
+		TaskAssistHandler taskAssistHandler, ILocationMcpService locationMcpService)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -231,6 +232,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_chatClientService = chatClientService;
 		_logger = logger;
 		_taskAssistHandler = taskAssistHandler;
+		_locationMcpService = locationMcpService;
 
 		// Load saved calendar choices
 		LoadSavedCalendars();
@@ -670,7 +672,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 			if (location != null)
 			{
+				// Update display string
 				CurrentLocation = $"Lat: {location.Latitude:F4}, Long: {location.Longitude:F4}";
+				
+				// Update the location in the MCP service
+				_locationMcpService.SetCurrentLocation(location.Latitude, location.Longitude);
 			}
 			else
 			{
@@ -751,6 +757,30 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			if (IsLocationEnabled)
 			{
 				sb.AppendLine($"Current Location: {CurrentLocation}");
+				
+				// Update the location in the MCP service if it's not already set
+				// This ensures that even if GetCurrentLocationAsync hasn't been called yet,
+				// we still set the location for the MCP
+				if (CurrentLocation != "Location not available" && 
+					!CurrentLocation.StartsWith("Error:") &&
+					CurrentLocation.Contains(","))
+				{
+					try
+					{
+						// Parse the location string "Lat: 12.3456, Long: 78.9012"
+						var parts = CurrentLocation.Split(',');
+						if (parts.Length == 2)
+						{
+							double lat = double.Parse(parts[0].Trim().Replace("Lat:", "").Trim());
+							double lng = double.Parse(parts[1].Trim().Replace("Long:", "").Trim());
+							_locationMcpService.SetCurrentLocation(lat, lng);
+						}
+					}
+					catch (Exception ex)
+					{
+						_logger.LogError(ex, "Failed to parse location string: {Location}", CurrentLocation);
+					}
+				}
 			}
 
 			// Calendar events
@@ -793,7 +823,20 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("- Tasks that relate to upcoming calendar events in the next 24 hours");
 			sb.AppendLine("- Tasks that might be relevant to my current location should come first and exclude all other tasks unrelated to the location");
 			sb.AppendLine("- Tasks that align with my personal preferences in the 'About Me' section, unless they don't meet the location or timeframe criteria");
-			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning"); sb.AppendLine("- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
+			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");
+			
+			// Add instructions about using the IsNearby MCP function
+			if (IsLocationEnabled)
+			{
+				sb.AppendLine("\nYou have access to a special function called IsNearby that can tell you if the user is near a specific type of location:");
+				sb.AppendLine("- Use the IsNearby function to check if the user is near places mentioned in tasks");
+				sb.AppendLine("- Example: To check if the user is near a coffee shop, call IsNearby(\"coffee shop\")");
+				sb.AppendLine("- The function returns true if the user is within 100 meters of the type of location");
+				sb.AppendLine("- Prioritize tasks related to locations that IsNearby returns true for");
+				sb.AppendLine("- Mention in the priorityReasoning when a task is prioritized because the user is near a relevant location");
+			}
+			
+			sb.AppendLine("\n- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
 			sb.AppendLine("- Don't include more than 3 tasks in the response");
 			sb.AppendLine("- Provide a personalized greeting using my name if available in the 'About Me' section, or a fun, space/cosmic themed greeting");
 			// sb.AppendLine("- Include at least 3 tasks in the response");

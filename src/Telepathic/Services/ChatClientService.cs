@@ -36,10 +36,12 @@ public class ChatClientService : IChatClientService
 {
     private IChatClient? _chatClient;
     private readonly ILogger _logger;
+    private readonly ILocationMcpService _locationMcpService;
 
-    public ChatClientService(ILogger<ChatClientService> logger)
+    public ChatClientService(ILogger<ChatClientService> logger, ILocationMcpService locationMcpService)
     {
         _logger = logger;
+        _locationMcpService = locationMcpService;
         
         // Try to initialize from preferences if available
         var apiKey = Preferences.Default.Get("openai_api_key", string.Empty);
@@ -72,6 +74,9 @@ public class ChatClientService : IChatClientService
             
             // Add logging wrapper
             _chatClient = new LoggingChatClient(_chatClient, _logger);
+            
+            // Initialize and register the Location MCP
+            _locationMcpService.InitializeMcp(_chatClient);
             
             _logger.LogInformation("Chat client successfully initialized with model: {Model}", model);
         }
