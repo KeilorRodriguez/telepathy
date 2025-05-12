@@ -831,6 +831,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 				sb.AppendLine("\nYou have access to a special function called IsNearby that can tell you if the user is near a specific type of location:");
 				sb.AppendLine("- Use the IsNearby function to check if the user is near places mentioned in tasks");
 				sb.AppendLine("- Example: To check if the user is near a coffee shop, call IsNearby(\"coffee shop\")");
+				sb.AppendLine("- Example points of interest to check: coffee shops, grocery stores, retail stores, restaurants, banks, etc.");
+				sb.AppendLine("- Extract the relevant location type from task titles or descriptions");
 				sb.AppendLine("- The function returns true if the user is within 100 meters of the type of location");
 				sb.AppendLine("- Prioritize tasks related to locations that IsNearby returns true for");
 				sb.AppendLine("- Mention in the priorityReasoning when a task is prioritized because the user is near a relevant location");
