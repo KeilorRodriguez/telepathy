@@ -43,9 +43,6 @@ public class ChatClientService : IChatClientService
         _logger = logger;
         _mcpService = mcpService;
         
-        // Initialize the MCP service
-        _mcpService.Initialize();
-        
         // Try to initialize from preferences if available
         var apiKey = Preferences.Default.Get("openai_api_key", string.Empty);
         if (!string.IsNullOrEmpty(apiKey))

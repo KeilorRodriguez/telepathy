@@ -1,11 +1,13 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using OpenAI;
 using Plugin.Maui.Audio;
 using Plugin.Maui.CalendarStore;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using Syncfusion.Maui.Toolkit.Hosting;
+using Telepathic.Tools;
 
 namespace Telepathic;
 
@@ -63,6 +65,11 @@ public static class MauiProgram
 		builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
 
+		// Register Model Context Protocol server
+		builder.Services.AddMcpServer()
+			.WithStdioServerTransport()
+			.WithTools<LocationTools>();
+
 		builder.Services.AddSingleton(CalendarStore.Default);
 		builder.Services.AddSingleton<ProjectRepository>();
 		builder.Services.AddSingleton<TaskRepository>();
@@ -72,7 +79,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ModalErrorHandler>();
 		builder.Services.AddSingleton<MainPageModel>();
 		builder.Services.AddSingleton<ProjectListPageModel>();
-		builder.Services.AddSingleton<ManageMetaPageModel>();		builder.Services.AddSingleton<IAudioService, AudioService>();
+		builder.Services.AddSingleton<ManageMetaPageModel>();		
+		builder.Services.AddSingleton<IAudioService, AudioService>();
 		builder.Services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
 		builder.Services.AddSingleton<IChatClientService, ChatClientService>();
 		builder.Services.AddSingleton<LocationTools>();
