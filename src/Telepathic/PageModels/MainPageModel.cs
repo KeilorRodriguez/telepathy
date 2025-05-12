@@ -852,20 +852,17 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
       Debug.WriteLine($"AI Context: {sb.ToString()}");
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
-			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
-			var chatClient = _chatClientService.GetClient();
-			if (chatClient != null)
+			// Send to AI for analysis with MCP tools included
+			try
 			{
-				try
+				var apiResponse = await _chatClientService.GetResponseWithToolsAsync<PriorityTaskResult>(sb.ToString());
+				if (apiResponse?.Result != null)
 				{
-					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
-					if (apiResponse?.Result != null)
+					// Update personalized greeting if it exists
+					if (!string.IsNullOrEmpty(apiResponse.Result.PersonalizedGreeting))
 					{
-						// Update personalized greeting if it exists
-						if (!string.IsNullOrEmpty(apiResponse.Result.PersonalizedGreeting))
-						{
-							PersonalizedGreeting = apiResponse.Result.PersonalizedGreeting;
-						}
+						PersonalizedGreeting = apiResponse.Result.PersonalizedGreeting;
+					}
 						else
 						{
 							// Generate a default time-based greeting
@@ -906,14 +903,13 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 					// Record when we last checked priorities
 					_lastPriorityCheck = DateTime.Now;
 				}
-
+				
 				catch (Exception ex)
 				{
 					System.Diagnostics.Debug.WriteLine($"Error calling AI for task prioritization: {ex.Message}");
 				}
 			}
-		}
-		catch (Exception ex)
+			catch (Exception ex)
 		{
 			_errorHandler.HandleError(ex);
 		}
