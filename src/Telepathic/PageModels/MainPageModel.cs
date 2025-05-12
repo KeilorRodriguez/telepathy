@@ -26,7 +26,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
 	private readonly TaskAssistHandler _taskAssistHandler;
-	private readonly ILocationMcpService _locationMcpService;
+	private readonly ILocationService _locationService;
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
@@ -221,7 +221,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
     }    public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
 		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService, 
-		TaskAssistHandler taskAssistHandler, ILocationMcpService locationMcpService)
+		TaskAssistHandler taskAssistHandler, ILocationService locationService)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -232,7 +232,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_chatClientService = chatClientService;
 		_logger = logger;
 		_taskAssistHandler = taskAssistHandler;
-		_locationMcpService = locationMcpService;
+		_locationService = locationService;
 
 		// Load saved calendar choices
 		LoadSavedCalendars();
@@ -675,8 +675,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 				// Update display string
 				CurrentLocation = $"Lat: {location.Latitude:F4}, Long: {location.Longitude:F4}";
 				
-				// Update the location in the MCP service
-				_locationMcpService.SetCurrentLocation(location.Latitude, location.Longitude);
+				// Update the location in the location service
+				_locationService.SetCurrentLocation(location.Latitude, location.Longitude);
 			}
 			else
 			{
@@ -758,9 +758,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				sb.AppendLine($"Current Location: {CurrentLocation}");
 				
-				// Update the location in the MCP service if it's not already set
+				// Update the location in the location service if it's not already set
 				// This ensures that even if GetCurrentLocationAsync hasn't been called yet,
-				// we still set the location for the MCP
+				// we still set the location for the location service
 				if (CurrentLocation != "Location not available" && 
 					!CurrentLocation.StartsWith("Error:") &&
 					CurrentLocation.Contains(","))
@@ -773,7 +773,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 						{
 							double lat = double.Parse(parts[0].Trim().Replace("Lat:", "").Trim());
 							double lng = double.Parse(parts[1].Trim().Replace("Long:", "").Trim());
-							_locationMcpService.SetCurrentLocation(lat, lng);
+							_locationService.SetCurrentLocation(lat, lng);
 						}
 					}
 					catch (Exception ex)
@@ -825,7 +825,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("- Tasks that align with my personal preferences in the 'About Me' section, unless they don't meet the location or timeframe criteria");
 			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");
 			
-			// Add instructions about using the IsNearby MCP function
+			// Add instructions about using the IsNearby function
 			if (IsLocationEnabled)
 			{
 				sb.AppendLine("\nYou have access to a special function called IsNearby that can tell you if the user is near a specific type of location:");
