@@ -1,53 +1,67 @@
-using Microsoft.Extensions.AI.MultimodalConversation;
+using ModelContextProtocol;
+using ModelContextProtocol.Server;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel;
+using System.Threading.Tasks;
 
-namespace Telepathic.Services;
+namespace Telepathic.Tools;
 
 /// <summary>
-/// Implementation of the location service that provides nearby location checking
+/// MCP tool for location-based task prioritization
 /// </summary>
-public class LocationService : ILocationService
+[McpServerToolType]
+public sealed class LocationTools
 {
-    private readonly ILogger<LocationService> _logger;
+    private readonly ILogger<LocationTools> _logger;
     private double _currentLatitude;
     private double _currentLongitude;
     private bool _hasLocation;
-    
-    public LocationService(ILogger<LocationService> logger)
+
+    public LocationTools(ILogger<LocationTools> logger)
     {
         _logger = logger;
     }
-    
-    public void Initialize(IChatClient client)
+
+    /// <summary>
+    /// Sets the user's current location
+    /// </summary>
+    public void SetCurrentLocation(double latitude, double longitude)
     {
-        if (client == null)
-        {
-            _logger.LogWarning("Cannot initialize Location service: chat client is null");
-            return;
-        }
-        
-        // Register the IsNearby function with the chat client
-        client.RegisterFunction("IsNearby", IsNearbyFunction);
-        _logger.LogInformation("Location service initialized successfully");
+        _currentLatitude = latitude;
+        _currentLongitude = longitude;
+        _hasLocation = true;
+        _logger.LogInformation("Current location updated to: {Latitude}, {Longitude}", latitude, longitude);
     }
-    
-    private Task<bool> IsNearbyFunction(MultimodalConversationContext context, string pointOfInterest, double distanceThresholdMeters = 100)
+
+    /// <summary>
+    /// Gets the user's current location
+    /// </summary>
+    public (double Latitude, double Longitude) GetCurrentLocation()
     {
-        return IsNearbyAsync(pointOfInterest, distanceThresholdMeters);
+        return (_currentLatitude, _currentLongitude);
     }
-    
-    public async Task<bool> IsNearbyAsync(string pointOfInterest, double distanceThresholdMeters = 100)
+
+    /// <summary>
+    /// Checks if the user is nearby a specified point of interest
+    /// </summary>
+    /// <param name="pointOfInterest">The point of interest to check (e.g., "coffee shop", "Target", "grocery store")</param>
+    /// <param name="distanceThresholdMeters">The distance threshold in meters (default: 100)</param>
+    /// <returns>True if the user is within the threshold distance of the point of interest</returns>
+    [McpServerTool, Description("Checks if the user is near a specified location or business type")]
+    public async Task<string> IsNearby(
+        [Description("Type of location or business (e.g., coffee shop, Target, grocery store)")] string pointOfInterest, 
+        [Description("Distance threshold in meters (default: 100)")] double distanceThresholdMeters = 100)
     {
         if (!_hasLocation)
         {
             _logger.LogWarning("Cannot check if nearby: no current location set");
-            return false;
+            return "false - No current location is set";
         }
         
         if (string.IsNullOrWhiteSpace(pointOfInterest))
         {
             _logger.LogWarning("Cannot check if nearby: point of interest is empty");
-            return false;
+            return "false - Point of interest cannot be empty";
         }
         
         try
@@ -57,7 +71,7 @@ public class LocationService : ILocationService
             if (!coordinates.HasValue)
             {
                 _logger.LogWarning("Could not find coordinates for point of interest: {PointOfInterest}", pointOfInterest);
-                return false;
+                return $"false - Could not find coordinates for {pointOfInterest}";
             }
             
             // Calculate distance using Haversine formula
@@ -72,28 +86,17 @@ public class LocationService : ILocationService
                 "Checking if near {PointOfInterest}: distance is {Distance:F2}m, threshold is {Threshold}m, result: {IsNearby}", 
                 pointOfInterest, distance, distanceThresholdMeters, isNearby);
             
-            return isNearby;
+            return isNearby 
+                ? $"true - You are {distance:F2}m away from {pointOfInterest}" 
+                : $"false - You are {distance:F2}m away from {pointOfInterest} (threshold: {distanceThresholdMeters}m)";
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking if nearby point of interest: {PointOfInterest}", pointOfInterest);
-            return false;
+            return $"false - Error calculating distance to {pointOfInterest}: {ex.Message}";
         }
     }
-    
-    public void SetCurrentLocation(double latitude, double longitude)
-    {
-        _currentLatitude = latitude;
-        _currentLongitude = longitude;
-        _hasLocation = true;
-        _logger.LogInformation("Current location updated to: {Latitude}, {Longitude}", latitude, longitude);
-    }
-    
-    public (double Latitude, double Longitude) GetCurrentLocation()
-    {
-        return (_currentLatitude, _currentLongitude);
-    }
-    
+
     /// <summary>
     /// Calculates the distance between two points using the Haversine formula
     /// </summary>

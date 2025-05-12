@@ -75,7 +75,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ManageMetaPageModel>();		builder.Services.AddSingleton<IAudioService, AudioService>();
 		builder.Services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
 		builder.Services.AddSingleton<IChatClientService, ChatClientService>();
-		builder.Services.AddSingleton<ILocationService, LocationService>();
+		builder.Services.AddSingleton<LocationTools>();
+		builder.Services.AddSingleton<IMcpService, McpService>();
 		builder.Services.AddSingleton<TaskAssistAnalyzer>();
 		builder.Services.AddSingleton<TaskAssistHandler>();
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");

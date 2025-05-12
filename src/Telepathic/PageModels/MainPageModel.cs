@@ -26,7 +26,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
 	private readonly TaskAssistHandler _taskAssistHandler;
-	private readonly ILocationService _locationService;
+	private readonly IMcpService _mcpService;
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
@@ -221,7 +221,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
     }    public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
 		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
 		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService, 
-		TaskAssistHandler taskAssistHandler, ILocationService locationService)
+		TaskAssistHandler taskAssistHandler, IMcpService mcpService)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -232,7 +232,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_chatClientService = chatClientService;
 		_logger = logger;
 		_taskAssistHandler = taskAssistHandler;
-		_locationService = locationService;
+		_mcpService = mcpService;
 
 		// Load saved calendar choices
 		LoadSavedCalendars();
@@ -676,7 +676,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 				CurrentLocation = $"Lat: {location.Latitude:F4}, Long: {location.Longitude:F4}";
 				
 				// Update the location in the location service
-				_locationService.SetCurrentLocation(location.Latitude, location.Longitude);
+				_mcpService.LocationTools.SetCurrentLocation(location.Latitude, location.Longitude);
 			}
 			else
 			{
@@ -773,7 +773,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 						{
 							double lat = double.Parse(parts[0].Trim().Replace("Lat:", "").Trim());
 							double lng = double.Parse(parts[1].Trim().Replace("Long:", "").Trim());
-							_locationService.SetCurrentLocation(lat, lng);
+							_mcpService.LocationTools.SetCurrentLocation(lat, lng);
 						}
 					}
 					catch (Exception ex)
