@@ -135,12 +135,31 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 		}
 	}
 
+
 	partial void OnTitleChanged(string value)
 	{
+		// Optionally update _task.Title here if you want live sync
+	}
+
+	partial void OnAssistTypeChanged(AssistType value)
+	{
+		if (_task != null)
+			_task.AssistType = value;
+	}
+
+	partial void OnAssistDataChanged(string value)
+	{
+		if (_task != null)
+			_task.AssistData = value;
+	}
+
+	[RelayCommand]
+	private void TitleUnfocused()
+	{
 		// Analyze for assist opportunities when title changes
-		if (!string.IsNullOrWhiteSpace(value) && AnalyzeForAssist && _taskAssistAnalyzer != null)
+		if (!string.IsNullOrWhiteSpace(Title) && AnalyzeForAssist && _taskAssistAnalyzer != null)
 		{
-			AnalyzeTaskTextAsync(value).FireAndForgetSafeAsync(_errorHandler);
+			AnalyzeTaskTextAsync(Title).FireAndForgetSafeAsync(_errorHandler);
 		}
 	}
 

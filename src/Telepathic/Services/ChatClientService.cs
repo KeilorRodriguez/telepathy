@@ -1,9 +1,10 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Client;
-using OpenAI;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Telepathic.Tools;
+using OpenAI;
+using System.Linq;
 
 namespace Telepathic.Services;
 
@@ -53,13 +54,13 @@ public class ChatClientService : IChatClientService
 {
     private IChatClient? _chatClient;
     private readonly ILogger _logger;
-    private readonly IMcpService _mcpService;
+    private readonly LocationTools _locationTools;
     private IList<object>? _cachedTools;
 
-    public ChatClientService(ILogger<ChatClientService> logger, IMcpService mcpService)
+    public ChatClientService(ILogger<ChatClientService> logger, LocationTools locationTools)
     {
         _logger = logger;
-        _mcpService = mcpService;
+        _locationTools = locationTools;
         
         // Try to initialize from preferences if available
         var apiKey = Preferences.Default.Get("openai_api_key", string.Empty);
@@ -79,23 +80,23 @@ public class ChatClientService : IChatClientService
     /// <summary>
     /// Gets the available MCP tools that can be used with the chat client
     /// </summary>
-    public async Task<IList<object>> GetMcpToolsAsync()
+    public Task<IList<object>> GetMcpToolsAsync()
     {
         if (_cachedTools != null)
         {
-            return _cachedTools;
+            return Task.FromResult(_cachedTools);
         }
         
         try
         {
-            var tools = await _mcpService.GetAvailableToolsAsync();
-            _cachedTools = tools;
-            return tools;
+            // Directly use LocationTools without going through McpService
+            _cachedTools = new List<object> { _locationTools };
+            return Task.FromResult(_cachedTools);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving MCP tools");
-            return new List<object>();
+            return Task.FromResult<IList<object>>(new List<object>());
         }
     }
     
@@ -108,12 +109,12 @@ public class ChatClientService : IChatClientService
         var tools = await GetMcpToolsAsync();
         
         // Create chat options with tools included
-        var options = new ChatOptions
-        {
-            Tools = tools.ToArray()
-        };
+        var options = new ChatOptions();
         
-        _logger.LogInformation("Calling chat client with {ToolCount} MCP tools", tools.Count);
+        // Don't use the tools directly - instead let MCP system handle registration
+        // The LocationTools is already registered with the MCP server
+        
+        _logger.LogInformation("Calling chat client with location tools available");
         return await client.GetResponseAsync<T>(prompt, options);
     }
 

@@ -45,7 +45,11 @@
                 <sf:SfTextInputLayout 
                     Hint="Task">
                     <Entry
-                        Text="{Binding Title}" />
+                        Text="{Binding Title}">
+                        <Entry.Behaviors>
+                            <toolkit:EventToCommandBehavior EventName="Unfocused" Command="{Binding TitleUnfocusedCommand}"/>
+                        </Entry.Behaviors>
+                    </Entry>
                 </sf:SfTextInputLayout>
 
                 <sf:SfTextInputLayout 

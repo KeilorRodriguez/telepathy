@@ -11,6 +11,7 @@ using Microsoft.Maui.ApplicationModel.Communication;
 using Microsoft.Maui.ApplicationModel;
 using System.Web;
 using Microsoft.Maui.Devices.Sensors;
+using Telepathic.Tools;
 
 namespace Telepathic.PageModels;
 
@@ -22,11 +23,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly TaskRepository _taskRepository;
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
-	private readonly SeedDataService _seedDataService;	private readonly ICalendarStore _calendarStore;
-	private readonly IChatClientService _chatClientService;
+	private readonly SeedDataService _seedDataService; private readonly ICalendarStore _calendarStore; private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
 	private readonly TaskAssistHandler _taskAssistHandler;
-	private readonly IMcpService _mcpService;
+	private readonly LocationTools _locationTools;
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
@@ -76,8 +76,20 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	private bool _isSettingsSheetOpen;
 
+
+
 	[ObservableProperty]
 	private string _openAIApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
+
+	[ObservableProperty]
+	private string _googlePlacesApiKey = Preferences.Default.Get("google_places_api_key", string.Empty);
+
+	// Entry fields for UI binding
+	[ObservableProperty]
+	private string _openAIApiKeyEntry;
+
+	[ObservableProperty]
+	private string _googlePlacesApiKeyEntry;
 
 	[NotifyPropertyChangedFor(nameof(ShouldShowPriorityTasks))]
 	[ObservableProperty]
@@ -150,17 +162,17 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		}
 	}
 
-    private async Task OpenMaps(string assistData, string taskTitle)
-    {
-        try 
+	private async Task OpenMaps(string assistData, string taskTitle)
+	{
+		try
 		{
 			// Check if AssistData contains lat/long coordinates
 			if (!string.IsNullOrWhiteSpace(assistData) && assistData.Contains(","))
 			{
 				// Try to parse coordinates format "lat, long"
 				var parts = assistData.Split(',');
-				if (parts.Length == 2 && 
-					double.TryParse(parts[0].Trim(), out double lat) && 
+				if (parts.Length == 2 &&
+					double.TryParse(parts[0].Trim(), out double lat) &&
 					double.TryParse(parts[1].Trim(), out double lng))
 				{
 					// We have valid coordinates - set course for this sector!
@@ -185,14 +197,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				// Use as place name or address
 				var placemark = new Placemark
-					{
-						CountryName = "United States",
-						AdminArea = "",
-						Thoroughfare = assistData,
-						Locality = ""
-					};
-					// Not valid coordinates - treat as address/place name
-					await Map.Default.OpenAsync(placemark);
+				{
+					CountryName = "United States",
+					AdminArea = "",
+					Thoroughfare = assistData,
+					Locality = ""
+				};
+				// Not valid coordinates - treat as address/place name
+				await Map.Default.OpenAsync(placemark);
 			}
 			else if (IsLocationEnabled)
 			{
@@ -218,10 +230,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			await AppShell.DisplayToastAsync($"Failed to navigate to location: {ex.Message}");
 		}
-    }    public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
-		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
-		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService, 
-		TaskAssistHandler taskAssistHandler, IMcpService mcpService)
+	}
+
+	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
+	TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
+	ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService,
+	TaskAssistHandler taskAssistHandler, LocationTools locationTools)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -232,7 +246,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_chatClientService = chatClientService;
 		_logger = logger;
 		_taskAssistHandler = taskAssistHandler;
-		_mcpService = mcpService;
+		_locationTools = locationTools;
+
+		// Sync entry fields for UI
+		OpenAIApiKeyEntry = OpenAIApiKey;
+		GooglePlacesApiKeyEntry = GooglePlacesApiKey;
 
 		// Load saved calendar choices
 		LoadSavedCalendars();
@@ -243,6 +261,17 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			_ = GetCurrentLocationAsync();
 		}
 	}
+
+	partial void OnOpenAIApiKeyEntryChanged(string value)
+	{
+		OpenAIApiKey = value;
+	}
+
+	partial void OnGooglePlacesApiKeyEntryChanged(string value)
+	{
+		GooglePlacesApiKey = value;
+	}
+	
 	/// <summary>
 	/// Retrieves calendar events for the connected calendars for today
 	/// </summary>
@@ -367,19 +396,19 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_isNavigatedTo = false;
 	[RelayCommand]
 	private async Task Appearing()
-{
-	if (!_dataLoaded)
 	{
-		await InitData(_seedDataService);
-		_dataLoaded = true;
-		await Refresh(true); // Always refresh after InitData to load data and trigger AI
+		if (!_dataLoaded)
+		{
+			await InitData(_seedDataService);
+			_dataLoaded = true;
+			await Refresh(true); // Always refresh after InitData to load data and trigger AI
+		}
+		else if (!_isNavigatedTo)
+		{
+			await Refresh(true);
+		}
+		// No direct call to AnalyzeAndPrioritizeTasks here; Refresh handles it.
 	}
-	else if (!_isNavigatedTo)
-	{
-		await Refresh(true);
-	}
-	// No direct call to AnalyzeAndPrioritizeTasks here; Refresh handles it.
-}
 	[RelayCommand]
 	private async Task Completed(ProjectTask task)
 	{
@@ -453,31 +482,31 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		// Get all completed tasks
 		var completedTasks = Tasks.Where(t => t.IsCompleted).ToList();
-		
+
 		// Delete completed tasks from database
 		foreach (var task in completedTasks)
 		{
 			await _taskRepository.DeleteItemAsync(task);
 		}
-		
+
 		// Create fresh filtered collections instead of modifying existing ones
 		var incompleteTasks = Tasks.Where(t => !t.IsCompleted).ToList();
 		Tasks = new(incompleteTasks);
-		
+
 		// Get IDs of all completed tasks for efficient lookup
 		var completedTaskIds = completedTasks.Select(t => t.ID).ToHashSet();
-		
+
 		// Filter out completed tasks from priority tasks
 		var remainingPriorityTasks = PriorityTasks
 			.Where(pt => !completedTaskIds.Contains(pt.ID))
 			.ToList();
-		
+
 		// Replace entire collection
 		PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(remainingPriorityTasks);
-		
+
 		// Now the HasCompletedTasks property should return false since we've removed all completed tasks
 		OnPropertyChanged(nameof(HasCompletedTasks));
-		
+
 		await AppShell.DisplayToastAsync("All cleaned up!");
 	}
 
@@ -487,10 +516,20 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		OnPropertyChanged(nameof(ShouldShowPriorityTasks));
 	}
 
+
 	partial void OnOpenAIApiKeyChanged(string value)
 	{
 		_logger.LogInformation($"OpenAI API Key changed");
 		Preferences.Default.Set("openai_api_key", value);
+	}
+
+	partial void OnGooglePlacesApiKeyChanged(string value)
+	{
+		if (!string.IsNullOrWhiteSpace(value))
+			Preferences.Default.Set("google_places_api_key", value);
+		else
+			Preferences.Default.Remove("google_places_api_key");
+		_locationTools.SetGooglePlacesApiKey(value);
 	}
 
 	partial void OnAboutMeTextChanged(string value)
@@ -650,7 +689,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			await GetCurrentLocationAsync();
 		}
 	}
-	
+
 	[RelayCommand]
 	private async Task ForcePriorityTaskRefresh()
 	{
@@ -674,9 +713,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				// Update display string
 				CurrentLocation = $"Lat: {location.Latitude:F4}, Long: {location.Longitude:F4}";
-				
+
 				// Update the location in the location service
-				_mcpService.LocationTools.SetCurrentLocation(location.Latitude, location.Longitude);
+				_locationTools.SetCurrentLocation(location.Latitude, location.Longitude);
 			}
 			else
 			{
@@ -757,11 +796,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			if (IsLocationEnabled)
 			{
 				sb.AppendLine($"Current Location: {CurrentLocation}");
-				
+
 				// Update the location in the location service if it's not already set
 				// This ensures that even if GetCurrentLocationAsync hasn't been called yet,
 				// we still set the location for the location service
-				if (CurrentLocation != "Location not available" && 
+				if (CurrentLocation != "Location not available" &&
 					!CurrentLocation.StartsWith("Error:") &&
 					CurrentLocation.Contains(","))
 				{
@@ -773,7 +812,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 						{
 							double lat = double.Parse(parts[0].Trim().Replace("Lat:", "").Trim());
 							double lng = double.Parse(parts[1].Trim().Replace("Long:", "").Trim());
-							_mcpService.LocationTools.SetCurrentLocation(lat, lng);
+							_locationTools.SetCurrentLocation(lat, lng);
 						}
 					}
 					catch (Exception ex)
@@ -824,7 +863,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("- Tasks that might be relevant to my current location should come first and exclude all other tasks unrelated to the location");
 			sb.AppendLine("- Tasks that align with my personal preferences in the 'About Me' section, unless they don't meet the location or timeframe criteria");
 			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");
-			
+
 			// Add instructions about using the IsNearby function
 			if (IsLocationEnabled)
 			{
@@ -837,19 +876,21 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 				sb.AppendLine("- Prioritize tasks related to locations that IsNearby returns true for");
 				sb.AppendLine("- Mention in the priorityReasoning when a task is prioritized because the user is near a relevant location");
 			}
-			
+
 			sb.AppendLine("\n- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
 			sb.AppendLine("- Don't include more than 3 tasks in the response");
 			sb.AppendLine("- Provide a personalized greeting using my name if available in the 'About Me' section, or a fun, space/cosmic themed greeting");
 			// sb.AppendLine("- Include at least 3 tasks in the response");
 
+
+			// RETURN FORMAT (required for schema compliance):
 			// sb.AppendLine("\nRETURN FORMAT:");
 			// sb.AppendLine("Return a JSON object with the following properties:");
-			// sb.AppendLine("1. 'priorityTasks': An array of task objects, each with at least the following properties: id (int), title (string), priorityReasoning (string), assistType (string), assistData (string)");
+			// sb.AppendLine("1. 'priorityTasks': An array of task objects, each with ALL of the following properties: id (int), title (string), priorityReasoning (string), assistType (string), assistData (string). The 'id' property is REQUIRED for every task and must be present and unique for each task. Do not omit 'id' for any task, even if you have to generate a placeholder integer id.");
 			// sb.AppendLine("2. 'personalizedGreeting': A short greeting (less than 50 characters) that's personalized based on time of day, user's name, or interests");
 			// sb.AppendLine("Example: { \"priorityTasks\": [ { \"id\": 1, \"title\": \"Meet Bob\", \"priorityReasoning\": \"Due today and matches your morning routine\", \"assistType\": \"Calendar\", \"assistData\": \"Meet Bob at 10am\" } ], \"personalizedGreeting\": \"Good morning, Captain David!\" }");
 
-      Debug.WriteLine($"AI Context: {sb.ToString()}");
+			Debug.WriteLine($"AI Context: {sb.ToString()}");
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 			// Send to AI for analysis with MCP tools included
@@ -863,53 +904,53 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 					{
 						PersonalizedGreeting = apiResponse.Result.PersonalizedGreeting;
 					}
-						else
-						{
-							// Generate a default time-based greeting
-							var timeOfDay = GetTimeOfDayDescription(DateTime.Now);
-							PersonalizedGreeting = $"Good {timeOfDay}, Space Adventurer!";
-						}
+					else
+					{
+						// Generate a default time-based greeting
+						var timeOfDay = GetTimeOfDayDescription(DateTime.Now);
+						PersonalizedGreeting = $"Good {timeOfDay}, Space Adventurer!";
+					}
 
-						if (apiResponse.Result.PriorityTasks != null)
-						{
+					if (apiResponse.Result.PriorityTasks != null)
+					{
 
-							// Update fields for prioritized tasks
-							// Consolidated: update and add to PriorityTasks in one pass
-							PriorityTasks.Clear();
-							foreach (var aiTask in apiResponse.Result.PriorityTasks)
+						// Update fields for prioritized tasks
+						// Consolidated: update and add to PriorityTasks in one pass
+						PriorityTasks.Clear();
+						foreach (var aiTask in apiResponse.Result.PriorityTasks)
+						{
+							var task = Tasks.FirstOrDefault(t => t.Title == aiTask.Title && !t.IsCompleted);
+							if (task != null)
 							{
-								var task = Tasks.FirstOrDefault(t => t.Title == aiTask.Title && !t.IsCompleted);
-								if (task != null)
-								{
-									task.PriorityReasoning = aiTask.PriorityReasoning;
-									task.AssistType = aiTask.AssistType;
-									task.AssistData = aiTask.AssistData;
-									Debug.WriteLine($"Task '{task.Title}' prioritized because: {aiTask.PriorityReasoning}, AssistType: {aiTask.AssistType}, AssistData: {aiTask.AssistData}");
+								task.PriorityReasoning = aiTask.PriorityReasoning;
+								task.AssistType = aiTask.AssistType;
+								task.AssistData = aiTask.AssistData;
+								Debug.WriteLine($"Task '{task.Title}' prioritized because: {aiTask.PriorityReasoning}, AssistType: {aiTask.AssistType}, AssistData: {aiTask.AssistData}");
 
-									var taskViewModel = new ProjectTaskViewModel(task);
-									var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
-									if (project != null)
-									{
-										taskViewModel.ProjectName = project.Name;
-									}
-									PriorityTasks.Add(taskViewModel);
+								var taskViewModel = new ProjectTaskViewModel(task);
+								var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
+								if (project != null)
+								{
+									taskViewModel.ProjectName = project.Name;
 								}
+								PriorityTasks.Add(taskViewModel);
 							}
 						}
 					}
-
-					HasPriorityTasks = PriorityTasks.Count > 0;
-
-					// Record when we last checked priorities
-					_lastPriorityCheck = DateTime.Now;
 				}
-				
-				catch (Exception ex)
-				{
-					System.Diagnostics.Debug.WriteLine($"Error calling AI for task prioritization: {ex.Message}");
-				}
+
+				HasPriorityTasks = PriorityTasks.Count > 0;
+
+				// Record when we last checked priorities
+				_lastPriorityCheck = DateTime.Now;
 			}
+
 			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Error calling AI for task prioritization: {ex.Message}");
+			}
+		}
+		catch (Exception ex)
 		{
 			_errorHandler.HandleError(ex);
 		}
@@ -933,9 +974,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	}
 
 	private class PriorityTaskResult
-	{
-		[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
-		public List<ProjectTask>? PriorityTasks { get; set; }
+{
+	[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
+	public List<ProjectTask>? PriorityTasks { get; set; }
 
 	[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
 	public string? PersonalizedGreeting { get; set; }

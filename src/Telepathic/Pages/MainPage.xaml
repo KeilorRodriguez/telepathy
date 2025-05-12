@@ -393,10 +393,18 @@
                             </VerticalStackLayout>
                         </sf:SfTextInputLayout>
 
+
                         <sf:SfTextInputLayout
                             Hint="OpenAI API Key">
                             <Entry Text="{Binding OpenAIApiKey, Mode=TwoWay}"
                                     Placeholder="Enter API Key"
+                                    IsPassword="True"/>
+                        </sf:SfTextInputLayout>
+
+                        <sf:SfTextInputLayout
+                            Hint="Google Places API Key">
+                            <Entry Text="{Binding GooglePlacesApiKeyEntry, Mode=TwoWay}"
+                                    Placeholder="Enter Google Places API Key"
                                     IsPassword="True"/>
                         </sf:SfTextInputLayout>
 

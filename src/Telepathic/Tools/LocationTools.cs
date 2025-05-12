@@ -16,10 +16,20 @@ public sealed class LocationTools
     private double _currentLatitude;
     private double _currentLongitude;
     private bool _hasLocation;
+    private string? _googlePlacesApiKey;
+    private static readonly System.Net.Http.HttpClient _httpClient = new();
 
     public LocationTools(ILogger<LocationTools> logger)
     {
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Sets the Google Places API key to use for geocoding.
+    /// </summary>
+    public void SetGooglePlacesApiKey(string? apiKey)
+    {
+        _googlePlacesApiKey = apiKey;
     }
 
     /// <summary>
@@ -49,7 +59,7 @@ public sealed class LocationTools
     /// <returns>True if the user is within the threshold distance of the point of interest</returns>
     [McpServerTool, Description("Checks if the user is near a specified location or business type")]
     public async Task<string> IsNearby(
-        [Description("Type of location or business (e.g., coffee shop, Target, grocery store)")] string pointOfInterest, 
+        [Description("Type of location or business (e.g., coffee shop, Target, grocery store)")] string pointOfInterest,
         [Description("Distance threshold in meters (default: 100)")] double distanceThresholdMeters = 100)
     {
         if (!_hasLocation)
@@ -57,13 +67,13 @@ public sealed class LocationTools
             _logger.LogWarning("Cannot check if nearby: no current location set");
             return "false - No current location is set";
         }
-        
+
         if (string.IsNullOrWhiteSpace(pointOfInterest))
         {
             _logger.LogWarning("Cannot check if nearby: point of interest is empty");
             return "false - Point of interest cannot be empty";
         }
-        
+
         try
         {
             // Get the point of interest coordinates
@@ -73,21 +83,21 @@ public sealed class LocationTools
                 _logger.LogWarning("Could not find coordinates for point of interest: {PointOfInterest}", pointOfInterest);
                 return $"false - Could not find coordinates for {pointOfInterest}";
             }
-            
+
             // Calculate distance using Haversine formula
             double distance = CalculateDistance(
-                _currentLatitude, 
-                _currentLongitude, 
-                coordinates.Value.Latitude, 
+                _currentLatitude,
+                _currentLongitude,
+                coordinates.Value.Latitude,
                 coordinates.Value.Longitude);
-            
+
             bool isNearby = distance <= distanceThresholdMeters;
             _logger.LogInformation(
-                "Checking if near {PointOfInterest}: distance is {Distance:F2}m, threshold is {Threshold}m, result: {IsNearby}", 
+                "Checking if near {PointOfInterest}: distance is {Distance:F2}m, threshold is {Threshold}m, result: {IsNearby}",
                 pointOfInterest, distance, distanceThresholdMeters, isNearby);
-            
-            return isNearby 
-                ? $"true - You are {distance:F2}m away from {pointOfInterest}" 
+
+            return isNearby
+                ? $"true - You are {distance:F2}m away from {pointOfInterest}"
                 : $"false - You are {distance:F2}m away from {pointOfInterest} (threshold: {distanceThresholdMeters}m)";
         }
         catch (Exception ex)
@@ -105,33 +115,33 @@ public sealed class LocationTools
     {
         // Earth's radius in meters
         const double earthRadiusMeters = 6371000;
-        
+
         // Convert degrees to radians
         double lat1Rad = DegreesToRadians(lat1);
         double lon1Rad = DegreesToRadians(lon1);
         double lat2Rad = DegreesToRadians(lat2);
         double lon2Rad = DegreesToRadians(lon2);
-        
+
         // Calculate differences
         double dLat = lat2Rad - lat1Rad;
         double dLon = lon2Rad - lon1Rad;
-        
+
         // Haversine formula
         double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
                    Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-        
+
         double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         double distance = earthRadiusMeters * c;
-        
+
         return distance;
     }
-    
+
     private double DegreesToRadians(double degrees)
     {
         return degrees * Math.PI / 180.0;
     }
-    
+
     /// <summary>
     /// Gets the coordinates for a point of interest
     /// </summary>
@@ -139,41 +149,39 @@ public sealed class LocationTools
     /// <returns>The coordinates or null if not found</returns>
     private async Task<(double Latitude, double Longitude)?> GetPointOfInterestCoordinatesAsync(string pointOfInterest)
     {
-        // In a real implementation, this would use a geocoding service or Places API
-        // For this implementation, we'll simulate by returning coordinates near the user's location
-        
+        if (string.IsNullOrWhiteSpace(_googlePlacesApiKey))
+        {
+            _logger.LogError("Google Places API key is not set.");
+            return null;
+        }
+        if (!_hasLocation)
+        {
+            _logger.LogError("Current location is not set.");
+            return null;
+        }
         try
         {
-            // Simulate a nearby point (within 50-150 meters)
-            Random random = new Random();
-            double distance = random.Next(50, 150); // random distance between 50 and 150 meters
-            double bearing = random.Next(0, 360); // random direction in degrees
-            
-            // Calculate new coordinates based on distance and bearing
-            double lat2, lon2;
-            
-            // Convert to radians
-            double latRad = DegreesToRadians(_currentLatitude);
-            double lonRad = DegreesToRadians(_currentLongitude);
-            double bearingRad = DegreesToRadians(bearing);
-            double distanceRadians = distance / 6371000.0; // Earth's radius in meters
-            
-            // Calculate new position
-            lat2 = Math.Asin(Math.Sin(latRad) * Math.Cos(distanceRadians) +
-                             Math.Cos(latRad) * Math.Sin(distanceRadians) * Math.Cos(bearingRad));
-            
-            lon2 = lonRad + Math.Atan2(
-                Math.Sin(bearingRad) * Math.Sin(distanceRadians) * Math.Cos(latRad),
-                Math.Cos(distanceRadians) - Math.Sin(latRad) * Math.Sin(lat2));
-            
-            // Convert back to degrees
-            double newLat = RadiansToDegrees(lat2);
-            double newLon = RadiansToDegrees(lon2);
-            
-            _logger.LogInformation("Simulated coordinates for '{PointOfInterest}': {Latitude}, {Longitude}", 
-                pointOfInterest, newLat, newLon);
-            
-            return (newLat, newLon);
+            // Google Places Nearby Search API
+            string url = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={_currentLatitude},{_currentLongitude}&radius=1000&keyword={Uri.EscapeDataString(pointOfInterest)}&key={_googlePlacesApiKey}";
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Google Places API request failed: {StatusCode}", response.StatusCode);
+                return null;
+            }
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var results = doc.RootElement.GetProperty("results");
+            if (results.GetArrayLength() == 0)
+            {
+                _logger.LogWarning("No places found for '{PointOfInterest}'", pointOfInterest);
+                return null;
+            }
+            var location = results[0].GetProperty("geometry").GetProperty("location");
+            double lat = location.GetProperty("lat").GetDouble();
+            double lng = location.GetProperty("lng").GetDouble();
+            _logger.LogInformation("Found coordinates for '{PointOfInterest}': {Latitude}, {Longitude}", pointOfInterest, lat, lng);
+            return (lat, lng);
         }
         catch (Exception ex)
         {
@@ -181,7 +189,7 @@ public sealed class LocationTools
             return null;
         }
     }
-    
+
     private double RadiansToDegrees(double radians)
     {
         return radians * 180.0 / Math.PI;
