@@ -7,10 +7,6 @@ using Microsoft.Extensions.AI;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Telepathic.ViewModels;
-using Microsoft.Maui.ApplicationModel.Communication;
-using Microsoft.Maui.ApplicationModel;
-using System.Web;
-using Microsoft.Maui.Devices.Sensors;
 using Telepathic.Tools;
 
 namespace Telepathic.PageModels;
