@@ -264,7 +264,7 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
             AnalysisStatusDetail = "Using AI to identify tasks and projects in your recording...";
 
             // ignore the audio and just see if we can get something meaningful from this text
-            Transcript = "This week we are going to the Good Friday service at church, but we need to get Nolan from the airport around 9:30. This weekend we have an easter egg hunt at church and then after church Sunday morning we are going to Mammy's house for lunch and an egg hunt. We need to take a dish and the bag of candy for filling eggs.";
+            // Transcript = "This week we are going to the Good Friday service at church, but we need to get Nolan from the airport around 9:30. This weekend we have an easter egg hunt at church and then after church Sunday morning we are going to Mammy's house for lunch and an egg hunt. We need to take a dish and the bag of candy for filling eggs.";
 
             // Create a prompt that will extract projects and tasks from the transcript
             var prompt = $@"
