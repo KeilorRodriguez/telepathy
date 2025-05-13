@@ -497,10 +497,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	}
 
 	[RelayCommand]
-	private void ShowSettings()
+	private void ToggleSettings()
 	{
-		IsSettingsSheetOpen = true;
+		// Toggle the settings sheet open/closed state
+		IsSettingsSheetOpen = !IsSettingsSheetOpen;
 	}
+
 	[RelayCommand]
 	private async Task SaveApiKey()
 	{
