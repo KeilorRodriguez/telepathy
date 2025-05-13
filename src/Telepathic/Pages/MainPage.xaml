@@ -37,6 +37,7 @@
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <toolkit:MathExpressionConverter x:Key="MathExpressionConverter"/>
             <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter"/>
+            <converters:AssistTypeToBoolConverter x:Key="AssistTypeToBoolConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -50,7 +51,7 @@
                          HeightRequest="44"
                          WidthRequest="44"
                          Background="Transparent"
-                         Command="{Binding ShowSettingsCommand}"/>
+                         Command="{Binding ToggleSettingsCommand}"/>
             <ImageButton Source="icon_telepathy_on.png"
                          IsVisible="{Binding IsTelepathyEnabled}"
                          HorizontalOptions="End"
@@ -59,7 +60,7 @@
                          HeightRequest="44"
                          WidthRequest="44"
                          Background="Transparent"
-                         Command="{Binding ShowSettingsCommand}"/>
+                         Command="{Binding ToggleSettingsCommand}"/>
         </Grid>
     </Shell.TitleView>
 
