@@ -37,6 +37,7 @@
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <toolkit:MathExpressionConverter x:Key="MathExpressionConverter"/>
             <toolkit:MultiMathExpressionConverter x:Key="MultiMathExpressionConverter"/>
+            <converters:AssistTypeToBoolConverter x:Key="AssistTypeToBoolConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
