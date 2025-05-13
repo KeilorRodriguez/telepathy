@@ -1,8 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Telepathic.Data;
 using Telepathic.Models;
-using Telepathic.Services;
 
 namespace Telepathic.PageModels;
 
@@ -10,7 +8,7 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 {
 	public const string ProjectQueryKey = "project";
 	private ProjectTask? _task;
-	private bool _canDelete;	private readonly ProjectRepository _projectRepository;
+	private bool _canDelete; private readonly ProjectRepository _projectRepository;
 	private readonly TaskRepository _taskRepository;
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly TaskAssistAnalyzer? _taskAssistAnalyzer;
