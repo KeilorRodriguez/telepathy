@@ -8,8 +8,6 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Telepathic.ViewModels;
 using Telepathic.Tools;
-using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol.Transport;
 
 namespace Telepathic.PageModels;
 

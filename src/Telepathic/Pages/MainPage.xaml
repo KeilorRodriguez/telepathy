@@ -78,7 +78,7 @@
                         Spacing="{StaticResource LayoutSpacing}"
                         Padding="{StaticResource LayoutPadding}">
 
-                        <Button Text="Force" Command="{Binding ForcePriorityTaskRefreshCommand}"/>
+                        <!-- <Button Text="Force" Command="{Binding ForcePriorityTaskRefreshCommand}"/> -->
 
                         <!-- Activity Indicator for telepathic analysis -->
                         <controls:ActivityIndicatorView

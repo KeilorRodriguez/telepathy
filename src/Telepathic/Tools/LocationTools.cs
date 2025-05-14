@@ -1,8 +1,5 @@
-using ModelContextProtocol;
-using ModelContextProtocol.Server;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
-using System.Threading.Tasks;
 
 namespace Telepathic.Tools;
 
