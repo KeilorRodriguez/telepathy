@@ -1,8 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Telepathic.Data;
 using Telepathic.Models;
-using Telepathic.Services;
 
 namespace Telepathic.PageModels;
 
@@ -10,7 +8,7 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 {
 	public const string ProjectQueryKey = "project";
 	private ProjectTask? _task;
-	private bool _canDelete;	private readonly ProjectRepository _projectRepository;
+	private bool _canDelete; private readonly ProjectRepository _projectRepository;
 	private readonly TaskRepository _taskRepository;
 	private readonly ModalErrorHandler _errorHandler;
 	private readonly TaskAssistAnalyzer? _taskAssistAnalyzer;
@@ -135,12 +133,31 @@ public partial class TaskDetailPageModel : ObservableObject, IQueryAttributable
 		}
 	}
 
+
 	partial void OnTitleChanged(string value)
 	{
+		// Optionally update _task.Title here if you want live sync
+	}
+
+	partial void OnAssistTypeChanged(AssistType value)
+	{
+		if (_task != null)
+			_task.AssistType = value;
+	}
+
+	partial void OnAssistDataChanged(string value)
+	{
+		if (_task != null)
+			_task.AssistData = value;
+	}
+
+	[RelayCommand]
+	private void TitleUnfocused()
+	{
 		// Analyze for assist opportunities when title changes
-		if (!string.IsNullOrWhiteSpace(value) && AnalyzeForAssist && _taskAssistAnalyzer != null)
+		if (!string.IsNullOrWhiteSpace(Title) && AnalyzeForAssist && _taskAssistAnalyzer != null)
 		{
-			AnalyzeTaskTextAsync(value).FireAndForgetSafeAsync(_errorHandler);
+			AnalyzeTaskTextAsync(Title).FireAndForgetSafeAsync(_errorHandler);
 		}
 	}
 

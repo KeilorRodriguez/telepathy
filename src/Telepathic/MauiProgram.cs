@@ -1,11 +1,17 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol.Transport;
+
+
+// using ModelContextProtocol.Server;
 using OpenAI;
 using Plugin.Maui.Audio;
 using Plugin.Maui.CalendarStore;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using Syncfusion.Maui.Toolkit.Hosting;
+using Telepathic.Tools;
 
 namespace Telepathic;
 
@@ -62,6 +68,28 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 		builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
+		// builder.Services.AddChatClient().UseFunctionInvocation();
+
+		// Register Model Context Protocol server
+		// builder.Services.AddMcpServer()
+		// 	.WithStdioServerTransport()
+		// 	.WithToolsFromAssembly();
+
+		
+
+		// builder.Services.AddSingleton<IMcpClient>(async sp =>
+		// {
+		// 	var transport = new StdioClientTransport(new()
+		// 	{
+		// 		Name       = "GoogleMaps",
+		// 		Command    = "npx",
+		// 		Arguments  = ["-y", "@modelcontextprotocol/server-google-maps"],
+		// 		EnvironmentVariables = { ["GOOGLE_MAPS_API_KEY"] = 
+		// 								Preferences.Default.Get("google_places_api_key", string.Empty) }
+		// 	});
+
+		// 	return await McpClientFactory.CreateAsync(transport);   // ⬅ standard pattern :contentReference[oaicite:1]{index=1}
+		// });
 
 		builder.Services.AddSingleton(CalendarStore.Default);
 		builder.Services.AddSingleton<ProjectRepository>();
@@ -72,9 +100,11 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ModalErrorHandler>();
 		builder.Services.AddSingleton<MainPageModel>();
 		builder.Services.AddSingleton<ProjectListPageModel>();
-		builder.Services.AddSingleton<ManageMetaPageModel>();		builder.Services.AddSingleton<IAudioService, AudioService>();
+		builder.Services.AddSingleton<ManageMetaPageModel>();		
+		builder.Services.AddSingleton<IAudioService, AudioService>();
 		builder.Services.AddSingleton<ITranscriptionService, WhisperTranscriptionService>();
 		builder.Services.AddSingleton<IChatClientService, ChatClientService>();
+		builder.Services.AddSingleton<LocationTools>();
 		builder.Services.AddSingleton<TaskAssistAnalyzer>();
 		builder.Services.AddSingleton<TaskAssistHandler>();
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");

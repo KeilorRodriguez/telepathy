@@ -7,10 +7,9 @@ using Microsoft.Extensions.AI;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Telepathic.ViewModels;
-using Microsoft.Maui.ApplicationModel.Communication;
-using Microsoft.Maui.ApplicationModel;
-using System.Web;
-using Microsoft.Maui.Devices.Sensors;
+using Telepathic.Tools;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol.Transport;
 
 namespace Telepathic.PageModels;
 
@@ -22,10 +21,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly TaskRepository _taskRepository;
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
-	private readonly SeedDataService _seedDataService;	private readonly ICalendarStore _calendarStore;
+	private readonly SeedDataService _seedDataService;
+	private readonly ICalendarStore _calendarStore;
 	private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
 	private readonly TaskAssistHandler _taskAssistHandler;
+	private readonly LocationTools _locationTools;
 	private CancellationTokenSource? _cancelTokenSource;
 	private DateTime _lastPriorityCheck = DateTime.MinValue;
 	private const int PRIORITY_CHECK_HOURS = 4;
@@ -75,8 +76,20 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	[ObservableProperty]
 	private bool _isSettingsSheetOpen;
 
+
+
 	[ObservableProperty]
 	private string _openAIApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
+
+	[ObservableProperty]
+	private string _googlePlacesApiKey = Preferences.Default.Get("google_places_api_key", string.Empty);
+
+	// Entry fields for UI binding
+	[ObservableProperty]
+	private string _openAIApiKeyEntry;
+
+	[ObservableProperty]
+	private string _googlePlacesApiKeyEntry;
 
 	[NotifyPropertyChangedFor(nameof(ShouldShowPriorityTasks))]
 	[ObservableProperty]
@@ -149,17 +162,17 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		}
 	}
 
-    private async Task OpenMaps(string assistData, string taskTitle)
-    {
-        try 
+	private async Task OpenMaps(string assistData, string taskTitle)
+	{
+		try
 		{
 			// Check if AssistData contains lat/long coordinates
 			if (!string.IsNullOrWhiteSpace(assistData) && assistData.Contains(","))
 			{
 				// Try to parse coordinates format "lat, long"
 				var parts = assistData.Split(',');
-				if (parts.Length == 2 && 
-					double.TryParse(parts[0].Trim(), out double lat) && 
+				if (parts.Length == 2 &&
+					double.TryParse(parts[0].Trim(), out double lat) &&
 					double.TryParse(parts[1].Trim(), out double lng))
 				{
 					// We have valid coordinates - set course for this sector!
@@ -184,14 +197,14 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			{
 				// Use as place name or address
 				var placemark = new Placemark
-					{
-						CountryName = "United States",
-						AdminArea = "",
-						Thoroughfare = assistData,
-						Locality = ""
-					};
-					// Not valid coordinates - treat as address/place name
-					await Map.Default.OpenAsync(placemark);
+				{
+					CountryName = "United States",
+					AdminArea = "",
+					Thoroughfare = assistData,
+					Locality = ""
+				};
+				// Not valid coordinates - treat as address/place name
+				await Map.Default.OpenAsync(placemark);
 			}
 			else if (IsLocationEnabled)
 			{
@@ -217,10 +230,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		{
 			await AppShell.DisplayToastAsync($"Failed to navigate to location: {ex.Message}");
 		}
-    }    public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
-		TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
-		ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService, 
-		TaskAssistHandler taskAssistHandler)
+	}
+
+	public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
+	TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
+	ICalendarStore calendarStore, ILogger<MainPageModel> logger, IChatClientService chatClientService,
+	TaskAssistHandler taskAssistHandler, LocationTools locationTools)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -231,6 +246,13 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_chatClientService = chatClientService;
 		_logger = logger;
 		_taskAssistHandler = taskAssistHandler;
+		_locationTools = locationTools;
+
+		// Sync entry fields for UI
+		OpenAIApiKeyEntry = OpenAIApiKey;
+		GooglePlacesApiKeyEntry = GooglePlacesApiKey;
+
+		_locationTools.SetGooglePlacesApiKey(GooglePlacesApiKey);
 
 		// Load saved calendar choices
 		LoadSavedCalendars();
@@ -241,6 +263,17 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			_ = GetCurrentLocationAsync();
 		}
 	}
+
+	partial void OnOpenAIApiKeyEntryChanged(string value)
+	{
+		OpenAIApiKey = value;
+	}
+
+	partial void OnGooglePlacesApiKeyEntryChanged(string value)
+	{
+		GooglePlacesApiKey = value;
+	}
+
 	/// <summary>
 	/// Retrieves calendar events for the connected calendars for today
 	/// </summary>
@@ -365,19 +398,19 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_isNavigatedTo = false;
 	[RelayCommand]
 	private async Task Appearing()
-{
-	if (!_dataLoaded)
 	{
-		await InitData(_seedDataService);
-		_dataLoaded = true;
-		await Refresh(true); // Always refresh after InitData to load data and trigger AI
+		if (!_dataLoaded)
+		{
+			await InitData(_seedDataService);
+			_dataLoaded = true;
+			await Refresh(true); // Always refresh after InitData to load data and trigger AI
+		}
+		else if (!_isNavigatedTo)
+		{
+			await Refresh(true);
+		}
+		// No direct call to AnalyzeAndPrioritizeTasks here; Refresh handles it.
 	}
-	else if (!_isNavigatedTo)
-	{
-		await Refresh(true);
-	}
-	// No direct call to AnalyzeAndPrioritizeTasks here; Refresh handles it.
-}
 	[RelayCommand]
 	private async Task Completed(ProjectTask task)
 	{
@@ -451,31 +484,31 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		// Get all completed tasks
 		var completedTasks = Tasks.Where(t => t.IsCompleted).ToList();
-		
+
 		// Delete completed tasks from database
 		foreach (var task in completedTasks)
 		{
 			await _taskRepository.DeleteItemAsync(task);
 		}
-		
+
 		// Create fresh filtered collections instead of modifying existing ones
 		var incompleteTasks = Tasks.Where(t => !t.IsCompleted).ToList();
 		Tasks = new(incompleteTasks);
-		
+
 		// Get IDs of all completed tasks for efficient lookup
 		var completedTaskIds = completedTasks.Select(t => t.ID).ToHashSet();
-		
+
 		// Filter out completed tasks from priority tasks
 		var remainingPriorityTasks = PriorityTasks
 			.Where(pt => !completedTaskIds.Contains(pt.ID))
 			.ToList();
-		
+
 		// Replace entire collection
 		PriorityTasks = new ObservableCollection<ProjectTaskViewModel>(remainingPriorityTasks);
-		
+
 		// Now the HasCompletedTasks property should return false since we've removed all completed tasks
 		OnPropertyChanged(nameof(HasCompletedTasks));
-		
+
 		await AppShell.DisplayToastAsync("All cleaned up!");
 	}
 
@@ -485,10 +518,20 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		OnPropertyChanged(nameof(ShouldShowPriorityTasks));
 	}
 
+
 	partial void OnOpenAIApiKeyChanged(string value)
 	{
 		_logger.LogInformation($"OpenAI API Key changed");
 		Preferences.Default.Set("openai_api_key", value);
+	}
+
+	partial void OnGooglePlacesApiKeyChanged(string value)
+	{
+		if (!string.IsNullOrWhiteSpace(value))
+			Preferences.Default.Set("google_places_api_key", value);
+		else
+			Preferences.Default.Remove("google_places_api_key");
+		_locationTools.SetGooglePlacesApiKey(value);
 	}
 
 	partial void OnAboutMeTextChanged(string value)
@@ -650,7 +693,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			await GetCurrentLocationAsync();
 		}
 	}
-	
+
 	[RelayCommand]
 	private async Task ForcePriorityTaskRefresh()
 	{
@@ -672,7 +715,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 			if (location != null)
 			{
+				// Update display string
 				CurrentLocation = $"Lat: {location.Latitude:F4}, Long: {location.Longitude:F4}";
+
+				// Update the location in the location service
+				_locationTools.SetCurrentLocation(location.Latitude, location.Longitude);
 			}
 			else
 			{
@@ -753,6 +800,30 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			if (IsLocationEnabled)
 			{
 				sb.AppendLine($"Current Location: {CurrentLocation}");
+
+				// Update the location in the location service if it's not already set
+				// This ensures that even if GetCurrentLocationAsync hasn't been called yet,
+				// we still set the location for the location service
+				if (CurrentLocation != "Location not available" &&
+					!CurrentLocation.StartsWith("Error:") &&
+					CurrentLocation.Contains(","))
+				{
+					try
+					{
+						// Parse the location string "Lat: 12.3456, Long: 78.9012"
+						var parts = CurrentLocation.Split(',');
+						if (parts.Length == 2)
+						{
+							double lat = double.Parse(parts[0].Trim().Replace("Lat:", "").Trim());
+							double lng = double.Parse(parts[1].Trim().Replace("Long:", "").Trim());
+							_locationTools.SetCurrentLocation(lat, lng);
+						}
+					}
+					catch (Exception ex)
+					{
+						_logger.LogError(ex, "Failed to parse location string: {Location}", CurrentLocation);
+					}
+				}
 			}
 
 			// Calendar events
@@ -786,7 +857,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 					projectName = project.Name;
 				}
 
-				sb.AppendLine($"- Task '{task.Title}', Project: '{projectName}', Due: {(task.DueDate.HasValue ? task.DueDate.Value.ToString("d") : "No due date")}, Priority: {task.Priority}");
+				sb.AppendLine($"- Task '{task.Title}', Project: '{projectName}'");
 			}
 			// Instructions for the AI
 			sb.AppendLine("\nINSTRUCTIONS:");
@@ -795,21 +866,30 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("- Tasks that relate to upcoming calendar events in the next 24 hours");
 			sb.AppendLine("- Tasks that might be relevant to my current location should come first and exclude all other tasks unrelated to the location");
 			sb.AppendLine("- Tasks that align with my personal preferences in the 'About Me' section, unless they don't meet the location or timeframe criteria");
-			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning"); sb.AppendLine("- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
+			sb.AppendLine("- ONLY recommend tasks appropriate for this time of day - e.g. don't suggest evening activities in the morning");
+
+			// Add instructions about using the IsNearby function
+			if (IsLocationEnabled)
+			{
+				sb.AppendLine("\nYou have access to a special function called IsNearby that can tell you if the user is near a specific type of location:");
+				sb.AppendLine("- Use the IsNearby function to check if the user is near places mentioned in tasks");
+				sb.AppendLine("- Example: To check if the user is near a coffee shop, call IsNearby(\"coffee shop\")");
+				sb.AppendLine("- Example points of interest to check: coffee shops, grocery stores, retail stores, restaurants, banks, etc.");
+				sb.AppendLine("- Extract the relevant location type from task titles or descriptions");
+				sb.AppendLine("- The function returns true if the user is within 100 meters of the type of location");
+				sb.AppendLine("- Prioritize tasks related to locations that IsNearby returns true for");
+				sb.AppendLine("- Mention in the priorityReasoning when a task is prioritized because the user is near a relevant location");
+			}
+
+			sb.AppendLine("\n- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
 			sb.AppendLine("- Don't include more than 3 tasks in the response");
 			sb.AppendLine("- Provide a personalized greeting using my name if available in the 'About Me' section, or a fun, space/cosmic themed greeting");
 			// sb.AppendLine("- Include at least 3 tasks in the response");
 
-			// sb.AppendLine("\nRETURN FORMAT:");
-			// sb.AppendLine("Return a JSON object with the following properties:");
-			// sb.AppendLine("1. 'priorityTasks': An array of task objects, each with at least the following properties: id (int), title (string), priorityReasoning (string), assistType (string), assistData (string)");
-			// sb.AppendLine("2. 'personalizedGreeting': A short greeting (less than 50 characters) that's personalized based on time of day, user's name, or interests");
-			// sb.AppendLine("Example: { \"priorityTasks\": [ { \"id\": 1, \"title\": \"Meet Bob\", \"priorityReasoning\": \"Due today and matches your morning routine\", \"assistType\": \"Calendar\", \"assistData\": \"Meet Bob at 10am\" } ], \"personalizedGreeting\": \"Good morning, Captain David!\" }");
-
-      Debug.WriteLine($"AI Context: {sb.ToString()}");
+			_logger.LogInformation($"AI Context: {sb.ToString()}");
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
-			// Send to AI for analysis using the same pattern as in ProjectDetailPageModel
+			// Send to AI for analysis with MCP tools included
 			var chatClient = _chatClientService.GetClient();
 			if (chatClient != null)
 			{
@@ -833,8 +913,6 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 						if (apiResponse.Result.PriorityTasks != null)
 						{
 
-							// Update fields for prioritized tasks
-							// Consolidated: update and add to PriorityTasks in one pass
 							PriorityTasks.Clear();
 							foreach (var aiTask in apiResponse.Result.PriorityTasks)
 							{
@@ -866,7 +944,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 				catch (Exception ex)
 				{
-					System.Diagnostics.Debug.WriteLine($"Error calling AI for task prioritization: {ex.Message}");
+					_logger.LogError($"Error calling AI for task prioritization: {ex.Message}");
 				}
 			}
 		}
@@ -892,15 +970,6 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		else
 			return "Night";
 	}
-
-	private class PriorityTaskResult
-	{
-		[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
-		public List<ProjectTask>? PriorityTasks { get; set; }
-
-	[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
-	public string? PersonalizedGreeting { get; set; }
-}
 
 	[RelayCommand]
 	private async Task VoiceRecord()
@@ -984,5 +1053,44 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		}
 	}
 
+	[RelayCommand]
+	async Task CheckIsNearby(ProjectTaskViewModel task)
+	{
+		if (task == null)// || string.IsNullOrWhiteSpace(task.Task.AssistData)
+			return;
 
+		
+		var chatClient = _chatClientService.GetClient();
+		if (chatClient != null)
+		{
+			var sb = new System.Text.StringBuilder();
+
+			await GetCurrentLocationAsync(); // set the _locationTools
+
+			// Add basic context information
+			sb.AppendLine("List any specific location that is nearby that could help me with this task.");
+			sb.AppendLine($"Task: {task.Title}");
+			sb.AppendLine($"Details: {task.Task.AssistData}");
+			sb.AppendLine($"Current location: {_locationTools.GetCurrentLocation().Latitude}, {_locationTools.GetCurrentLocation().Longitude}");
+			sb.AppendLine($"IsNearby a coffee shop");
+
+			Debug.WriteLine(sb.ToString());			
+
+			try
+			{
+				// var options = new ChatOptions
+				// {
+				// 	Tools = [AIFunctionFactory.Create(_locationTools.IsNearby)]
+				// };
+				var apiResponse = await chatClient.GetResponseAsync<string>(sb.ToString());
+				if (apiResponse?.Result != null)
+				{
+					await AppShell.Current.DisplayAlert("Nearby Location", apiResponse.Result, "OK");
+				}
+			}catch (Exception ex)
+			{
+				_logger.LogError($"Error calling AI for task prioritization: {ex.Message}");
+			}
+		}
+	}
 }
