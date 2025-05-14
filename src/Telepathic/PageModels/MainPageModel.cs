@@ -8,6 +8,8 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Telepathic.ViewModels;
 using Telepathic.Tools;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol.Transport;
 
 namespace Telepathic.PageModels;
 
@@ -19,7 +21,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private readonly TaskRepository _taskRepository;
 	private readonly CategoryRepository _categoryRepository;
 	private readonly ModalErrorHandler _errorHandler;
-	private readonly SeedDataService _seedDataService; private readonly ICalendarStore _calendarStore; private readonly IChatClientService _chatClientService;
+	private readonly SeedDataService _seedDataService;
+	private readonly ICalendarStore _calendarStore;
+	private readonly IChatClientService _chatClientService;
 	private readonly ILogger _logger;
 	private readonly TaskAssistHandler _taskAssistHandler;
 	private readonly LocationTools _locationTools;
@@ -248,6 +252,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		OpenAIApiKeyEntry = OpenAIApiKey;
 		GooglePlacesApiKeyEntry = GooglePlacesApiKey;
 
+		_locationTools.SetGooglePlacesApiKey(GooglePlacesApiKey);
+
 		// Load saved calendar choices
 		LoadSavedCalendars();
 
@@ -267,7 +273,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		GooglePlacesApiKey = value;
 	}
-	
+
 	/// <summary>
 	/// Retrieves calendar events for the connected calendars for today
 	/// </summary>
@@ -849,7 +855,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 					projectName = project.Name;
 				}
 
-				sb.AppendLine($"- Task '{task.Title}', Project: '{projectName}', Due: {(task.DueDate.HasValue ? task.DueDate.Value.ToString("d") : "No due date")}, Priority: {task.Priority}");
+				sb.AppendLine($"- Task '{task.Title}', Project: '{projectName}'");
 			}
 			// Instructions for the AI
 			sb.AppendLine("\nINSTRUCTIONS:");
@@ -878,72 +884,66 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("- Provide a personalized greeting using my name if available in the 'About Me' section, or a fun, space/cosmic themed greeting");
 			// sb.AppendLine("- Include at least 3 tasks in the response");
 
-
-			// RETURN FORMAT (required for schema compliance):
-			// sb.AppendLine("\nRETURN FORMAT:");
-			// sb.AppendLine("Return a JSON object with the following properties:");
-			// sb.AppendLine("1. 'priorityTasks': An array of task objects, each with ALL of the following properties: id (int), title (string), priorityReasoning (string), assistType (string), assistData (string). The 'id' property is REQUIRED for every task and must be present and unique for each task. Do not omit 'id' for any task, even if you have to generate a placeholder integer id.");
-			// sb.AppendLine("2. 'personalizedGreeting': A short greeting (less than 50 characters) that's personalized based on time of day, user's name, or interests");
-			// sb.AppendLine("Example: { \"priorityTasks\": [ { \"id\": 1, \"title\": \"Meet Bob\", \"priorityReasoning\": \"Due today and matches your morning routine\", \"assistType\": \"Calendar\", \"assistData\": \"Meet Bob at 10am\" } ], \"personalizedGreeting\": \"Good morning, Captain David!\" }");
-
-			Debug.WriteLine($"AI Context: {sb.ToString()}");
+			_logger.LogInformation($"AI Context: {sb.ToString()}");
 
 			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
 			// Send to AI for analysis with MCP tools included
-			try
+			var chatClient = _chatClientService.GetClient();
+			if (chatClient != null)
 			{
-				var apiResponse = await _chatClientService.GetResponseWithToolsAsync<PriorityTaskResult>(sb.ToString());
-				if (apiResponse?.Result != null)
+				try
 				{
-					// Update personalized greeting if it exists
-					if (!string.IsNullOrEmpty(apiResponse.Result.PersonalizedGreeting))
+					var apiResponse = await chatClient.GetResponseAsync<PriorityTaskResult>(sb.ToString());
+					if (apiResponse?.Result != null)
 					{
-						PersonalizedGreeting = apiResponse.Result.PersonalizedGreeting;
-					}
-					else
-					{
-						// Generate a default time-based greeting
-						var timeOfDay = GetTimeOfDayDescription(DateTime.Now);
-						PersonalizedGreeting = $"Good {timeOfDay}, Space Adventurer!";
-					}
-
-					if (apiResponse.Result.PriorityTasks != null)
-					{
-
-						// Update fields for prioritized tasks
-						// Consolidated: update and add to PriorityTasks in one pass
-						PriorityTasks.Clear();
-						foreach (var aiTask in apiResponse.Result.PriorityTasks)
+						// Update personalized greeting if it exists
+						if (!string.IsNullOrEmpty(apiResponse.Result.PersonalizedGreeting))
 						{
-							var task = Tasks.FirstOrDefault(t => t.Title == aiTask.Title && !t.IsCompleted);
-							if (task != null)
-							{
-								task.PriorityReasoning = aiTask.PriorityReasoning;
-								task.AssistType = aiTask.AssistType;
-								task.AssistData = aiTask.AssistData;
-								Debug.WriteLine($"Task '{task.Title}' prioritized because: {aiTask.PriorityReasoning}, AssistType: {aiTask.AssistType}, AssistData: {aiTask.AssistData}");
+							PersonalizedGreeting = apiResponse.Result.PersonalizedGreeting;
+						}
+						else
+						{
+							// Generate a default time-based greeting
+							var timeOfDay = GetTimeOfDayDescription(DateTime.Now);
+							PersonalizedGreeting = $"Good {timeOfDay}, Space Adventurer!";
+						}
 
-								var taskViewModel = new ProjectTaskViewModel(task);
-								var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
-								if (project != null)
+						if (apiResponse.Result.PriorityTasks != null)
+						{
+
+							PriorityTasks.Clear();
+							foreach (var aiTask in apiResponse.Result.PriorityTasks)
+							{
+								var task = Tasks.FirstOrDefault(t => t.Title == aiTask.Title && !t.IsCompleted);
+								if (task != null)
 								{
-									taskViewModel.ProjectName = project.Name;
+									task.PriorityReasoning = aiTask.PriorityReasoning;
+									task.AssistType = aiTask.AssistType;
+									task.AssistData = aiTask.AssistData;
+									Debug.WriteLine($"Task '{task.Title}' prioritized because: {aiTask.PriorityReasoning}, AssistType: {aiTask.AssistType}, AssistData: {aiTask.AssistData}");
+
+									var taskViewModel = new ProjectTaskViewModel(task);
+									var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
+									if (project != null)
+									{
+										taskViewModel.ProjectName = project.Name;
+									}
+									PriorityTasks.Add(taskViewModel);
 								}
-								PriorityTasks.Add(taskViewModel);
 							}
 						}
 					}
+
+					HasPriorityTasks = PriorityTasks.Count > 0;
+
+					// Record when we last checked priorities
+					_lastPriorityCheck = DateTime.Now;
 				}
 
-				HasPriorityTasks = PriorityTasks.Count > 0;
-
-				// Record when we last checked priorities
-				_lastPriorityCheck = DateTime.Now;
-			}
-
-			catch (Exception ex)
-			{
-				System.Diagnostics.Debug.WriteLine($"Error calling AI for task prioritization: {ex.Message}");
+				catch (Exception ex)
+				{
+					_logger.LogError($"Error calling AI for task prioritization: {ex.Message}");
+				}
 			}
 		}
 		catch (Exception ex)
@@ -968,15 +968,6 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		else
 			return "Night";
 	}
-
-	private class PriorityTaskResult
-{
-	[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
-	public List<ProjectTask>? PriorityTasks { get; set; }
-
-	[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
-	public string? PersonalizedGreeting { get; set; }
-}
 
 	[RelayCommand]
 	private async Task VoiceRecord()
@@ -1060,5 +1051,44 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		}
 	}
 
+	[RelayCommand]
+	async Task CheckIsNearby(ProjectTaskViewModel task)
+	{
+		if (task == null)// || string.IsNullOrWhiteSpace(task.Task.AssistData)
+			return;
 
+		
+		var chatClient = _chatClientService.GetClient();
+		if (chatClient != null)
+		{
+			var sb = new System.Text.StringBuilder();
+
+			await GetCurrentLocationAsync(); // set the _locationTools
+
+			// Add basic context information
+			sb.AppendLine("List any specific location that is nearby that could help me with this task.");
+			sb.AppendLine($"Task: {task.Title}");
+			sb.AppendLine($"Details: {task.Task.AssistData}");
+			sb.AppendLine($"Current location: {_locationTools.GetCurrentLocation().Latitude}, {_locationTools.GetCurrentLocation().Longitude}");
+			sb.AppendLine($"IsNearby a coffee shop");
+
+			Debug.WriteLine(sb.ToString());			
+
+			try
+			{
+				// var options = new ChatOptions
+				// {
+				// 	Tools = [AIFunctionFactory.Create(_locationTools.IsNearby)]
+				// };
+				var apiResponse = await chatClient.GetResponseAsync<string>(sb.ToString());
+				if (apiResponse?.Result != null)
+				{
+					await AppShell.Current.DisplayAlert("Nearby Location", apiResponse.Result, "OK");
+				}
+			}catch (Exception ex)
+			{
+				_logger.LogError($"Error calling AI for task prioritization: {ex.Message}");
+			}
+		}
+	}
 }

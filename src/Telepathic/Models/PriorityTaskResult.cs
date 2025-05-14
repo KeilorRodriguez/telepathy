@@ -1,12 +1,13 @@
+using System.Text.Json.Serialization;
 using Telepathic.Models;
 
 namespace Telepathic.Models;
 
 public class PriorityTaskResult
 {
-	[System.Text.Json.Serialization.JsonPropertyName("priorityTasks")]
+	[JsonPropertyName("tasks")]
 	public List<ProjectTask>? PriorityTasks { get; set; }
 
-	[System.Text.Json.Serialization.JsonPropertyName("personalizedGreeting")]
+	[JsonPropertyName("personalized_greeting")]
 	public string? PersonalizedGreeting { get; set; }
 }

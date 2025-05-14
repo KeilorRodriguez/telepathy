@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 
 namespace Telepathic.Tools;
 
-/// <summary>
-/// MCP tool for location-based task prioritization
-/// </summary>
-[McpServerToolType]
 public sealed class LocationTools
 {
     private readonly ILogger<LocationTools> _logger;
@@ -57,7 +53,7 @@ public sealed class LocationTools
     /// <param name="pointOfInterest">The point of interest to check (e.g., "coffee shop", "Target", "grocery store")</param>
     /// <param name="distanceThresholdMeters">The distance threshold in meters (default: 100)</param>
     /// <returns>True if the user is within the threshold distance of the point of interest</returns>
-    [McpServerTool, Description("Checks if the user is near a specified location or business type")]
+    [Description("Checks if the user is near a location or business type")]
     public async Task<string> IsNearby(
         [Description("Type of location or business (e.g., coffee shop, Target, grocery store)")] string pointOfInterest,
         [Description("Distance threshold in meters (default: 100)")] double distanceThresholdMeters = 100)

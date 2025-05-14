@@ -1,7 +1,11 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Server;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol.Transport;
+
+
+// using ModelContextProtocol.Server;
 using OpenAI;
 using Plugin.Maui.Audio;
 using Plugin.Maui.CalendarStore;
@@ -64,11 +68,28 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 		builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
+		// builder.Services.AddChatClient().UseFunctionInvocation();
 
 		// Register Model Context Protocol server
-		builder.Services.AddMcpServer()
-			.WithStdioServerTransport()
-			.WithTools<LocationTools>();
+		// builder.Services.AddMcpServer()
+		// 	.WithStdioServerTransport()
+		// 	.WithToolsFromAssembly();
+
+		
+
+		// builder.Services.AddSingleton<IMcpClient>(async sp =>
+		// {
+		// 	var transport = new StdioClientTransport(new()
+		// 	{
+		// 		Name       = "GoogleMaps",
+		// 		Command    = "npx",
+		// 		Arguments  = ["-y", "@modelcontextprotocol/server-google-maps"],
+		// 		EnvironmentVariables = { ["GOOGLE_MAPS_API_KEY"] = 
+		// 								Preferences.Default.Get("google_places_api_key", string.Empty) }
+		// 	});
+
+		// 	return await McpClientFactory.CreateAsync(transport);   // ⬅ standard pattern :contentReference[oaicite:1]{index=1}
+		// });
 
 		builder.Services.AddSingleton(CalendarStore.Default);
 		builder.Services.AddSingleton<ProjectRepository>();

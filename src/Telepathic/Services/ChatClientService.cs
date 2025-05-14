@@ -131,9 +131,17 @@ public class ChatClientService : IChatClientService
         {
             var openAIClient = new OpenAIClient(apiKey);
             _chatClient = openAIClient.GetChatClient(model: model).AsIChatClient();
-            
-            // Add logging wrapper
             _chatClient = new LoggingChatClient(_chatClient, _logger);
+
+            _chatClient = new ChatClientBuilder(_chatClient)
+            .ConfigureOptions(options =>
+            {
+                options.Tools ??= [];
+                options.Tools.Add(AIFunctionFactory.Create(_locationTools.IsNearby));
+            })
+            .UseFunctionInvocation()
+            .Build();
+            
             
             // Clear cached tools when client is updated
             _cachedTools = null;

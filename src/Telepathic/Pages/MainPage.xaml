@@ -77,6 +77,8 @@
                         Spacing="{StaticResource LayoutSpacing}"
                         Padding="{StaticResource LayoutPadding}">
 
+                        <Button Text="Force" Command="{Binding ForcePriorityTaskRefreshCommand}"/>
+
                         <!-- Activity Indicator for telepathic analysis -->
                         <controls:ActivityIndicatorView
                             IsVisible="{Binding IsAnalyzingContext}"
@@ -168,8 +170,17 @@
                                                                         HeightRequest="44"
                                                                         WidthRequest="44"
                                                                         BackgroundColor="Transparent"
-                                                                        Command="{Binding AssistCommand}"
-                                                                        CommandParameter="{Binding .}"/>
+                                                                        Command="{Binding AssistCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}"
+                                                                        CommandParameter="{Binding Task}"/>
+
+                                                                <!-- <ImageButton Source="{StaticResource IconAssist}"
+                                                                        IsVisible="{Binding AssistType, Converter={StaticResource AssistTypeToBoolConverter}}"
+                                                                        Aspect="Center"
+                                                                        HeightRequest="44"
+                                                                        WidthRequest="44"
+                                                                        BackgroundColor="Transparent"
+                                                                        Command="{Binding CheckIsNearbyCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}"
+                                                                        CommandParameter="{Binding .}"/> -->
                                                             </HorizontalStackLayout>
                                                             
                                                             
