@@ -371,7 +371,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		try
 		{
-			if (hideIndicator)
+			if (!hideIndicator)
 				IsRefreshing = true;
 
 			await LoadData();
@@ -470,12 +470,22 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		=> Shell.Current.GoToAsync($"project?id={project.ID}");
 
 	[RelayCommand]
-	private Task NavigateToTask(ProjectTask? task)
-		=> task != null ? Shell.Current.GoToAsync($"task?id={task.ID}") : Task.CompletedTask;
-
-	[RelayCommand]
-	private Task NavigateToPriorityTask(ProjectTaskViewModel? task)
-		=> task != null ? Shell.Current.GoToAsync($"task?id={task.ID}") : Task.CompletedTask;
+	private async Task NavigateToTask(ProjectTask? task)
+	{
+		try
+		{
+			if (task != null)
+			{
+				await Shell.Current.GoToAsync($"task?id={task.ID}");
+			}
+		}
+		catch (Exception ex)
+		{
+			await AppShell.DisplayToastAsync($"Navigation error: {ex.Message}");
+			_logger.LogError(ex, "Failed to navigate to task ID {TaskId}", task?.ID);
+			_errorHandler.HandleError(ex);
+		}
+	}
 
 	[RelayCommand]
 	private async Task CleanTasks()

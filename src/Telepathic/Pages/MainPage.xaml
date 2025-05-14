@@ -116,17 +116,18 @@
                                                         Stroke="{toolkit:AppThemeResource Surface1}"
                                                         StrokeShape="RoundRectangle 20"
                                                         BackgroundColor="{toolkit:AppThemeResource Surface0}"
+                                                        InputTransparent="False"
                                                         >
                                                     <Border.GestureRecognizers>
                                                         <TapGestureRecognizer 
-                                                            Command="{Binding NavigateToPriorityTaskCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}},x:DataType=pageModels:MainPageModel}"
-                                                                CommandParameter="{Binding .}"/>
+                                                            Command="{Binding NavigateToTaskCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}},x:DataType=pageModels:MainPageModel}"
+                                                                CommandParameter="{Binding Task}"/>
                                                     </Border.GestureRecognizers>
                                                     <!-- <effectsView:SfEffectsView
                                                         TouchDownEffects="Highlight"
                                                         HighlightBackground="{toolkit:AppThemeResource OnBackground}"> -->
                                                         <Grid RowDefinitions="*"
-                                                            ColumnDefinitions="*">
+                                                            ColumnDefinitions="*" IsClippedToBounds="True">
                                                             <!-- Checkbox in the upper left -->
                                                             <HorizontalStackLayout Spacing="15"
                                                                 VerticalOptions="Start" HorizontalOptions="Start"
@@ -157,7 +158,7 @@
                                                             
                                                             <HorizontalStackLayout Spacing="{StaticResource size160}"
                                                                 HorizontalOptions="End"
-                                                                VerticalOptions="End">
+                                                                VerticalOptions="End" IsClippedToBounds="True">
                                                                 <ImageButton Source="{StaticResource IconInsights}"                                                                        
                                                                         Aspect="Center"
                                                                         HeightRequest="44"

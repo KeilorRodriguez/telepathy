@@ -88,7 +88,7 @@
                     </expander:SfExpander.Header>
                     <expander:SfExpander.Content>
                         <Grid ColumnDefinitions="*,*"
-                              RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                               ColumnSpacing="10"
                                 RowSpacing="10">
                             <!-- Row 1 -->
@@ -140,6 +140,13 @@
                                     IsChecked="{Binding AnalyzeForAssist}"/>
                             </HorizontalStackLayout>
 
+                            <sf:SfTextInputLayout Grid.Row="5" Grid.ColumnSpan="2"
+                                Hint="Assist Data">
+                                <Entry
+                                    Text="{Binding AssistData}"
+                                    Placeholder="Enter phone number, email, address, etc." />
+                            </sf:SfTextInputLayout>
+
 
                         </Grid>
                     </expander:SfExpander.Content>
@@ -179,14 +186,7 @@
                 </expander:SfExpander>
                 <!-- </sf:SfTextInputLayout> -->
 
-                <!-- Assist Data -->
-                <sf:SfTextInputLayout 
-                    Hint="Assist Data"
-                    IsVisible="{Binding AssistType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=!{x:Static models:AssistType.None}}">
-                    <Entry
-                        Text="{Binding AssistData}"
-                        Placeholder="Enter phone number, email, address, etc." />
-                </sf:SfTextInputLayout>
+                
 
                 <Button
                     HeightRequest="{OnIdiom 44, Desktop=60}"
