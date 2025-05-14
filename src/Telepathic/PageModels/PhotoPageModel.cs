@@ -23,7 +23,8 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
 
     private FileResult? _fileResult;
     
-    [ObservableProperty] private string _imageSource = string.Empty;
+    [ObservableProperty] private string _imagePath = string.Empty;
+    [ObservableProperty] private ImageSource _imageSource;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private PhotoPhase _phase = PhotoPhase.Analyzing;
     
@@ -56,32 +57,56 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     [RelayCommand]
     private async Task PageAppearing()
     {
-        if (_fileResult != null)
+        // If we already have an image, analyze it
+        if (!string.IsNullOrEmpty(ImagePath))
         {
-            // Load the image from the file result
-            // ImageSource = _fileResult.FullPath;
-            if (_fileResult != null)
-            {
-                // save the file into local storage
-                ImageSource = Path.Combine(FileSystem.CacheDirectory, _fileResult.FileName);
+            await AnalyzeImageAsync();
+            return;
+        }
 
-                using Stream sourceStream = await _fileResult.OpenReadAsync();
-                using FileStream localFileStream = File.OpenWrite(ImageSource);
+        try
+        {
+            // Launch camera capture on appearing
+            if (!MediaPicker.IsCaptureSupported)
+            {
+                _errorHandler.HandleError(new Exception("Camera is not available on this device"));
+                await GoBackAsync();
+                return;
+            }
+
+            var result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
+            {
+                Title = "Take a photo"
+            });
+
+            if (result != null)
+            {
+                // Save the file into local storage and set ImageSource
+                ImagePath = Path.Combine(FileSystem.CacheDirectory, result.FileName);
+
+                using Stream sourceStream = await result.OpenReadAsync();
+                using FileStream localFileStream = File.OpenWrite(ImagePath);
 
                 await sourceStream.CopyToAsync(localFileStream);
+                ImageSource = ImageSource.FromFile(ImagePath);
+
+                // await AnalyzeImageAsync();
             }
-            _fileResult = null; // Clear the file result to avoid reloading
-        
-            await AnalyzeImageAsync();
+            else
+            {
+                // User cancelled
+                await GoBackAsync();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            _errorHandler.HandleError(new Exception("No image was provided to analyze"));
+            _errorHandler.HandleError(ex);
             await GoBackAsync();
         }
     }
-    
-    private async Task AnalyzeImageAsync()
+
+    [RelayCommand]
+    async Task AnalyzeImageAsync()
     {
         try
         {
@@ -89,16 +114,16 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
             IsAnalyzingContext = true;
             AnalysisStatusTitle = "Processing Photo";
             AnalysisStatusDetail = "Detecting text and visual content...";
-            
+
             _stopwatch.Restart();
-            
+
             // Analyze the image using AI
             await ExtractTasksFromImageAsync();
-            
+
             _stopwatch.Stop();
-            _logger.LogInformation("Photo analysis completed in {AnalysisDuration}ms", 
+            _logger.LogInformation("Photo analysis completed in {AnalysisDuration}ms",
                 _stopwatch.ElapsedMilliseconds);
-            
+
             // Set phase to reviewing to show the results
             Phase = PhotoPhase.Reviewing;
         }
@@ -147,9 +172,9 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
                 throw new InvalidOperationException("Could not get chat client");
             }
 
-            byte[] imageBytes = File.ReadAllBytes(ImageSource);
+            byte[] imageBytes = File.ReadAllBytes(ImagePath);
             
-            var msg = new Microsoft.Extensions.AI.ChatMessage(ChatRole.Assistant,
+            var msg = new Microsoft.Extensions.AI.ChatMessage(ChatRole.User,
             [
                 new TextContent(prompt.ToString()),
                 new DataContent(imageBytes, mediaType: "image/png")
@@ -306,6 +331,6 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        _fileResult = query["FileResult"] as FileResult;
+        // No longer needed for photo capture navigation
     }
 }

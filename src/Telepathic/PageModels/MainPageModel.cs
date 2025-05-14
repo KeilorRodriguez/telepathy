@@ -1029,27 +1029,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		try
 		{
 			IsBusy = true;
-
-			if (!MediaPicker.IsCaptureSupported)
-			{
-				_errorHandler.HandleError(new Exception("Camera is not available on this device"));
-				return;
-			}
-
-			var result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
-			{
-				Title = "Take a photo"
-			});
-
-			if (result != null)
-			{
-				// Navigate to the PhotoPage with the image
-				var parameters = new Dictionary<string, object>
-				{
-					{ "FileResult", result }
-				};
-				await Shell.Current.GoToAsync("photo", parameters);
-			}
+			// Navigate directly to PhotoPage; photo capture will occur on appearing
+			await Shell.Current.GoToAsync("photo");
 		}
 		catch (Exception ex)
 		{

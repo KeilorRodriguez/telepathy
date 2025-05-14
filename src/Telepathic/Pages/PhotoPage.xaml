@@ -9,6 +9,10 @@
              x:Class="Telepathic.Pages.PhotoPage"
              x:DataType="pageModels:PhotoPageModel"
              Title="Photo Analysis">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Analyze" Command="{Binding AnalyzeImageCommand}" />
+    </ContentPage.ToolbarItems>
              
     <ContentPage.Behaviors>
         <toolkit:EventToCommandBehavior
@@ -29,22 +33,21 @@
         </ResourceDictionary>
     </ContentPage.Resources>
     
-    <Grid Padding="20">
+    <Grid>
         <!-- Analyzing Phase -->
         <Grid IsVisible="{Binding Phase, Converter={StaticResource IsPhaseAnalyzingConverter}}"
             RowDefinitions="*,Auto,*">
             
             <!-- Image with scanner animation -->
-            <Border Grid.Row="1"
-                    StrokeShape="RoundRectangle 12"
-                    StrokeThickness="0"
-                    Margin="10">
+            <Border Grid.Row="0" Grid.RowSpan="2"
+                    StrokeThickness="0">
                 
                 <Grid>
                     <!-- The image itself -->
                     <Image Source="{Binding ImageSource}"
                            Aspect="AspectFill"
-                           
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill"
                            />
                     
                     <!-- Scanner animation -->
@@ -55,7 +58,7 @@
                                  HeightRequest="2"
                                  HorizontalOptions="Fill"
                                  VerticalOptions="Start"
-                                 Margin="5,0" />
+                                 Margin="0" />
                         
                         <!-- Gradient overlays for scanner effect -->
                         <BoxView x:Name="TopGradient"
