@@ -22,12 +22,11 @@
     
     <ContentPage.Resources>
         <ResourceDictionary>
-            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
-            <toolkit:EnumToBoolConverter x:Key="EnumToBoolConverter"/> 
+            
         </ResourceDictionary>
     </ContentPage.Resources>
     
-    <Grid>
+    <Grid Padding="{StaticResource LayoutPadding}">
         <!-- Analyzing Phase -->
         <Grid IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:PhotoPhase.Analyzing}}"
               RowDefinitions="*,Auto,*">
@@ -85,8 +84,9 @@
         </Grid>
         
         <!-- Review Phase -->
-        <ScrollView IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:PhotoPhase.Reviewing}}"> 
-            <StackLayout Spacing="20">
+        <ScrollView 
+            IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:PhotoPhase.Reviewing}}"> 
+            <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}">
                 <!-- Image preview -->
                 <Border BackgroundColor="{AppThemeBinding Light=#f0f0f0, Dark=#333333}"
                         StrokeShape="RoundRectangle 12"
@@ -104,15 +104,16 @@
                        Margin="0,5"/>
                 
                 <!-- Projects Section -->
-                <StackLayout 
+                <VerticalStackLayout 
                     Spacing="{StaticResource LayoutSpacing}">
-                    <Label Text="Extracted Tasks" Style="{StaticResource Title1}" />
+                    <Label Text="Extracted Projects and Tasks" Style="{StaticResource Title1}" TextColor="{toolkit:AppThemeResource Tertiary}"/>
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Projects}"
                         Spacing="{StaticResource LayoutSpacing}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="models:Project">
                                 <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}">
                                     <Label Text="{Binding Name}" 
+                                        TextColor="{toolkit:AppThemeResource Quaternary}"
                                         Style="{StaticResource Title2}" />
                                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Tasks}"
                                         Spacing="{StaticResource LayoutSpacing}">
@@ -129,12 +130,13 @@
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
-                </StackLayout>                
+                </VerticalStackLayout>                
                 
                 <!-- No tasks found message -->
-                <VerticalStackLayout IsVisible="{Binding Projects.Count, Converter={StaticResource CountToBoolConverter}, ConverterParameter='inverse'}"
-                                    HorizontalOptions="Center"
-                                    Margin="0,40">
+                <VerticalStackLayout 
+                    IsVisible="{Binding Projects.Count, Converter={StaticResource IsEqualConverter}, ConverterParameter=0}"
+                    HorizontalOptions="Center"
+                    Margin="0,40">
                     <Image Source="{StaticResource IconPhotos}"
                            HeightRequest="64"
                            WidthRequest="64"
@@ -150,19 +152,16 @@
                 </VerticalStackLayout>
                 
                 <!-- Action Buttons -->
-                <Grid ColumnDefinitions="*,*" Margin="0,20,0,20" ColumnSpacing="20">
-                    <Button Grid.Column="0"
-                            Text="Cancel"
+                <HorizontalStackLayout Spacing="{StaticResource LayoutSpacing}">
+                    <Button Text="Cancel"
                             Command="{Binding GoBackCommand}"
                             HorizontalOptions="End" />
                             
-                    <Button Grid.Column="1"
-                            Text="Save Tasks"
+                    <Button Text="Save Tasks"
                             Command="{Binding SaveCommand}"
-                            IsEnabled="{Binding Projects.Count, Converter={StaticResource CountToBoolConverter}}"
                             HorizontalOptions="Start" />
-                </Grid>
-            </StackLayout>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
         </ScrollView>
     </Grid>
 </ContentPage>

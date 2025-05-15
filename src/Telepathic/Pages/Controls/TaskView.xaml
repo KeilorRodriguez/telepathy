@@ -17,9 +17,7 @@
     StrokeThickness="{Binding IsRecommendation, Converter={StaticResource BoolToThicknessConverter}, ConverterParameter=2}"
     x:DataType="models:ProjectTask">
       <Border.Resources>
-        <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
-        <converters:BoolToFontAttributesConverter x:Key="BoolToFontAttributesConverter" />
-        
+        <converters:BoolToFontAttributesConverter x:Key="BoolToFontAttributesConverter" />        
         
         <toolkit:BoolToObjectConverter x:Key="BoolToBorderBrushConverter" 
                                      TrueObject="{StaticResource AIBrush}" 

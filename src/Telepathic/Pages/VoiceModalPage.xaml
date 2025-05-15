@@ -12,7 +12,7 @@
              Title="Voice">
     
     
-    <Grid Padding="20">
+    <Grid Padding="{StaticResource LayoutPadding}">
         <!-- Recording Phase -->
         <Grid x:Name="RecordingView"
               IsVisible="{Binding Phase, Converter={StaticResource PhaseToRecordingBool}}"
@@ -133,26 +133,15 @@
                             ShimmerEndColor="#9b59b6"/>
         
         <!-- Review Phase -->
-        <ScrollView IsVisible="{Binding Phase, Converter={StaticResource PhaseToReviewBool}}"> 
-            <StackLayout Spacing="20">
+        <ScrollView 
+            IsVisible="{Binding Phase, Converter={StaticResource PhaseToReviewBool}}"> 
+            <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}">
 
-                
-
-                <!-- Transcript Section -->
-                <!-- <expander:SfExpander IsExpanded="False">
-                    <expander:SfExpander.Header>
-                        <Label Text="Show Transcript" FontSize="Medium" FontAttributes="Bold" />
-                    </expander:SfExpander.Header>
-                    <Border Margin="0,0,0,10">
-                        <Label Text="{Binding Transcript}" />
-                    </Border>
-                </expander:SfExpander> -->
-                
                 <!-- Projects Section -->
-                <StackLayout IsVisible="{Binding Projects.Count, Converter={StaticResource CountToBoolConverter}}"
-                    Spacing="{StaticResource LayoutSpacing}"
-                    >
-                    <Label Text="Projects" Style="{StaticResource Title1}" TextColor="{toolkit:AppThemeResource Tertiary}" />
+                <VerticalStackLayout 
+                    IsVisible="{Binding Projects.Count, Converter={StaticResource IntToBoolConverter}}"
+                    Spacing="{StaticResource LayoutSpacing}">
+                    <Label Text="Extracted Projects and Tasks" Style="{StaticResource Title1}" TextColor="{toolkit:AppThemeResource Tertiary}" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Projects}"
                         Spacing="{StaticResource LayoutSpacing}">
                         <BindableLayout.ItemTemplate>
@@ -176,22 +165,20 @@
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
-                </StackLayout>                
+                </VerticalStackLayout>                
                 
                 
                 <!-- Action Buttons -->
-                <Grid ColumnDefinitions="*,*" Margin="0,20,0,20" ColumnSpacing="20">
-                    <Button Grid.Column="0"
-                            Text="Re-record"
+                <HorizontalStackLayout Spacing="{StaticResource LayoutSpacing}">
+                    <Button Text="Re-record"
                             Command="{Binding ReRecordCommand}"
                             HorizontalOptions="End" />
                             
-                    <Button Grid.Column="1"
-                            Text="Save"
+                    <Button Text="Save"
                             Command="{Binding SaveCommand}"
                             HorizontalOptions="Start" />
-                </Grid>
-            </StackLayout>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
         </ScrollView>
 
     </Grid>
