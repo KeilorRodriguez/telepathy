@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using Telepathic.Models;
+using Telepathic.Services;
 
 namespace Telepathic.PageModels;
 
@@ -16,12 +17,13 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     private readonly IChatClientService _chatClientService;
     private readonly ModalErrorHandler _errorHandler;
     private readonly ILogger<PhotoPageModel> _logger;
+    private readonly TaskAssistHandler _taskAssistHandler;
     private readonly Stopwatch _stopwatch = new();
 
     private FileResult? _fileResult;
     
     [ObservableProperty] private string _imagePath = string.Empty;
-    [ObservableProperty] private ImageSource _imageSource;
+    [ObservableProperty] private ImageSource? _imageSource;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private PhotoPhase _phase = PhotoPhase.Analyzing;
     
@@ -37,20 +39,21 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.NavigateToTaskCommand => NavigateToTaskCommand;
     IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AcceptRecommendationCommand => AcceptRecommendationCommand;
     IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.RejectRecommendationCommand => RejectRecommendationCommand;
-    // No assist actions in photo context
-    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AssistCommand => throw new NotImplementedException();
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AssistCommand => AssistCommand;
 
     public PhotoPageModel(
         ProjectRepository projectRepository,
         TaskRepository taskRepository,
         IChatClientService chatClientService,
         ModalErrorHandler errorHandler,
+        TaskAssistHandler taskAssistHandler,
         ILogger<PhotoPageModel> logger)
     {
         _projectRepository = projectRepository;
         _taskRepository = taskRepository;
         _chatClientService = chatClientService;
         _errorHandler = errorHandler;
+        _taskAssistHandler = taskAssistHandler;
         _logger = logger;
     }
     
@@ -359,5 +362,30 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         // No longer needed for photo capture navigation
+    }
+
+    /// <summary>
+    /// Handle assist action on a task using the TaskAssistHandler service
+    /// </summary>
+    [RelayCommand]
+    private async Task Assist(ProjectTask task)
+    {
+        if (task == null || task.AssistType == AssistType.None)
+            return;
+            
+        try
+        {
+            IsBusy = true;
+            await _taskAssistHandler.HandleAssistAsync(task, false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error performing assist action");
+            _errorHandler.HandleError(ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 }

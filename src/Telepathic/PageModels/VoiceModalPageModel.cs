@@ -18,17 +18,18 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
     IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.NavigateToTaskCommand => NavigateToTaskCommand;
     IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AcceptRecommendationCommand => AcceptRecommendationCommand;
     IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.RejectRecommendationCommand => RejectRecommendationCommand;
-    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AssistCommand => throw new NotImplementedException();
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AssistCommand => AssistCommand;
     bool IProjectTaskPageModel.IsBusy => IsBusy;
-    readonly IAudioManager _audioManager;
+    private readonly IAudioManager _audioManager;
+    private readonly IChatClientService _chatClientService;
+    private readonly ModalErrorHandler _errorHandler;
+    private readonly ILogger<VoiceModalPageModel> _logger;
+    private readonly TaskAssistHandler _taskAssistHandler;
 
     IAudioSource? _audioSource = null;
 
     IAudioRecorder? _recorder;
     readonly ITranscriptionService _transcriber;
-    readonly ModalErrorHandler _errorHandler;
-    readonly IChatClientService _chatClientService;
-    readonly ILogger<VoiceModalPageModel> _logger;
 
     [ObservableProperty] bool isRecording;
     [ObservableProperty] bool isBusy;
@@ -60,7 +61,8 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
         IChatClientService chatClientService,
         ProjectRepository projectRepository,
         TaskRepository taskRepository,
-        ILogger<VoiceModalPageModel> logger)
+        ILogger<VoiceModalPageModel> logger,
+        TaskAssistHandler taskAssistHandler)
     {
         // _audio = audio;
         _audioManager = audioManager;
@@ -70,6 +72,7 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
         _projectRepository = projectRepository;
         _taskRepository = taskRepository;
         _logger = logger;
+        _taskAssistHandler = taskAssistHandler;
 
         _logger.LogInformation("Voice Modal Page Model initialized");
     }
@@ -503,5 +506,30 @@ Here's the transcript: {Transcript}";
     {
         _logger.LogInformation("Navigating back from voice modal");
         await Shell.Current.GoToAsync("..");
+    }
+
+    /// <summary>
+    /// Handle assist action on a task using the TaskAssistHandler service
+    /// </summary>
+    [RelayCommand]
+    private async Task Assist(ProjectTask task)
+    {
+        if (task == null || task.AssistType == AssistType.None)
+            return;
+            
+        try
+        {
+            IsBusy = true;
+            await _taskAssistHandler.HandleAssistAsync(task, false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error performing assist action");
+            _errorHandler.HandleError(ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 }

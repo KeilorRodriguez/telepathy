@@ -17,9 +17,18 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	private readonly ProjectRepository _projectRepository;
 	private readonly TaskRepository _taskRepository;
 	private readonly CategoryRepository _categoryRepository;
-	private readonly TagRepository _tagRepository;	private readonly ModalErrorHandler _errorHandler;
+	private readonly TagRepository _tagRepository;
+	private readonly ModalErrorHandler _errorHandler;
 	private readonly IChatClientService _chatClientService;
 	private readonly ICalendarStore _calendarStore;
+	private readonly TaskAssistHandler _taskAssistHandler;
+
+	// Interface implementations
+	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.NavigateToTaskCommand => NavigateToTaskCommand;
+	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AcceptRecommendationCommand => AcceptRecommendationCommand;
+	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.RejectRecommendationCommand => RejectRecommendationCommand;
+	IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AssistCommand => AssistCommand;
+	bool IProjectTaskPageModel.IsBusy => IsBusy;
 
 	[ObservableProperty]
 	private bool _hasRecommendations;
@@ -82,7 +91,7 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 
 	public bool HasRecommendedTasks
 	 	=> RecommendedTasks?.Count > 0;
-	public ProjectDetailPageModel(ProjectRepository projectRepository, TaskRepository taskRepository, CategoryRepository categoryRepository, TagRepository tagRepository, ModalErrorHandler errorHandler, IChatClientService chatClientService, ICalendarStore calendarStore)
+	public ProjectDetailPageModel(ProjectRepository projectRepository, TaskRepository taskRepository, CategoryRepository categoryRepository, TagRepository tagRepository, ModalErrorHandler errorHandler, IChatClientService chatClientService, ICalendarStore calendarStore, TaskAssistHandler taskAssistHandler)
 	{
 		_projectRepository = projectRepository;
 		_taskRepository = taskRepository;
@@ -91,9 +100,7 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 		_errorHandler = errorHandler;
 		_chatClientService = chatClientService;
 		_calendarStore = calendarStore;
-
-		Tasks = [];
-		RecommendedTasks = [];
+		_taskAssistHandler = taskAssistHandler;
 	}
 
 	partial void OnNameChanged(string value)
@@ -394,7 +401,6 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 	[RelayCommand]
 	private Task NavigateToTask(ProjectTask task) =>
 		Shell.Current.GoToAsync($"task?id={task.ID}");
-
 	[RelayCommand]
 	private async Task Assist(ProjectTask task)
 	{
@@ -404,81 +410,9 @@ public partial class ProjectDetailPageModel : ObservableObject, IQueryAttributab
 		{
 			IsBusy = true;
 			BusyTitle = "Performing assist action";
-			switch (task.AssistType)
-			{
-				case AssistType.Calendar:
-					// Try to create a calendar event using the assist data
-					try {
-						// Get all connected calendars
-						var calendars = await _calendarStore.GetCalendars();
-						
-						// Check if any calendar is connected and available
-						if (calendars == null || !calendars.Any())
-						{
-							await AppShell.DisplayToastAsync("No calendars available. Please connect a calendar in settings.");
-							break;
-						}
-						
-						// Default to using the first available calendar
-						var calendarId = calendars.First().Id;
-						
-						// Create a simple event with the task title
-						string eventId = await _calendarStore.CreateEvent(
-							calendarId,
-							task.Title,
-							task.AssistData, // Use AssistData as description
-							string.Empty, // No location
-							DateTimeOffset.Now.AddHours(1), // Start time (1 hour from now)
-							DateTimeOffset.Now.AddHours(2), // End time (2 hours from now)
-							false // Not an all-day event
-						);
-						
-						if (!string.IsNullOrEmpty(eventId))
-						{
-							await AppShell.DisplayToastAsync("Calendar event created successfully!");
-						}
-						else
-						{
-							await AppShell.DisplayToastAsync("Failed to create calendar event.");
-						}
-					}
-					catch (Exception ex)
-					{
-						_errorHandler.HandleError(new Exception("Error creating calendar event", ex));
-						await AppShell.DisplayToastAsync("Error creating calendar event. See logs for details.");
-					}
-					break;
-				case AssistType.Maps:
-					// Open address or location in external maps via web
-					var mapsUri = new Uri($"https://maps.apple.com/?q={Uri.EscapeDataString(task.AssistData)}");
-					await Launcher.OpenAsync(mapsUri);
-					break;
-				case AssistType.Phone:
-					// Open phone dialer with number
-					PhoneDialer.Open(task.AssistData);
-					break;				case AssistType.Email:
-					// Compose email
-					var message = new EmailMessage
-					{
-						Subject = $"Re: {task.Title}",
-						Body = string.Empty,
-						To = new List<string> { task.AssistData }
-					};
-					await Email.ComposeAsync(message);
-					break;
-				case AssistType.AI:
-					try
-					{
-						// AI integration not implemented in this version
-						await AppShell.DisplayToastAsync("AI integration not available");
-					}
-					catch (Exception ex)
-					{
-						_errorHandler.HandleError(ex);
-						await AppShell.DisplayToastAsync("Error with AI integration. See logs for details.");
-					}
-					break;
-			}
+			
+			// Use the existing TaskAssistHandler service to handle all assist action types
+			await _taskAssistHandler.HandleAssistAsync(task, false);
 		}
 		catch (Exception ex)
 		{
