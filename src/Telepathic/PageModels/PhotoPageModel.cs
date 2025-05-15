@@ -29,6 +29,7 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     [ObservableProperty] private bool _isAnalyzingContext = true;
     [ObservableProperty] private string _analysisStatusTitle = "Processing Photo";
     [ObservableProperty] private string _analysisStatusDetail = "Preparing to analyze your image...";
+    [ObservableProperty] private string _analysisInstructions = "";
     
     // Extracted projects and tasks
     [ObservableProperty] private List<Project> _projects = new();
@@ -65,37 +66,48 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
 
         try
         {
-            // Launch camera capture on appearing
-            if (!MediaPicker.IsCaptureSupported)
+            FileResult? result = null;
+            if (DeviceInfo.Idiom == DeviceIdiom.Desktop)
             {
-                _errorHandler.HandleError(new Exception("Camera is not available on this device"));
-                await GoBackAsync();
-                return;
-            }
-
-            var result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
-            {
-                Title = "Take a photo"
-            });
-
-            if (result != null)
-            {
-                // Save the file into local storage and set ImageSource
-                ImagePath = Path.Combine(FileSystem.CacheDirectory, result.FileName);
-
-                using Stream sourceStream = await result.OpenReadAsync();
-                using FileStream localFileStream = File.OpenWrite(ImagePath);
-
-                await sourceStream.CopyToAsync(localFileStream);
-                ImageSource = ImageSource.FromFile(ImagePath);
-
-                // await AnalyzeImageAsync();
+                result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
+                {
+                    Title = "Select a photo"
+                });
             }
             else
-            {
-                // User cancelled
-                await GoBackAsync();
+            { // Mobile
+                // Launch camera capture on appearing
+                if (!MediaPicker.IsCaptureSupported)
+                {
+                    _errorHandler.HandleError(new Exception("Camera is not available on this device"));
+                    await GoBackAsync();
+                    return;
+                }
+
+                result = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
+                {
+                    Title = "Take a photo"
+                });
             }
+
+            if (result != null)
+                {
+                    // Save the file into local storage and set ImageSource
+                    ImagePath = Path.Combine(FileSystem.CacheDirectory, result.FileName);
+
+                    using Stream sourceStream = await result.OpenReadAsync();
+                    using FileStream localFileStream = File.OpenWrite(ImagePath);
+
+                    await sourceStream.CopyToAsync(localFileStream);
+                    ImageSource = ImageSource.FromFile(ImagePath);
+
+                    // await AnalyzeImageAsync();
+                }
+                else
+                {
+                    // User cancelled
+                    await GoBackAsync();
+                }
         }
         catch (Exception ex)
         {
@@ -160,7 +172,11 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
             prompt.AppendLine("1. Identify any projects and tasks (to-do items) visible in the image");
             prompt.AppendLine("2. Format handwritten text, screenshots, or photos of physical notes into structured data");
             prompt.AppendLine("3. Group related tasks into projects when appropriate");
-            // prompt.AppendLine("4. If the image contains a calendar, schedule, or dates, include those as due dates");
+
+            if (!string.IsNullOrEmpty(AnalysisInstructions))
+            {
+                prompt.AppendLine($"4. {AnalysisInstructions}");
+            }
             prompt.AppendLine();
             prompt.AppendLine("If no projects/tasks are found, return an empty projects array.");
             

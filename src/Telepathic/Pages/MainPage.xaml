@@ -326,8 +326,7 @@
                     HeightRequest="60"
                     WidthRequest="60"
                     Command="{Binding TakePhotoCommand}"
-                    Opacity="0"
-                    IsVisible="{OnIdiom Desktop=False, Default=True}"/>
+                    Opacity="0"/>
 
             <Button x:Name="MicrophoneButton"
                     ImageSource="{toolkit:AppThemeResource IconMicrophone}"

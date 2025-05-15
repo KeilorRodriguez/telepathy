@@ -5,6 +5,7 @@
              xmlns:models="clr-namespace:Telepathic.Models"
              xmlns:aloha="clr-namespace:AlohaKit.Animations;assembly=AlohaKit.Animations"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.TextInputLayout;assembly=Syncfusion.Maui.Toolkit"
              xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
              x:Class="Telepathic.Pages.PhotoPage"
              x:DataType="pageModels:PhotoPageModel"
@@ -29,7 +30,7 @@
     <Grid Padding="{StaticResource LayoutPadding}">
         <!-- Analyzing Phase -->
         <Grid IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:PhotoPhase.Analyzing}}"
-              RowDefinitions="*,Auto,*">
+              RowDefinitions="*,Auto,Auto,Auto">
             
             <!-- Image with scanner animation -->
             <Grid 
@@ -74,13 +75,18 @@
                 Grid.Row="2"
                 IsVisible="{Binding IsAnalyzingContext}"
                 IsRunning="{Binding IsAnalyzingContext}"
-                HorizontalOptions="Center"
+                HorizontalOptions="Fill"
                 Title="{Binding AnalysisStatusTitle}"
                 Detail="{Binding AnalysisStatusDetail}"
                 MinimumWidthRequest="200"
                 MinimumHeightRequest="100"
                 ShimmerStartColor="#4a90e2"
                 ShimmerEndColor="#9b59b6"/>
+
+            <sf:SfTextInputLayout Hint="Additional Instructions" Grid.Row="3">
+                <Entry Text="{Binding AnalysisInstructions}" />
+            </sf:SfTextInputLayout>
+            
         </Grid>
         
         <!-- Review Phase -->
