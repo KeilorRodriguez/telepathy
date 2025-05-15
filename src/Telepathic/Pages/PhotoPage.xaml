@@ -23,60 +23,52 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
-            <toolkit:CompareConverter x:Key="IsPhaseAnalyzingConverter"
-                ComparisonOperator="Equal"
-                ComparingValue="{x:Static pageModels:PhotoPhase.Analyzing}"/>
-            <toolkit:CompareConverter x:Key="IsPhaseReviewingConverter"
-                ComparisonOperator="Equal"
-                ComparingValue="{x:Static pageModels:PhotoPhase.Reviewing}"/>
-            
+            <toolkit:EnumToBoolConverter x:Key="EnumToBoolConverter"/> 
         </ResourceDictionary>
     </ContentPage.Resources>
     
     <Grid>
         <!-- Analyzing Phase -->
-        <Grid IsVisible="{Binding Phase, Converter={StaticResource IsPhaseAnalyzingConverter}}"
-            RowDefinitions="*,Auto,*">
+        <Grid IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:PhotoPhase.Analyzing}}"
+              RowDefinitions="*,Auto,*">
             
             <!-- Image with scanner animation -->
-            <Border Grid.Row="0" Grid.RowSpan="2"
-                    StrokeThickness="0">
+            <Grid 
+                Grid.Row="0" 
+                Grid.RowSpan="2">
+                <!-- The image itself -->
+                <Image Source="{Binding ImageSource}"
+                        Aspect="AspectFill"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill"
+                        />
                 
-                <Grid>
-                    <!-- The image itself -->
-                    <Image Source="{Binding ImageSource}"
-                           Aspect="AspectFill"
-                           HorizontalOptions="Fill"
-                           VerticalOptions="Fill"
-                           />
+                <!-- Scanner animation -->
+                <Grid x:Name="ScannerAnimation">
+                    <!-- Scanner line -->
+                    <BoxView x:Name="ScannerLine"
+                                BackgroundColor="{AppThemeBinding Light=#4a90e280, Dark=#9b59b680}"
+                                HeightRequest="2"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Start"
+                                Margin="0" />
                     
-                    <!-- Scanner animation -->
-                    <Grid x:Name="ScannerAnimation">
-                        <!-- Scanner line -->
-                        <BoxView x:Name="ScannerLine"
-                                 BackgroundColor="{AppThemeBinding Light=#4a90e280, Dark=#9b59b680}"
-                                 HeightRequest="2"
-                                 HorizontalOptions="Fill"
-                                 VerticalOptions="Start"
-                                 Margin="0" />
-                        
-                        <!-- Gradient overlays for scanner effect -->
-                        <BoxView x:Name="TopGradient"
-                                 BackgroundColor="{AppThemeBinding Light=#4a90e220, Dark=#9b59b620}"
-                                 HeightRequest="40"
-                                 Opacity="0.6"
-                                 HorizontalOptions="Fill"
-                                 VerticalOptions="Start" />
-                                 
-                        <BoxView x:Name="BottomGradient"
-                                 BackgroundColor="{AppThemeBinding Light=#4a90e220, Dark=#9b59b620}"
-                                 HeightRequest="40"
-                                 Opacity="0.6"
-                                 HorizontalOptions="Fill"
-                                 VerticalOptions="End" />
-                    </Grid>
+                    <!-- Gradient overlays for scanner effect -->
+                    <BoxView x:Name="TopGradient"
+                                BackgroundColor="{AppThemeBinding Light=#4a90e220, Dark=#9b59b620}"
+                                HeightRequest="40"
+                                Opacity="0.6"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Start" />
+                                
+                    <BoxView x:Name="BottomGradient"
+                                BackgroundColor="{AppThemeBinding Light=#4a90e220, Dark=#9b59b620}"
+                                HeightRequest="40"
+                                Opacity="0.6"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="End" />
                 </Grid>
-            </Border>
+            </Grid>
             
             <!-- Activity indicator -->
             <controls:ActivityIndicatorView
@@ -93,7 +85,7 @@
         </Grid>
         
         <!-- Review Phase -->
-        <ScrollView IsVisible="{Binding Phase, Converter={StaticResource IsPhaseReviewingConverter}}"> 
+        <ScrollView IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:PhotoPhase.Reviewing}}"> 
             <StackLayout Spacing="20">
                 <!-- Image preview -->
                 <Border BackgroundColor="{AppThemeBinding Light=#f0f0f0, Dark=#333333}"

@@ -2,11 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using OpenAI.Chat;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Telepathic.Models;
-using Telepathic.Services;
 
 namespace Telepathic.PageModels;
 
