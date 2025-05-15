@@ -135,7 +135,7 @@
                 <VerticalStackLayout IsVisible="{Binding Projects.Count, Converter={StaticResource CountToBoolConverter}, ConverterParameter='inverse'}"
                                     HorizontalOptions="Center"
                                     Margin="0,40">
-                    <Image Source="{toolkit:AppThemeResource IconPhotos}"
+                    <Image Source="{StaticResource IconPhotos}"
                            HeightRequest="64"
                            WidthRequest="64"
                            HorizontalOptions="Center"

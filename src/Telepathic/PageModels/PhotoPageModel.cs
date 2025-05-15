@@ -33,9 +33,11 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     // Extracted projects and tasks
     [ObservableProperty] private List<Project> _projects = new();
 
-    public IAsyncRelayCommand<ProjectTask> NavigateToTaskCommand => throw new NotImplementedException();
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.NavigateToTaskCommand => NavigateToTaskCommand;
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AcceptRecommendationCommand => AcceptRecommendationCommand;
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.RejectRecommendationCommand => RejectRecommendationCommand;
     // No assist actions in photo context
-    public IAsyncRelayCommand<ProjectTask> AssistCommand => throw new NotImplementedException();
+    IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.AssistCommand => throw new NotImplementedException();
 
     public PhotoPageModel(
         ProjectRepository projectRepository,
@@ -218,6 +220,18 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     {
         task.IsCompleted = !task.IsCompleted;
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Navigate to the task detail page for a specific task
+    /// </summary>
+    [RelayCommand]
+    private Task NavigateToTask(ProjectTask? task)
+    {
+        if (task == null) return Task.CompletedTask;
+
+        _logger.LogInformation("Navigating to task details page for task: {TaskTitle}", task.Title);
+        return Shell.Current.GoToAsync($"task?id={task.ID}");
     }
 
     [RelayCommand]
