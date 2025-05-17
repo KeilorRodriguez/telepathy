@@ -892,11 +892,12 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine("\n- For each task you prioritize, provide a brief reason WHY it's being prioritized now");
 			sb.AppendLine("- Don't include more than 3 tasks in the response");
 			sb.AppendLine("- Provide a personalized greeting using my name if available in the 'About Me' section, or a fun, space/cosmic themed greeting");
-			// sb.AppendLine("- Include at least 3 tasks in the response");
+			sb.AppendLine("- Do not guess at tasks. It's ok to not include any prioritized tasks if none are relevant");
+			sb.AppendLine("- When choosing between tasks, order them by best fit. Do not choose randomly");
 
 			_logger.LogInformation($"AI Context: {sb.ToString()}");
 
-			AnalysisStatusDetail = "Applying cosmic intelligence to your tasks...";
+			AnalysisStatusDetail = "Applying futuristic intelligence to your tasks...";
 			// Send to AI for analysis with MCP tools included
 			var chatClient = _chatClientService.GetClient();
 			if (chatClient != null)
@@ -915,7 +916,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 						{
 							// Generate a default time-based greeting
 							var timeOfDay = GetTimeOfDayDescription(DateTime.Now);
-							PersonalizedGreeting = $"Good {timeOfDay}, Space Adventurer!";
+							PersonalizedGreeting = $"Good {timeOfDay}, Adventurer!";
 						}
 
 						if (apiResponse.Result.PriorityTasks != null)

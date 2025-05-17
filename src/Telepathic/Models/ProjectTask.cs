@@ -7,7 +7,6 @@ public class ProjectTask
 	[JsonIgnore]
 	public int ID { get; set; }
 
-	[JsonPropertyName("title")]
 	public string Title { get; set; } = string.Empty;
 
 	public bool IsCompleted { get; set; }
