@@ -1,60 +1,94 @@
 {
     "Projects": [
         {
-            "Name": "Balance",
-            "Description": "Improve work-life balance.",
+            "Name": "AI Infused .NET MAUI",
+            "Description": "All the things I want to show people about .NET MAUI and AI.",
             "Icon": "\uea28",
             "Category": { "Title": "work", "Color": "#3068df" },
             "Tags": [
                 { "Title": "work", "Color": "#3068df" }
             ],
             "Tasks": [
-                { "Title": "Survey Employees", "IsCompleted": false },
-                { "Title": "Analyze Survey Results", "IsCompleted": false },
-                { "Title": "Develop Action Plan", "IsCompleted": false }
+                { "Title": "Draft an outline with key points", "IsCompleted": false },
+                { "Title": "Gather research sources from peer reviewed studies", "IsCompleted": false },
+                { "Title": "Create a PowerPoint presentation", "IsCompleted": false },
+                { "Title": "Recruit Gerald to demo Aspire", "IsCompleted": false },
+                { "Title": "Build a killer demo based on our template", "IsCompleted": false },
+                { "Title": "Buy some new Adidas Gazelle sneakers", "IsCompleted": false },
+                { "Title": "Record the demos", "IsCompleted": false },
+                { "Title": "Do a tech check 30 minutes before the presentation", "IsCompleted": false },
+                { "Title": "Deliver the presentation", "IsCompleted": false },
+                { "Title": "Celebrate the successful delivery of the presentation", "IsCompleted": false }
             ]
         },
         {
-            "Name": "Personal",
-            "Description": "Learn to speak another language.",
+            "Name": "Travel to Seattle for Microsoft Build",
+            "Description": "What do I need to do before I leave for Seattle, and what do I need to do when I get there?",
             "Icon": "\uf8fe",
-            "Category": { "Title": "education", "Color": "#8800FF" },
+            "Category": { "Title": "work", "Color": "#3068df" },
             "Tags": [
-                { "Title": "personal", "Color": "#FF4500" }
+                { "Title": "personal", "Color": "#FF4500" },
+                { "Title": "work", "Color": "#3068df" }
             ],
             "Tasks": [
-                { "Title": "Read a Book", "IsCompleted": false },
-                { "Title": "Attend a Workshop", "IsCompleted": false },
-                { "Title": "Practice a Hobby", "IsCompleted": false }
+                { "Title": "Mow the yard", "IsCompleted": false },
+                { "Title": "Do laundry", "IsCompleted": false },
+                { "Title": "Check the Seattle weather forecast for next week, May 19-23", "IsCompleted": false },
+                { "Title": "Pack for the trip", "IsCompleted": false },
+                { "Title": "Check in for the flight", "IsCompleted": false },
+                { "Title": "Get to the airport on time", "IsCompleted": false },
+                { "Title": "Arrive in Seattle and get to the hotel", "IsCompleted": false },
+                { "Title": "Pick up my conference badge and swag", "IsCompleted": false },
+                { "Title": "Check in at the hotel", "IsCompleted": false },
+                { "Title": "Get a good night sleep before the presentation", "IsCompleted": false }
             ]
         },
         {
-            "Name": "Fitness",
-            "Description": "Promote health and fitness activities",
+            "Name": "Run more, lift more, eat less",
+            "Description": "You're 50, so maybe it's time to get serious about your health.",
             "Icon": "\uf837",
             "Category": { "Title": "self", "Color": "#FF3300" },
             "Tags": [
                 { "Title": "health", "Color": "#32CD32" }
             ],
             "Tasks": [
-                { "Title": "Morning Yoga", "IsCompleted": false },
-                { "Title": "Evening Run", "IsCompleted": false },
-                { "Title": "Healthy Cooking Class", "IsCompleted": false }
+                { "Title": "Find a good gym near the conference center at 705 Pike St, Seattle, WA 98101", "IsCompleted": false },
+                { "Title": "Strength train 3 times this week", "IsCompleted": false },
+                { "Title": "Run Tuesday and Thursday at least 30 minutes a day", "IsCompleted": false },
+                { "Title": "Eat dinner before 7pm every night this week", "IsCompleted": false },
+                { "Title": "Find good places to eat salad near the conference center", "IsCompleted": false },
+                { "Title": "Don't let Maddy make me eat junk food and make unhealthy choices", "IsCompleted": false }
             ]
         },
         {
-            "Name": "Family and Friends",
-            "Description": "Strengthen relationships with family and friends.",
-            "Icon": "\uf5a9",
-            "Category": { "Title": "relationships", "Color": "#FF9900" },
+            "Name": "Ultimate Friday Adventure",
+            "Description": "Everything needed for the perfect Friday and weekend celebration.",
+            "Icon": "\uf1b9",
+            "Category": { "Title": "fun", "Color": "#FF69B4" },
             "Tags": [
-                { "Title": "family", "Color": "#1E90FF" },
-                { "Title": "friends", "Color": "#FF69B4" }
+                { "Title": "weekend", "Color": "#9932CC" },
+                { "Title": "party", "Color": "#FFD700" }
             ],
             "Tasks": [
-                { "Title": "Plan a Family Reunion", "IsCompleted": false },
-                { "Title": "Organize a Friends' Get-together", "IsCompleted": false },
-                { "Title": "Weekly Phone Calls", "IsCompleted": false }
+                { "Title": "Wake up at 7 AM and be fresh", "IsCompleted": false },
+                { "Title": "Go downstairs", "IsCompleted": false },
+                { "Title": "Have my bowl of cereal", "IsCompleted": false },
+                { "Title": "Check the time", "IsCompleted": false },
+                { "Title": "Get down to the bus stop", "IsCompleted": false },
+                { "Title": "Catch my bus", "IsCompleted": false },
+                { "Title": "Meet friends", "IsCompleted": false },
+                { "Title": "Decide between front seat or back seat", "IsCompleted": false },
+                { "Title": "Drive on the highway at 7:45", "IsCompleted": false },
+                { "Title": "Cruise fast to make time fly", "IsCompleted": false },
+                { "Title": "Think about fun things to do", "IsCompleted": false },
+                { "Title": "Make sure my friend is by my right", "IsCompleted": false },
+                { "Title": "Get down on Friday", "IsCompleted": false },
+                { "Title": "Look forward to the weekend", "IsCompleted": false },
+                { "Title": "Plan Saturday activities", "IsCompleted": false },
+                { "Title": "Plan Sunday activities", "IsCompleted": false },
+                { "Title": "Organize weekend party", "IsCompleted": false },
+                { "Title": "Have a ball today", "IsCompleted": false },
+                { "Title": "Make the weekend last", "IsCompleted": false }
             ]
         }
     ]
