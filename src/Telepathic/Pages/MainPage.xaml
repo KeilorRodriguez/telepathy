@@ -129,7 +129,8 @@
                                                         <Grid RowDefinitions="*"
                                                             ColumnDefinitions="*" IsClippedToBounds="True">
                                                             <!-- Checkbox in the upper left -->
-                                                            <HorizontalStackLayout Spacing="15"
+                                                            <Grid ColumnSpacing="15"
+                                                                ColumnDefinitions="Auto, *"
                                                                 VerticalOptions="Start" HorizontalOptions="Start"
                                                                 IsVisible="{Binding IsShowingReasoning,Converter={StaticResource InvertedBoolConverter}}">
                                                                 <CheckBox 
@@ -142,10 +143,11 @@
                                                                 <Label Text="{Binding Title}"
                                                                     VerticalOptions="Center"
                                                                     LineBreakMode="WordWrap"
+                                                                    MaxLines="3"
                                                                     HorizontalOptions="Start"
-                                                                    WidthRequest="-1"
+                                                                    Grid.Column="1"
                                                                     TextColor="{toolkit:AppThemeResource OnBackground}"/>
-                                                            </HorizontalStackLayout>
+                                                            </Grid>
                                                             
                                                             <!-- Priority Reasoning (replaces title when visible) -->
                                                             <Label Text="{Binding PriorityReasoning}"
@@ -190,6 +192,9 @@
                                                             <Label 
                                                                 Text="{Binding ProjectName, FallbackValue='Project'}"
                                                                 Style="{StaticResource Body2}"
+                                                                LineBreakMode="TailTruncation"
+                                                                MaximumWidthRequest="{OnIdiom Phone=180, Tablet=400}"
+                                                                HorizontalOptions="Start"
                                                                 VerticalOptions="End"                                                                
                                                                 TextColor="{toolkit:AppThemeResource Tertiary}"/>
                                                         </Grid>

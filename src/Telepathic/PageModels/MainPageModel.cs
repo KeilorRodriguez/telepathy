@@ -548,10 +548,15 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	}
 
 	[RelayCommand]
-	private void ToggleSettings()
+	private async Task ToggleSettings()
 	{
 		// Toggle the settings sheet open/closed state
 		IsSettingsSheetOpen = !IsSettingsSheetOpen;
+		// When closing settings panel, check if we need to analyze tasks
+		if (!IsSettingsSheetOpen && IsTelepathyEnabled && !HasPriorityTasks)
+		{
+			await AnalyzeAndPrioritizeTasks();
+		}
 	}
 
 	[RelayCommand]

@@ -10,10 +10,6 @@
              x:Class="Telepathic.Pages.PhotoPage"
              x:DataType="pageModels:PhotoPageModel"
              Title="Photo Analysis">
-
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Analyze" Command="{Binding AnalyzeImageCommand}" />
-    </ContentPage.ToolbarItems>
              
     <ContentPage.Behaviors>
         <toolkit:EventToCommandBehavior
