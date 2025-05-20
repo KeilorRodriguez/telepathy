@@ -12,7 +12,7 @@ namespace Telepathic.PageModels;
 
 public enum VoicePhase { Recording, Transcribing, Reviewing }
 
-public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageModel
+public partial class VoicePageModel : ObservableObject, IProjectTaskPageModel
 {
     // Interface implementations
     IAsyncRelayCommand<ProjectTask> IProjectTaskPageModel.NavigateToTaskCommand => NavigateToTaskCommand;
@@ -23,7 +23,7 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
     private readonly IAudioManager _audioManager;
     private readonly IChatClientService _chatClientService;
     private readonly ModalErrorHandler _errorHandler;
-    private readonly ILogger<VoiceModalPageModel> _logger;
+    private readonly ILogger<VoicePageModel> _logger;
     private readonly TaskAssistHandler _taskAssistHandler;
 
     IAudioSource? _audioSource = null;
@@ -54,14 +54,14 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
     // Stopwatch for measuring performance
     private Stopwatch _stopwatch = new();
 
-    public VoiceModalPageModel(
+    public VoicePageModel(
         IAudioManager audioManager,
         ITranscriptionService transcriber,
         ModalErrorHandler errorHandler,
         IChatClientService chatClientService,
         ProjectRepository projectRepository,
         TaskRepository taskRepository,
-        ILogger<VoiceModalPageModel> logger,
+        ILogger<VoicePageModel> logger,
         TaskAssistHandler taskAssistHandler)
     {
         // _audio = audio;
@@ -271,14 +271,14 @@ public partial class VoiceModalPageModel : ObservableObject, IProjectTaskPageMod
 
             // Create a prompt that will extract projects and tasks from the transcript
             var prompt = $@"
-Extract projects and tasks from this voice memo transcript. 
-Analyze the text to identify actionable tasks I need to keep track of. Use the following instructions:
-1. Tasks are actionable items that can be completed, such as 'Buy groceries' or 'Call Mom'.
-2. Projects are larger tasks that may contain multiple smaller tasks, such as 'Plan birthday party' or 'Organize closet'.
-3. Tasks must be grouped under a project and cannot be grouped under multiple projects.
-4. Any mentioned due dates use the YYYY-MM-DD format
+                Extract projects and tasks from this voice memo transcript. 
+                Analyze the text to identify actionable tasks I need to keep track of. Use the following instructions:
+                1. Tasks are actionable items that can be completed, such as 'Buy groceries' or 'Call Mom'.
+                2. Projects are larger tasks that may contain multiple smaller tasks, such as 'Plan birthday party' or 'Organize closet'.
+                3. Tasks must be grouped under a project and cannot be grouped under multiple projects.
+                4. Any mentioned due dates use the YYYY-MM-DD format
 
-Here's the transcript: {Transcript}";
+                Here's the transcript: {Transcript}";
 
             // Get response from the AI service
             var chatClient = _chatClientService.GetClient();
@@ -303,36 +303,6 @@ Here's the transcript: {Transcript}";
                 
                 _logger.LogInformation("Found {NumberOfProjects} projects", Projects.Count);
                 _logger.LogInformation("Found {NumberOfTasks} tasks", Projects.Sum(p => p.Tasks.Count));
-
-                // Add all projects and tasks to observable collections
-                // foreach (var aiProject in response.Result.Projects)
-                // {
-                //     // Convert AIProject to ProjectVm
-                //     var project = new ProjectVm
-                //     {
-                //         Name = aiProject.Name,
-                //         Tasks = aiProject.Tasks.Select(t => new TaskVm
-                //         {
-                //             Title = t.Title,
-                //             DueDate = t.DueDate,
-                //             Priority = t.Priority
-                //         }).ToList()
-                //     };
-                //     Projects.Add(project);
-                // }
-
-                // foreach (var aiTask in response.Result.StandaloneTasks)
-                // {
-                //     // Convert AITask to TaskVm
-                //     var task = new TaskVm
-                //     {
-                //         Title = aiTask.Title,
-                //         DueDate = aiTask.DueDate,
-                //         Priority = aiTask.Priority
-                //     };
-                //     StandaloneTasks.Add(task);
-                // }
-
 
                 // Check if no projects or tasks were detected
                 if (Projects.Count == 0)

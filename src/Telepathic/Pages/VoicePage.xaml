@@ -7,8 +7,8 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
             xmlns:expander="clr-namespace:Syncfusion.Maui.Toolkit.Expander;assembly=Syncfusion.Maui.Toolkit"
             xmlns:controls="clr-namespace:Telepathic.Pages.Controls"
-             x:Class="Telepathic.Pages.VoiceModalPage"
-             x:DataType="pageModels:VoiceModalPageModel"
+             x:Class="Telepathic.Pages.VoicePage"
+             x:DataType="pageModels:VoicePageModel"
              Title="Voice">
     
     
@@ -155,9 +155,9 @@
                                         <BindableLayout.ItemTemplate>
                                             <DataTemplate x:DataType="models:ProjectTask">
                                                 <controls:TaskView 
-                                                    TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoiceModalPageModel}}, x:DataType=pageModels:VoiceModalPageModel}"
-                                                    AcceptRecommendationCommand="{Binding AcceptRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoiceModalPageModel}}, x:DataType=pageModels:VoiceModalPageModel}"
-                                                    RejectRecommendationCommand="{Binding RejectRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoiceModalPageModel}}, x:DataType=pageModels:VoiceModalPageModel}" />
+                                                    TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoicePageModel}}, x:DataType=pageModels:VoicePageModel}"
+                                                    AcceptRecommendationCommand="{Binding AcceptRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoicePageModel}}, x:DataType=pageModels:VoicePageModel}"
+                                                    RejectRecommendationCommand="{Binding RejectRecommendationCommand, Source={RelativeSource AncestorType={x:Type pageModels:VoicePageModel}}, x:DataType=pageModels:VoicePageModel}" />
                                             </DataTemplate>
                                         </BindableLayout.ItemTemplate>
                                     </VerticalStackLayout>

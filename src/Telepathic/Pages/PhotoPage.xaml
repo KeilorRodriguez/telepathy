@@ -30,7 +30,7 @@
     <Grid Padding="{StaticResource LayoutPadding}">
         <!-- Analyzing Phase -->
         <Grid IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:PhotoPhase.Analyzing}}"
-              RowDefinitions="*,Auto,Auto,Auto">
+              RowDefinitions="*,Auto,Auto,Auto,Auto">
             
             <!-- Image with scanner animation -->
             <Grid 
@@ -86,6 +86,12 @@
             <sf:SfTextInputLayout Hint="Additional Instructions" Grid.Row="3">
                 <Entry Text="{Binding AnalysisInstructions}" />
             </sf:SfTextInputLayout>
+
+            <Button Text="Find Projects and Tasks"
+                    Grid.Row="4"
+                    Command="{Binding AnalyzeImageCommand}"
+                    HorizontalOptions="Fill"
+                    IsEnabled="{Binding IsAnalyzingContext, Converter={StaticResource InverseBoolConverter}}"/>
             
         </Grid>
         

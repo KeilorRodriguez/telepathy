@@ -79,8 +79,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<TaskAssistHandler>();
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
-		builder.Services.AddTransientWithShellRoute<Pages.VoiceModalPage, PageModels.VoiceModalPageModel>("voice");
-		builder.Services.AddTransientWithShellRoute<Pages.PhotoPage, PageModels.PhotoPageModel>("photo");
+		builder.Services.AddTransientWithShellRoute<VoicePage, VoicePageModel>("voice");
+		builder.Services.AddTransientWithShellRoute<PhotoPage, PhotoPageModel>("photo");
 
 		return builder.Build();
 	}

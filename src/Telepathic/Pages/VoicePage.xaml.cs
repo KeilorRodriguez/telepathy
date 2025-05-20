@@ -6,13 +6,13 @@ using Telepathic.PageModels;
 
 namespace Telepathic.Pages;
 
-public partial class VoiceModalPage : ContentPage
+public partial class VoicePage : ContentPage
 {
     private readonly Random _random = new Random();
     private bool _isAnimating = false;
-    private VoiceModalPageModel _model;
+    private VoicePageModel _model;
     
-    public VoiceModalPage(VoiceModalPageModel model)
+    public VoicePage(VoicePageModel model)
     {
         InitializeComponent();
         BindingContext = model;
@@ -24,7 +24,7 @@ public partial class VoiceModalPage : ContentPage
     
     private void Model_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(VoiceModalPageModel.IsRecording))
+        if (e.PropertyName == nameof(VoicePageModel.IsRecording))
         {
             if (_model.IsRecording)
             {
