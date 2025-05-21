@@ -15,7 +15,7 @@
     <Grid Padding="{StaticResource LayoutPadding}">
         <!-- Recording Phase -->
         <Grid x:Name="RecordingView"
-              IsVisible="{Binding Phase, Converter={StaticResource PhaseToRecordingBool}}"
+              IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:VoicePhase.Recording}}"
               RowDefinitions="*,Auto,*">
 
             <Label 
@@ -134,7 +134,7 @@
         
         <!-- Review Phase -->
         <ScrollView 
-            IsVisible="{Binding Phase, Converter={StaticResource PhaseToReviewBool}}"> 
+            IsVisible="{Binding Phase, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static pageModels:VoicePhase.Reviewing}}"> 
             <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}">
 
                 <!-- Projects Section -->
