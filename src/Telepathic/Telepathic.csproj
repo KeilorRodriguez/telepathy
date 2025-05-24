@@ -52,30 +52,10 @@
 		<CodesignRequireProvisioningProfile>true</CodesignRequireProvisioningProfile>
 		<DisableCodesignVerification>true</DisableCodesignVerification>
 	</PropertyGroup>
-
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
 		<CodesignProvision>Automatic</CodesignProvision>
 	</PropertyGroup>
-
-	<!-- <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
-		<CreatePackage>false</CreatePackage>
-		<CodesignProvision>Automatic</CodesignProvision>
-		<CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
-	</PropertyGroup> -->
-
-	<!-- <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-	  <CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
-	  <CodesignProvision>Telepathic Development</CodesignProvision>
-	</PropertyGroup> -->
-
-	<!-- enable trimming and AOT analyzers on all platforms -->
-	<!-- <PropertyGroup>
-		<IsAotCompatible>true</IsAotCompatible>
-
-		<PublishAot Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">true</PublishAot>
-		<PublishAot Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</PublishAot>
-	</PropertyGroup> -->
 
 	<ItemGroup>
 		<!-- App Icon -->

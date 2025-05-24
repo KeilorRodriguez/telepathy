@@ -49,12 +49,6 @@ public static class MauiProgram
 			})
 			.ConfigureMauiHandlers(handlers =>
 			{
-				// #if MACCATALYST
-				// handlers.AddHandler(typeof(Shell), typeof(Telepathic.Platforms.MacCatalyst.CustomAppShell));
-				// #endif
-				// #if IOS
-				// handlers.AddHandler(typeof(Shell), typeof(Telepathic.Platforms.iOS.CustomAppShell));
-				// #endif
 			});
 
 #if DEBUG

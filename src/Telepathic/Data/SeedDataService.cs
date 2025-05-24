@@ -92,10 +92,9 @@ public class SeedDataService
 				_taskRepository.DropTableAsync(),
 				_tagRepository.DropTableAsync(),
 				_categoryRepository.DropTableAsync());
-		}
-		catch (Exception e)
+		}		catch (Exception e)
 		{
-			Console.WriteLine(e);
+			_logger.LogError(e, "Error clearing database tables during seed data reset");
 		}
 	}
 }

@@ -124,19 +124,17 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	public bool HasCompletedTasks
 		=> Tasks?.Any(t => t.IsCompleted) ?? false;
 
-	[RelayCommand]
-	Task AcceptRecommendation(ProjectTask? task)
+	[RelayCommand]	Task AcceptRecommendation(ProjectTask? task)
 	{
 		if (task != null)
-			Debug.WriteLine($"Accepting recommendation for task: {task.Title}");
+			_logger.LogInformation("Accepting recommendation for task: {TaskTitle}", task.Title);
 		return Task.CompletedTask;
 	}
 
 	[RelayCommand]
-	Task RejectRecommendation(ProjectTask? task)
-	{
+	Task RejectRecommendation(ProjectTask? task)	{
 		if (task != null)
-			Debug.WriteLine($"Rejecting recommendation for task: {task.Title}");
+			_logger.LogInformation("Rejecting recommendation for task: {TaskTitle}", task.Title);
 		return Task.CompletedTask;
 	}
 
@@ -303,11 +301,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 					// Get events from the calendar for today
 					var events = await _calendarStore.GetEvents(calendar.Id, today, tomorrow);
 					results.AddRange(events);
-				}
-				catch (Exception ex)
+				}				catch (Exception ex)
 				{
 					// Log but continue with other calendars
-					System.Diagnostics.Debug.WriteLine($"Error getting events for calendar {calendar.Name}: {ex.Message}");
+					_logger.LogWarning(ex, "Error getting events for calendar {CalendarName}", calendar.Name);
 				}
 			}
 		}
@@ -934,9 +931,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 								if (task != null)
 								{
 									task.PriorityReasoning = aiTask.PriorityReasoning;
-									task.AssistType = aiTask.AssistType;
-									task.AssistData = aiTask.AssistData;
-									Debug.WriteLine($"Task '{task.Title}' prioritized because: {aiTask.PriorityReasoning}, AssistType: {aiTask.AssistType}, AssistData: {aiTask.AssistData}");
+									task.AssistType = aiTask.AssistType;									task.AssistData = aiTask.AssistData;
+									_logger.LogDebug("Task '{TaskTitle}' prioritized because: {PriorityReasoning}, AssistType: {AssistType}, AssistData: {AssistData}", 
+										task.Title, aiTask.PriorityReasoning, aiTask.AssistType, aiTask.AssistData);
 
 									var taskViewModel = new ProjectTaskViewModel(task);
 									var project = Projects.FirstOrDefault(p => p.ID == task.ProjectID);
@@ -1073,9 +1070,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			sb.AppendLine($"Task: {task.Title}");
 			sb.AppendLine($"Details: {task.Task.AssistData}");
 			sb.AppendLine($"Current location: {_locationTools.GetCurrentLocation().Latitude}, {_locationTools.GetCurrentLocation().Longitude}");
-			sb.AppendLine($"IsNearby a coffee shop");
-
-			Debug.WriteLine(sb.ToString());			
+			sb.AppendLine($"IsNearby a coffee shop");			_logger.LogDebug("AI Task Analysis Prompt: {Prompt}", sb.ToString());			
 
 			try
 			{

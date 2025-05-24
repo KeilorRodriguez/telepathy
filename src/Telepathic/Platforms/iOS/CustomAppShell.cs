@@ -54,8 +54,6 @@ public class CustomAppShell : ShellRenderer
         // Additional line-removing settings
         navBar.ShadowImage = new UIImage();
         navBar.SetBackgroundImage(new UIImage(), UIBarMetrics.Default);
-            
-        // navBar.TintColor = Application.Current.Resources[""];
         }
         public void SetHasShadow(UINavigationController controller, bool hasShadow)
         {
