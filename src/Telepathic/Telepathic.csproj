@@ -50,13 +50,9 @@
 		<CreatePackage>false</CreatePackage>
 		<EnableCodeSigning>true</EnableCodeSigning>
 		<CodesignRequireProvisioningProfile>true</CodesignRequireProvisioningProfile>
-		<DisableCodesignVerification>true</DisableCodesignVerification>
+		<DisableCodesignVerification>true</DisableCodesignVerification>	
 	</PropertyGroup>
-	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<CodesignKey>Apple Development: Dave Ortinau (W4L3MZPMK9)</CodesignKey>
-		<CodesignProvision>Automatic</CodesignProvision>
-	</PropertyGroup>
-
+	
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#F04B25" />
@@ -76,6 +72,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="AlohaKit.Animations" Version="1.1.0" />
+		<PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.4" />
 		<PackageReference Include="Microsoft.Extensions.AI" Version="9.5.0" />
 		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.4.4-preview.1.25259.16" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />

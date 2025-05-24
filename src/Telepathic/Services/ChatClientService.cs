@@ -1,10 +1,8 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Telepathic.Tools;
 using OpenAI;
-using System.Linq;
+using Azure.AI.OpenAI;
 
 namespace Telepathic.Services;
 
@@ -42,6 +40,15 @@ public interface IChatClientService
     void UpdateClient(string apiKey, string model = "gpt-4o-mini");
     
     /// <summary>
+    /// Updates the chat client with provider-specific settings
+    /// </summary>
+    /// <param name="apiKey">The API key for the provider</param>
+    /// <param name="provider">The provider type (e.g., "openai", "foundry")</param>
+    /// <param name="endpoint">The endpoint URL (required for foundry, optional for others)</param>
+    /// <param name="model">The model to use</param>
+    void UpdateClient(string apiKey, string provider, string? endpoint = null, string model = "gpt-4o-mini");
+    
+    /// <summary>
     /// Checks if the client is initialized and ready to use
     /// </summary>
     bool IsInitialized { get; }
@@ -63,10 +70,18 @@ public class ChatClientService : IChatClientService
         _locationTools = locationTools;
         
         // Try to initialize from preferences if available
-        var apiKey = Preferences.Default.Get("openai_api_key", string.Empty);
-        if (!string.IsNullOrEmpty(apiKey))
+        // Check for Foundry settings first (higher priority if both are configured)
+        var foundryEndpoint = Preferences.Default.Get("foundry_endpoint", string.Empty);
+        var foundryApiKey = Preferences.Default.Get("foundry_api_key", string.Empty);
+        var openAiApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
+        
+        if (!string.IsNullOrEmpty(foundryEndpoint) && !string.IsNullOrEmpty(foundryApiKey))
         {
-            UpdateClient(apiKey);
+            UpdateClient(foundryApiKey, "foundry", foundryEndpoint);
+        }
+        else if (!string.IsNullOrEmpty(openAiApiKey))
+        {
+            UpdateClient(openAiApiKey);
         }
     }
 
@@ -151,6 +166,64 @@ public class ChatClientService : IChatClientService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update chat client");
+            _chatClient = null;
+            throw;
+        }
+    }
+
+    public void UpdateClient(string apiKey, string provider, string? endpoint = null, string model = "gpt-4o")
+    {
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            _logger.LogWarning("Attempted to update chat client with empty API key");
+            _chatClient = null;
+            return;
+        }
+
+        try
+        {
+            switch (provider.ToLowerInvariant())
+            {
+                case "foundry":
+                    if (string.IsNullOrEmpty(endpoint))
+                    {
+                        throw new ArgumentException("Foundry provider requires an endpoint URL", nameof(endpoint));
+                    }
+                    _logger.LogInformation("Initializing Foundry chat client with endpoint: {Endpoint}", endpoint);
+                    
+                    // For Foundry, create OpenAI client that points to the Foundry endpoint
+                    // Most Foundry services are OpenAI-compatible
+                    var foundryClient = new AzureOpenAIClient(new Uri(endpoint),new System.ClientModel.ApiKeyCredential(apiKey));
+                    _chatClient = foundryClient.GetChatClient("gpt-4o").AsIChatClient();
+                    break;
+                    
+                case "openai":
+                default:
+                    // Use OpenAI client (existing logic)
+                    var openAIClient = new OpenAIClient(new System.ClientModel.ApiKeyCredential(apiKey));
+                    _chatClient = openAIClient.GetChatClient(model: model).AsIChatClient();
+                    break;
+            }
+
+            _chatClient = new LoggingChatClient(_chatClient, _logger);
+
+            _chatClient = new ChatClientBuilder(_chatClient)
+            .ConfigureOptions(options =>
+            {
+                options.Tools ??= [];
+                options.Tools.Add(AIFunctionFactory.Create(_locationTools.IsNearby));
+            })
+            .UseFunctionInvocation()
+            .Build();
+            
+            // Clear cached tools when client is updated
+            _cachedTools = null;
+            
+            _logger.LogInformation("Chat client successfully initialized with provider: {Provider}, model: {Model}", provider, model);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update chat client with provider: {Provider}", provider);
             _chatClient = null;
             throw;
         }

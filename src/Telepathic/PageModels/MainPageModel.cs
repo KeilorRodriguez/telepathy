@@ -78,16 +78,26 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[ObservableProperty]
 	private string _openAIApiKey = Preferences.Default.Get("openai_api_key", string.Empty);
-
 	[ObservableProperty]
 	private string _googlePlacesApiKey = Preferences.Default.Get("google_places_api_key", string.Empty);
+
+	[ObservableProperty]
+	private string _foundryEndpoint = Preferences.Default.Get("foundry_endpoint", string.Empty);
+
+	[ObservableProperty]
+	private string _foundryApiKey = Preferences.Default.Get("foundry_api_key", string.Empty);
 
 	// Entry fields for UI binding
 	[ObservableProperty]
 	private string _openAIApiKeyEntry;
-
 	[ObservableProperty]
 	private string _googlePlacesApiKeyEntry;
+
+	[ObservableProperty]
+	private string _foundryEndpointEntry;
+
+	[ObservableProperty]
+	private string _foundryApiKeyEntry;
 
 	[NotifyPropertyChangedFor(nameof(ShouldShowPriorityTasks))]
 	[ObservableProperty]
@@ -243,10 +253,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_logger = logger;
 		_taskAssistHandler = taskAssistHandler;
 		_locationTools = locationTools;
-
 		// Sync entry fields for UI
 		OpenAIApiKeyEntry = OpenAIApiKey;
 		GooglePlacesApiKeyEntry = GooglePlacesApiKey;
+		FoundryEndpointEntry = FoundryEndpoint;
+		FoundryApiKeyEntry = FoundryApiKey;
 
 		_locationTools.SetGooglePlacesApiKey(GooglePlacesApiKey);
 
@@ -264,10 +275,19 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	{
 		OpenAIApiKey = value;
 	}
-
 	partial void OnGooglePlacesApiKeyEntryChanged(string value)
 	{
 		GooglePlacesApiKey = value;
+	}
+
+	partial void OnFoundryEndpointEntryChanged(string value)
+	{
+		FoundryEndpoint = value;
+	}
+
+	partial void OnFoundryApiKeyEntryChanged(string value)
+	{
+		FoundryApiKey = value;
 	}
 
 	/// <summary>
@@ -529,7 +549,6 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		_logger.LogInformation($"OpenAI API Key changed");
 		Preferences.Default.Set("openai_api_key", value);
 	}
-
 	partial void OnGooglePlacesApiKeyChanged(string value)
 	{
 		if (!string.IsNullOrWhiteSpace(value))
@@ -537,6 +556,24 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		else
 			Preferences.Default.Remove("google_places_api_key");
 		_locationTools.SetGooglePlacesApiKey(value);
+	}
+
+	partial void OnFoundryEndpointChanged(string value)
+	{
+		_logger.LogInformation($"Foundry Endpoint changed");
+		if (!string.IsNullOrWhiteSpace(value))
+			Preferences.Default.Set("foundry_endpoint", value);
+		else
+			Preferences.Default.Remove("foundry_endpoint");
+	}
+
+	partial void OnFoundryApiKeyChanged(string value)
+	{
+		_logger.LogInformation($"Foundry API Key changed");
+		if (!string.IsNullOrWhiteSpace(value))
+			Preferences.Default.Set("foundry_api_key", value);
+		else
+			Preferences.Default.Remove("foundry_api_key");
 	}
 
 	partial void OnAboutMeTextChanged(string value)
@@ -555,23 +592,41 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 			await AnalyzeAndPrioritizeTasks();
 		}
 	}
-
 	[RelayCommand]
 	private async Task SaveApiKey()
 	{
-		_logger.LogInformation($"OpenAI API Key saved");
+		_logger.LogInformation($"API Keys and settings saved");
+		
+		// Save all API keys and settings
 		Preferences.Default.Set("openai_api_key", OpenAIApiKey);
+		if (!string.IsNullOrWhiteSpace(FoundryEndpoint))
+			Preferences.Default.Set("foundry_endpoint", FoundryEndpoint);
+		if (!string.IsNullOrWhiteSpace(FoundryApiKey))
+			Preferences.Default.Set("foundry_api_key", FoundryApiKey);
 
-		// Update the chat client with the new API key
+		// Update the chat client with the new settings
 		try
 		{
-			_chatClientService.UpdateClient(OpenAIApiKey);
-			await AppShell.DisplayToastAsync("API Key saved and chat client updated!");
+			// Determine which provider to use based on available settings
+			if (!string.IsNullOrWhiteSpace(FoundryEndpoint) && !string.IsNullOrWhiteSpace(FoundryApiKey))
+			{
+				_chatClientService.UpdateClient(FoundryApiKey, "foundry", FoundryEndpoint);
+				await AppShell.DisplayToastAsync("Foundry settings saved and chat client updated!");
+			}
+			else if (!string.IsNullOrWhiteSpace(OpenAIApiKey))
+			{
+				_chatClientService.UpdateClient(OpenAIApiKey);
+				await AppShell.DisplayToastAsync("OpenAI API Key saved and chat client updated!");
+			}
+			else
+			{
+				await AppShell.DisplayToastAsync("Settings saved! Please provide either OpenAI or Foundry credentials to enable AI features.");
+			}
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Failed to update chat client with new API key");
-			await AppShell.DisplayToastAsync("API Key saved, but failed to initialize chat client. Please check your key and try again.");
+			_logger.LogError(ex, "Failed to update chat client with new settings");
+			await AppShell.DisplayToastAsync("Settings saved, but failed to initialize chat client. Please check your credentials and try again.");
 		}
 	}
 
@@ -761,7 +816,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 	private async Task AnalyzeAndPrioritizeTasks()
 	{
 		// Early exit if telepathy is disabled or we're missing the API client
-		if (!IsTelepathyEnabled || !_chatClientService.IsInitialized || string.IsNullOrWhiteSpace(OpenAIApiKey))
+		if (!IsTelepathyEnabled || !_chatClientService.IsInitialized || (string.IsNullOrWhiteSpace(OpenAIApiKey) && string.IsNullOrWhiteSpace(FoundryApiKey)))
 		{
 			PriorityTasks = [];
 			HasPriorityTasks = false;
