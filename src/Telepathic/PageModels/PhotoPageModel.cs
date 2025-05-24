@@ -20,8 +20,6 @@ public partial class PhotoPageModel : ObservableObject, IProjectTaskPageModel, I
     private readonly TaskAssistHandler _taskAssistHandler;
     private readonly Stopwatch _stopwatch = new();
 
-    private FileResult? _fileResult;
-    
     [ObservableProperty] private string _imagePath = string.Empty;
     [ObservableProperty] private ImageSource? _imageSource;
     [ObservableProperty] private bool _isBusy;

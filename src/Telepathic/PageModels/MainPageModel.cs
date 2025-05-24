@@ -948,6 +948,11 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 								}
 							}
 						}
+						else
+						{
+							AnalysisStatusTitle = "All clear!";
+							AnalysisStatusDetail = "Your task universe is clear of immediate threats.";
+						}
 					}
 
 					HasPriorityTasks = PriorityTasks.Count > 0;
@@ -968,6 +973,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 		}
 		finally
 		{
+			await Task.Delay(1000); // Give the user a moment to read the status
 			IsAnalyzingContext = false;
 		}
 	}

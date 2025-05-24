@@ -28,7 +28,7 @@
         <toolkit:EventToCommandBehavior
             EventName="Appearing"
             Command="{Binding AppearingCommand}"/>
-        <toolkit:StatusBarBehavior StatusBarColor="{toolkit:AppThemeResource Background}"/>
+        <!-- <toolkit:StatusBarBehavior StatusBarColor="{toolkit:AppThemeResource Background}"/> -->
     </ContentPage.Behaviors>
 
     <ContentPage.Resources>
@@ -169,7 +169,7 @@
                                                                         Command="{Binding ToggleShowReasoningCommand}"/>
 
                                                                 <ImageButton Source="{StaticResource IconAssist}"
-                                                                        IsVisible="{Binding AssistType, Converter={StaticResource AssistTypeToBoolConverter}}"
+                                                                        IsVisible="{Binding Task.AssistType, Converter={StaticResource AssistTypeToBoolConverter}}"
                                                                         Aspect="Center"
                                                                         HeightRequest="44"
                                                                         WidthRequest="44"

@@ -38,7 +38,10 @@ public partial class ActivityIndicatorView : ContentView
         UpdateDetailVisibility();
         
         // Subscribe to app theme changes
-        Application.Current.RequestedThemeChanged += OnAppThemeChanged;
+        if (Application.Current != null)
+        {
+            Application.Current.RequestedThemeChanged += OnAppThemeChanged;
+        }
     }
     
     private void OnAppThemeChanged(object? sender, AppThemeChangedEventArgs e)
@@ -165,14 +168,17 @@ public partial class ActivityIndicatorView : ContentView
         // Make sure BaseFontColor is always visible by ensuring it has sufficient opacity
         var color = TitleTextColor;
         // Ensure alpha is at least 0.7 (roughly 178 in byte value) for visibility
-        if (color.Alpha < 0.7)
+        if (color != null && color.Alpha < 0.7)
         {
             color = color.WithAlpha(0.7f);
         }
         
-        TitleText.BaseFontColor = color;
-        TitleText.GradientStartColor = ShimmerStartColor;
-        TitleText.GradientEndColor = ShimmerEndColor;
+        if (color != null)
+        {
+            TitleText.BaseFontColor = color;
+            TitleText.GradientStartColor = ShimmerStartColor;
+            TitleText.GradientEndColor = ShimmerEndColor;
+        }
     }
     
     private void UpdateDetailVisibility()
