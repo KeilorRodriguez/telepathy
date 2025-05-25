@@ -400,3 +400,5 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 src/Telepathic/AssemblyInfo.cs
+bfg-1.14.0.jar
+secret-replacements.txt
