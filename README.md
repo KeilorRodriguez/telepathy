@@ -2,7 +2,7 @@
 
 Welcome, space adventurer! Telepathy is your futuristic to‑do companion that goes beyond simple lists—leveraging AI, voice, photos, and context to become your personal **task-o-matic** navigator.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/tFOFU7LDQlA?si=Om_fjl6KNwE8FTm3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![AI infused mobile and desktop apps with .NET MAUI YouTube video](images/youtube_poster.png)](https://www.youtube.com/embed/tFOFU7LDQlA?si=Om_fjl6KNwE8FTm3)
 
 Slides (PPT): [Microsoft Build 2025 - AI infused mobile & desktop app development with .NET MAUI](docs/2025%20Build%20-%20AI%20Infused%20MAUI.pptx)
 
