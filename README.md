@@ -2,6 +2,10 @@
 
 Welcome, space adventurer! Telepathy is your futuristic to‑do companion that goes beyond simple lists—leveraging AI, voice, photos, and context to become your personal **task-o-matic** navigator.
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/tFOFU7LDQlA?si=Om_fjl6KNwE8FTm3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+Slides (PPT): [Microsoft Build 2025 - AI infused mobile & desktop app development with .NET MAUI](docs/2025%20Build%20-%20AI%20Infused%20MAUI.pptx)
+
 ---
 
 ## 🚀 Getting Started
@@ -9,8 +13,8 @@ Welcome, space adventurer! Telepathy is your futuristic to‑do companion that g
 1. **Install & Launch**  
    Clone the repo or grab Telepathy from your favorite store and fire it up on your device—mobile or desktop.
 
-2. **Add Your OpenAI Key**  
-   Under **Settings**, paste your OpenAI API key. This unlocks Telepathy’s AI superpowers: smart task suggestions, context‑aware prioritization, and that legendary “voice‐analysis” mode.
+2. **Add Your OpenAI and/or Azure AI Foundry Key**  
+   Under **Settings**, paste your OpenAI API key and/or AI Foundry endpoint and key. This unlocks Telepathy’s AI superpowers: smart task suggestions, context‑aware prioritization, and that legendary “voice‐analysis” mode.
 
 3. **Connect Your Calendar**  
    Link Google, Outlook, or iCloud calendars so Telepathy can see your schedule. It will optimize your tasks around meetings, deadlines, and travel time.
