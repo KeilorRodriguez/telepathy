@@ -428,7 +428,7 @@
                         <sf:SfTextInputLayout
                             Hint="Foundry Endpoint">
                             <Entry Text="{Binding FoundryEndpoint, Mode=TwoWay}"
-                             Placeholder="Enter endpoint"/>
+                             Placeholder="Enter Endpoint"/>
                         </sf:SfTextInputLayout>
 
                         <sf:SfTextInputLayout
