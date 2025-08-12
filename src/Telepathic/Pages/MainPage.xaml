@@ -419,6 +419,19 @@
                         </sf:SfTextInputLayout>
 
                         <sf:SfTextInputLayout
+                          Hint="Azure Foundry Key">
+                            <Entry Text="{Binding FoundryApiKey, Mode=TwoWay}"
+                             Placeholder="Enter Foundry Key"
+                              IsPassword="True"/>
+                        </sf:SfTextInputLayout>
+
+                        <sf:SfTextInputLayout
+                            Hint="Foundry Endpoint">
+                            <Entry Text="{Binding FoundryEndpoint, Mode=TwoWay}"
+                             Placeholder="Enter endpoint"/>
+                        </sf:SfTextInputLayout>
+
+                        <sf:SfTextInputLayout
                             Hint="Google Places API Key">
                             <Entry Text="{Binding GooglePlacesApiKeyEntry, Mode=TwoWay}"
                                     Placeholder="Enter Google Places API Key"
