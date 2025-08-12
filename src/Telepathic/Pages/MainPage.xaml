@@ -426,9 +426,9 @@
                         </sf:SfTextInputLayout>
 
                         <sf:SfTextInputLayout
-                            Hint="Foundry Endpoint">
+                            Hint="Azure Foundry Endpoint">
                             <Entry Text="{Binding FoundryEndpoint, Mode=TwoWay}"
-                             Placeholder="Enter Endpoint"/>
+                             Placeholder="Enter Foundry Endpoint"/>
                         </sf:SfTextInputLayout>
 
                         <sf:SfTextInputLayout
